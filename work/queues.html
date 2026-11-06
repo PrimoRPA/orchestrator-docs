@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="work/queues">
+<main>
+<h1>Очереди</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>UI4</span></div>
+<p class="lead">Очереди обмена данными: создание, статусы элементов, повторы и автоочистка. Очередь проектов — это другое, о ней в <a href="../configure/project-queue.html">Очередь проектов</a>.</p>
+
+<h2>Где это в меню</h2>
+<p><b>Роботы → Очереди обмена данными</b>. Права: <code>ExchangeQueues.View</code>, <code>.Create</code>, <code>.Edit</code>, <code>.Delete</code>; для работы с элементами — <code>.Enqueue</code>, <code>.Peek</code>, <code>.ReadByKey</code>, <code>.RemoveByKey</code>.</p>
+
+<h2>Создать очередь</h2>
+<ol class="steps">
+  <li>Нажмите <b>Добавить очередь</b>, укажите <b>Наименование</b> и <b>Описание</b>.</li>
+  <li>Задайте повторы: <b>Максимальное количество попыток поставить элемент в очередь повторно</b> и <b>На какие ошибки элемент должен ставиться в очередь повторно</b> (Ошибка, Бизнес ошибка).</li>
+  <li>При необходимости: <b>Время жизни элемента очереди (сек.)</b>, <b>Таймаут для элемента очереди (сек.)</b>, <b>Тип уникальности натурального ключа</b> (внутри очереди или глобально), <b>Зашифрована</b>, <b>Физическое удаление</b>, <b>Публичная</b>, список <b>Роботы</b> с доступом.</li>
+  <li><b>Сохранить</b>. <span class="check">Очередь в списке; через <b>Элементы очереди</b> можно добавить элемент вручную</span></li>
+</ol>
+
+<h2>Статусы элементов</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>В UI4</th><th>Что значит</th></tr>
+  <tr><td>Новое</td><td>Добавлено, ещё не извлечено роботом.</td></tr>
+  <tr><td>Выполняется</td><td>Извлечено по FIFO или прочитано с блокировкой (<code>InProgress</code>).</td></tr>
+  <tr><td>Выполнено / Ошибка / Бизнес ошибка</td><td>Результат обработки: <code>Success</code>, <code>Error</code>, <code>BusinessError</code>.</td></tr>
+  <tr><td>Повтор</td><td>Элемент возвращён в очередь после ошибки. Счётчик <code>Retray</code>: 1 — первый повтор, больше 1 — повторный.</td></tr>
+  <tr><td>Удалено</td><td>Удалён вручную или по причине: TTL, срок (<b>Дата недоступности (после)</b>), таймаут.</td></tr>
+</table></div>
+<p>Эти статусы со счётчиками показаны в списке очередей. В фильтре элементов <b>Статусы</b> можно выбрать несколько значений сразу: Новое, Выполнено, Ошибка, Бизнес ошибка, Выполняется.</p>
+<div class="todo"><p>В UI4 есть подпись «На паузе» для статуса элемента, но в статистике очереди она не используется. Возможно, это отложенные элементы (<b>Дата недоступности (до)</b>, в бэкенде <code>Postponed</code>). Уточнить.</p></div>
+
+<h2>Что изменилось в 1.26.9: извлечение нескольких видов сразу</h2>
+<p>При извлечении по FIFO робот передаёт список <code>retries</code> вместо одного значения. Варианты: <code>New</code> — новые, <code>Error</code> — первый повтор после ошибки, <code>RepeatedError</code> — повторные, <code>Any</code> — любые. Оркестратор выдаёт элемент, подходящий под любой из них. Так за один вызов можно брать и новые, и повторные элементы.</p>
+<p>Старый параметр <code>retray</code> (одно значение) в коде помечен «не используется в оркклиенте с 26.9.21». Для старых роботов Оркестратор подставляет его, а если не передано ничего — берёт только новые. Чтение по фильтру тоже принимает список статусов (<code>EventTypes</code> вместо устаревшего <code>EventType</code>).</p>
+
+<h2>Автоочистка и архивация</h2>
+<p>В форме очереди — <b>Автоматическая очистка/архивация для старых элементов очереди</b>: по возрасту (дни) или по количеству; очистка или перенос в архивные таблицы.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр (секция <code>ExchangeQueue</code>)</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>ExchangeQueueValuesAutoDeleteInterval</code></td><td>Период фоновой очистки, мин (не меньше 5)</td><td>60</td></tr>
+  <tr><td><code>ExchangeQueueValuesAutoDeleteChunkSize</code></td><td>Размер пачки удаления (1–10000)</td><td>100</td></tr>
+  <tr><td><code>MinExchangeQueueValuesDeleteLimitDays</code></td><td>Минимум дней, который можно задать в форме</td><td>30</td></tr>
+  <tr><td><code>MinExchangeQueueValuesDeleteLimitElements</code></td><td>Минимум элементов, который можно задать в форме</td><td>100000</td></tr>
+  <tr><td><code>AllowPhysicalRemoval</code></td><td>Разрешить физическое удаление</td><td><code>false</code></td></tr>
+</table></div>
+
+<div class="todo"><p>Проверить совместимость со старыми роботами. По коду фильтр <code>retray</code> применяется, только если <code>retries</code> равен <code>null</code>. ASP.NET Core для отсутствующего параметра-коллекции обычно отдаёт пустой список. Тогда фильтр не применится и старый робот может получить и повторные элементы. Проверить на стенде.</p></div>
+<div class="todo"><p>Версия «26.9.21» из комментария в коде — это номер Студии/оркклиента или Оркестратора? Уточнить, с какой версии робота работает выбор нескольких видов.</p></div>
+
+<div class="src">Источники: <code>ui4: src/features/queues/ui/queues-form/QueuesForm.tsx</code>, <code>src/entities/queue/config/queueStatusLabels.ts</code>, <code>src/entities/queue/model/filters/queue-items.filters.config.tsx</code>, <code>src/shared/lib/translations/ru/queues.json</code>; <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Controllers/ExchangeQueuesController.cs</code> (peek, ReadItems), <code>Bl/ExchangeQueues/ExchangeQueueFIFOService.cs</code>, <code>Bl/ExchangeQueues/ExchangeQueueValuesAutoDeleteService.cs</code>, <code>Options/ExchangeQueue.cs</code>, <code>LTools.Enums/RetryFilter.cs</code>, <code>ExchangeQueueValueEventType.cs</code>; старая статья <code>orchestrator-user-ui4/robots/data-queues.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

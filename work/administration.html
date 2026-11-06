@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="work/administration">
+<main>
+<h1>Администрирование</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>UI4</span></div>
+<p class="lead">Пользователи и роли, лицензии, производственные календари, политики паролей и подписки на события.</p>
+
+<h2>Где это в меню</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что</th><th>Путь в UI4</th><th>Кому видно</th></tr>
+  <tr><td>Роли пользователей, Пользователи, Подписки, Уведомления</td><td><b>Настройки → Администрирование</b></td><td>по правам <code>Roles.View</code>, <code>Users.View</code>, <code>Subscriptions.View</code>, <code>NotificationEmailQueue.View</code></td></tr>
+  <tr><td>Политики паролей</td><td><b>Настройки → Администрирование → Политики паролей</b></td><td>только администратору</td></tr>
+  <tr><td>Ч-Б список Студий</td><td><b>Настройки → Администрирование</b></td><td>по праву на просмотр лицензий</td></tr>
+  <tr><td>Лицензии</td><td><b>Настройки → Лицензии</b></td><td><code>Licenses.View</code></td></tr>
+  <tr><td>Производственный календарь</td><td><b>Настройки → Система</b> (один календарь) или <b>Задания</b> (несколько календарей)</td><td><code>ProductionCalendars.View</code></td></tr>
+</table></div>
+
+<h2>Пользователи</h2>
+<p><b>Добавить пользователя</b>: <b>Логин</b>, <b>Имя</b>, <b>Email</b>, <b>Роли</b>, <b>Пароль</b>, <b>Квота на лицензии робота</b>, флаг <b>Требовать смену пароля при следующем входе в систему</b>. В логине допустимы символы <code>a-zA-Z0-9-._@+</code>. Тип пользователя: локальный, AD или OpenID (Keycloak).</p>
+<p>После 5 неудачных попыток входа пользователь блокируется на 300 секунд (<code>Security:Lockout:MaxFailedAccessAttempts</code>, <code>Security:Lockout:DefaultLockoutTimeSpan</code>).</p>
+
+<h2>Роли</h2>
+<p><b>Добавить роль</b>: <b>Имя</b>, <b>Описание</b>, <b>Роль студии</b> и матрица прав. Строки матрицы сгруппированы: Роботы, Rpa-проекты, Задания, Журналы, Настройка, Личные папки, DPA. Колонки — Просмотр, Создание, Редактирование, Удаление, Управление. Одна ячейка может включать несколько прав API: например, просмотр роботов даёт ещё и просмотр журнала робота и дистрибутивов.</p>
+<p>Доменные пользователи и пользователи Keycloak получают роли через привязку: к роли привязываются <b>Группы AD</b> или роли Keycloak. Подробнее — <a href="../configure/access.html">Вход и доступ</a>.</p>
+<p>Встроенные системные роли: Administrator, TenantAdministrator, Robot, Studio, Agent, RobotLogsService, RdpService, Integration, orchestrator, AnalyticService, Citizen, OnlyOrchProject, LimitedRobotRunner.</p>
+<p>Доступ к объектам в общих папках задаётся отдельно от роли. Уровни: только чтение, использование, редактирование, удаление; каждый следующий включает предыдущий.</p>
+
+<h2>Лицензии</h2>
+<ol class="steps">
+  <li><b>Настройки → Лицензии → Запрос на лицензию</b>: выберите <b>Продукт</b> и <b>Количество</b>, скачайте файл запроса и отправьте вендору.</li>
+  <li>Полученный файл загрузите кнопкой <b>Добавить лицензию</b>. <span class="check">Лицензия в списке, <b>Состояние</b> — действительна, видна <b>Дата истечения</b> или «Бессрочная»</span></li>
+</ol>
+<p>Замена: вендор отзывает старую лицензию. Файл отзыва загружается через <b>Добавить отзыв лицензии</b>, затем формируется <b>Запрос на замену лицензии</b>. Периоды: месяц, три месяца, год, бессрочный.</p>
+
+<h2>Производственные календари</h2>
+<p>Режим задаёт <code>ProductionCalendar:Multiple</code> в конфигурации WebApi. Один календарь — <b>Настройки → Система → Производственный календарь</b>, только в тенанте по умолчанию. Несколько календарей — <b>Задания → Производственный календарь</b>: у каждого есть имя (5–200 символов, уникальное), описание (5–500) и приоритет на случай пересечения дат. Типы дней: «Рабочий день», «Не рабочий день», «Предпраздничный день».</p>
+
+<h2>Политики паролей</h2>
+<p>Поля: минимальная длина (не меньше 3), минимум уникальных символов (не меньше 1), сколько прежних паролей нельзя повторять (не меньше 1), требования к цифрам, строчным, заглавным буквам и спецсимволам. Значения до первого изменения берутся из <code>Security:Password</code>: все требования включены, длина 6, уникальных символов 1, прежних паролей 4. После изменения политики все пользователи должны войти заново.</p>
+
+<h2>Подписки на события</h2>
+<p><b>Добавить подписку</b>: <b>Наименование</b>, <b>Email</b>, <b>Подписка активна</b>, <b>Системные события</b>, <b>Оркестраторные события</b> и <b>Фильтр по сущностям</b> (Робот, Проект, Задание, Машина). Системные события: недоступность агента, рост очереди проектов, истечение срока лицензии. Одно и то же событие дважды в подписку не добавить. Письма уходят через службу Notifications; очередь писем — <b>Настройки → Администрирование → Уведомления</b>, там же <b>Очистить очередь</b>.</p>
+
+<div class="todo"><p>Срока действия пароля в политике нет: в коде есть только событие <code>LoginUserExpired</code> (2008). Уточнить, откуда берётся колонка «Пароль действителен до» у пользователя.</p></div>
+
+<div class="src">Источники: <code>ui4: src/features/setting/components/tabsAdmin.tsx</code>, <code>tabs.tsx</code>, <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/shared/lib/translations/ru/{users,roles,licenses,calendars,passwordPolicies,subscriptions,notifications,common}.json</code>; <code>backend: Orchestrator/LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>, <code>PasswordPolicy.cs</code>, <code>Subscription.cs</code>, <code>LTools.Orchestrator.WebApi/Bl/Permissions/PermissionService.cs</code>, <code>Options/SecurityPassword.cs</code>, <code>Options/ProductionCalendar.cs</code>, <code>Validators/BaseProductionCalendar2Validator.cs</code>, <code>Validators/BasePasswordPolicyValidator.cs</code>, <code>LTools.Orchestrator.IdentityDal/SeedData.cs</code>, <code>LTools.Enums/{FolderAccessType,LicenseType,SystemEventType,SubscriptionEntityType}.cs</code>; старые статьи <code>orchestrator-admin-ui4/*</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

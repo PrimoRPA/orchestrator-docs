@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/email-trigger">
+<main>
+<h1>Не срабатывает триггер по почте</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Триггер «Запуск при получении Email» опрашивает почтовый ящик со стороны WebApi по POP3, IMAP или Exchange (EWS). Если письмо пришло, а робот не запустился, проблема либо в подключении к почте, либо в отборе писем.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>Письмо в ящике есть, а задание не запускает проект.</li>
+  <li>Триггер работал и перестал после смены пароля, обновления ОС или почтового сервера.</li>
+  <li>Кнопка <b>Тест</b> в настройках ящика выдаёт ошибку или проходит, а триггер всё равно не срабатывает.</li>
+  <li>В журнале WebApi: «Max unseen messages count limit exceeded».</li>
+</ul>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li>WebApi не подключается или не проходит аутентификацию на почтовом сервере.</li>
+  <li>В папке слишком много непрочитанных писем (IMAP и Exchange).</li>
+  <li>Письмо не подходит под фильтры <b>От</b> и <b>Тема</b>.</li>
+  <li>Письмо уже обработано раньше: Оркестратор не берёт письмо с тем же Message-ID повторно.</li>
+  <li>На Linux не подходит механизм аутентификации (NTLM, GSSAPI).</li>
+</ul>
+
+<h2>Что проверить</h2>
+<ol class="steps">
+  <li>Откройте настройки ящика на экране <b>Email входящей почты</b> и нажмите <b>Тест</b>. <span class="check">«Почтовое соединение установлено успешно»</span></li>
+  <li>Если тест не прошёл, текст ошибки — это ответ почтового сервера или сетевой библиотеки. Проверьте адрес, порт, логин и пароль. Если Email и логин для входа различаются, заполните <b>Логин</b>.</li>
+  <li>Тест проверяет только подключение и вход. Он не проверяет папку и число непрочитанных писем. Если тест прошёл, ищите в журнале WebApi ошибки по времени опроса: при сбое опроса записывается текст исключения без пояснений. <span class="check">Ошибок подключения нет</span></li>
+  <li>Проверьте фильтры триггера. <b>От</b> — список адресов через запятую, сравнение по вхождению строки. <b>Тема</b> — регулярное выражение или подстрока. <span class="check">Тестовое письмо подходит под оба фильтра</span></li>
+  <li>Проверьте папку: берётся папка из триггера, иначе папка ящика, иначе <code>INBOX</code>.</li>
+</ol>
+<div class="todo"><p>Скриншот: экран «Email входящей почты», форма ящика с кнопкой «Тест»; форма триггера «Запуск при получении Email» с полями «От», «Тема», интервалом опроса.</p></div>
+
+<h2>Как исправить</h2>
+<h3>Много непрочитанных писем</h3>
+<p>Для IMAP и Exchange, если в папке непрочитанных писем столько же или больше, чем <code>Triggers:Email:MaxFolderUnseenMessagesCount</code> (по умолчанию 100), опрос прерывается и ничего не обрабатывается. В журнале: «Max unseen messages count limit exceeded. Current limit = …, unseen messages count = …». Разберите или пометьте прочитанными старые письма, либо увеличьте параметр и перезапустите WebApi.</p>
+
+<h3>Как письма помечаются обработанными</h3>
+<p>IMAP и Exchange: подходящие письма помечаются прочитанными. При <b>Удалять полученные письма</b> они удаляются (Exchange — переносятся в удалённые). POP3 письма не помечает, удаляет только с этим флагом. Если ящик читает ещё и человек или другая программа и помечает письма прочитанными раньше Оркестратора, триггер может их пропустить.</p>
+
+<h3>Аутентификация на Linux</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Triggers:Email:UseManagedNtlm</code></td><td>Включает управляемую реализацию NTLM в .NET. Читается при старте WebApi, нужен перезапуск</td><td><code>false</code></td></tr>
+  <tr><td><code>Triggers:Email:RemoveGSSAPI</code>, <code>RemoveNTLM</code></td><td>Убирают механизм перед входом по IMAP. Учитываются и кнопкой <b>Тест</b></td><td><code>false</code></td></tr>
+  <tr><td><code>Triggers:Email:RemoveAuthenticationMechanisms</code></td><td>Список механизмов через запятую, которые убрать перед входом по IMAP</td><td>не задан</td></tr>
+</table></div>
+<p>Для Exchange на Linux при ошибке 401 подсказка в UI4 рекомендует установить пакет <code>gssntlmssp</code>.</p>
+
+<h3>Опрос и производительность</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><b>Интервал опроса (сек) почтового сервера</b> в триггере</td><td>Как часто опрашивать ящик, 1–600 с. Общее значение — <code>Triggers:Email:IntevalInSeconds</code></td><td>20</td></tr>
+  <tr><td><b>Максимальное кол-во писем, забираемых за один раз</b></td><td>Сколько писем брать за один опрос. Общее значение — <code>Triggers:Email:WindowSize</code></td><td>5</td></tr>
+  <tr><td><code>Triggers:Email:UseProtocolLogger</code></td><td>Пишет протокол обмена с сервером в <code>imap.log</code> или <code>pop3.log</code> — для диагностики</td><td><code>false</code></td></tr>
+</table></div>
+<div class="warn"><p>У секции <code>Triggers:Email</code> нет значений по умолчанию, если её нет в конфигурации: значения из таблицы действуют, только когда секция задана. В Dockerfile поставки она задаётся переменными <code>Triggers__Email__*</code>.</p></div>
+
+<div class="todo"><p>Ошибка подключения в опросе пишется в журнал только текстом исключения, без имени триггера, и событие не создаётся. Событие «Сработал триггер Email» (60002) в коде не создаётся. Предложить разработке.</p></div>
+<div class="todo"><p>Параметр <code>Triggers:Email:IsLotus</code> объявлен, но в коде не используется. Уточнить у разработки, как настраивать Lotus.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/{Triggers,Tenants}.cs</code>, <code>Bl/Assignments/EventBus/TriggerNativeEmailEventBusService.cs</code>, <code>Controllers/IncomingEmailsController.cs</code>, <code>Program.cs</code>, <code>Readme.txt</code>; <code>docker/*/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/{email,jobs}.json</code>, <code>src/entities/email/model/email.store.ts</code>; старая статья <code>orchestrator-admin-ui4/email.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

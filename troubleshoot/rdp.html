@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/rdp">
+<main>
+<h1>Сессия робота не поднимается или не видна в консоли</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
+<p class="lead">Для Windows-машин сессии роботов держит и показывает в браузере служба RDP2. Для Linux-машин консоль открывается напрямую на агенте. Сначала определите, какой у вас случай.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>Робот не стартует: «Оркестратор не смог открыть RDP-сессию в прошлый раз», в журнале WebApi — «После …-й попытки не запустилась RDP-сессия».</li>
+  <li>У RDP-пользователя не отмечено «RDP-сессия активна», или сессии постоянно рвутся (карточка «Мерцающие RDP-сессии» на дашборде).</li>
+  <li>Служба RDP2 падает или перезапускается.</li>
+  <li>Консоль в браузере не открывается, чёрный или белый экран, нет управления.</li>
+</ul>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li>Неверный пароль RDP-пользователя: после ошибки учётных данных RDP2 к нему больше не подключается.</li>
+  <li>RDP2 не получает список сессий от WebApi или не достаёт до машины по порту 3389.</li>
+  <li>Параметры безопасности RDP-пользователя не совпадают с политикой RDP на машине.</li>
+  <li>Консоль: браузер не может открыть адрес RDP2 из <code>RDP:RdpBaseUrl</code>, или RDP2 вынесена на другой сервер без нужного адреса и CORS.</li>
+  <li>Linux: браузер не доверяет сертификату агента на 5002, или нет Xvnc.</li>
+</ul>
+
+<h2>Как это устроено</h2>
+<p><b>Windows.</b> RDP2 раз в интервал запрашивает у WebApi список сессий (<code>GET {Orchestrator:BaseUrl}/api/RdpSessions</code>; если задан <code>Mqtt:Url</code> — через MQTT). Затем RDP2 подключается по RDP к пользователям, у которых включено <b>Автоматически поддерживать RDP-сессию</b>, и отчитывается о статусе. Браузер получает адрес RDP2 из <code>RDP:RdpBaseUrl</code> WebApi и открывает WebSocket <code>{RdpBaseUrl}/api/Desktop/ws/{id}/jpg</code>. В поставке nginx проксирует <code>/rdpstream/</code> на RDP2 (<code>127.0.0.1:5102</code>).</p>
+<p><b>Linux.</b> RDP2 не участвует. Агент запускает для операции робота сервер Xvnc. UI4 открывает консоль запросом <code>https://{IP машины}:5002/api/Desktop/…</code> прямо к агенту и только для текущей операции робота.</p>
+
+<h2>Что проверить: Windows</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
+  <tr><td>Служба RDP2 запущена</td><td>Служба <code>Primo.Orchestrator.RDP2</code></td><td>Работает; машина видна в <b>Настройки → Система → Машины RDP2</b></td></tr>
+  <tr><td>Адрес WebApi для RDP2</td><td>RDP2: <code>Orchestrator:BaseUrl</code></td><td>Доступен с сервера RDP2; в журнале нет «RDP sessions data are not available»</td></tr>
+  <tr><td>Пользователь сессии</td><td>Машина → <b>Пользователи</b> → RDP-пользователь</td><td>Включено <b>Автоматически поддерживать RDP-сессию</b>; логин и пароль верны</td></tr>
+  <tr><td>Порт RDP</td><td>Машина робота</td><td>RDP доступен на 3389 с сервера RDP2</td></tr>
+  <tr><td>Параметры безопасности</td><td>RDP-пользователь: <b>Authentication level</b>, <b>Negotiate security layer</b>, <b>Enable CredSSP</b></td><td>Совпадают с политикой RDP на машине. Ошибки CredSSP видны в журнале RDP2</td></tr>
+  <tr><td>Ограничения RDP2</td><td>Корень конфига RDP2: <code>AddressFilter</code>, <code>MaxSessionsLimit</code> (1–10, по умолчанию 1), <code>RdpClientConnectionUpdateInterval</code> (1000–60000 мс)</td><td>Машина попадает в фильтр, лимит не мешает</td></tr>
+  <tr><td>Консоль в браузере</td><td>WebApi: <code>RDP:RdpBaseUrl</code> (или <code>RDP:RdpBaseUrls</code> при фильтрах адресов); nginx <code>location /rdpstream/</code></td><td>Адрес открывается из браузера, проходит WebSocket</td></tr>
+  <tr><td>CORS RDP2</td><td>RDP2: <code>EnabledOrigins</code></td><td>Содержит адрес UI4, если RDP2 открывается не через тот же адрес</td></tr>
+</table></div>
+
+<h2>Что проверить: Linux</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
+  <tr><td>Агент на 5002 по HTTPS</td><td>Из браузера оператора: <code>https://{IP машины}:5002/api/Worker</code></td><td>Отвечает, браузер доверяет сертификату агента</td></tr>
+  <tr><td>Xvnc установлен</td><td>Машина робота: <code>/usr/bin/Xvnc</code></td><td>Есть. В журнале агента — «Remote view and control is enabled». Без Xvnc запускается Xvfb, консоли не будет</td></tr>
+  <tr><td>Робот выполняет операцию</td><td>UI4, робот</td><td>Есть текущая операция: консоль привязана к ней</td></tr>
+</table></div>
+
+<h2>Как исправить</h2>
+<ol class="steps">
+  <li>Если в карточке RDP-пользователя «Неверные учетные данные», задайте верный пароль. RDP2 после ошибки учётных данных перестаёт переподключаться к этому пользователю. <span class="check">«RDP-сессия активна» отмечено</span></li>
+  <li>Если консоль Windows не открывается, задайте <code>RDP:RdpBaseUrl</code> внешним адресом, который доступен из браузера (в поставке — через <code>/rdpstream</code> nginx), и перезапустите WebApi.</li>
+  <li>Для Linux: откройте <code>https://{IP машины}:5002</code> в браузере и примите сертификат, установите Xvnc.</li>
+  <li>Если отключённые сессии копятся, включите их завершение: <code>RDP:EnabledLogOffDisconnectedRDPUsers=true</code>. Для Linux-машин операция не поддерживается.</li>
+</ol>
+
+<div class="todo"><p>Скриншот: карточка машины, RDP-пользователь с флагами «Автоматически поддерживать RDP-сессию» и «RDP-сессия активна»; окно консоли робота.</p></div>
+<div class="warn"><p>UI4 1.26.9 для Linux-консоли жёстко использует <code>https</code> и порт <code>5002</code>, а не настройки порта и протокола агента. Если агент слушает другой порт или HTTP, консоль не откроется.</p></div>
+<div class="todo"><p>Поле <b>Нестандартный RDP-порт</b> в карточке RDP-пользователя RDP2 не использует: подключение всегда идёт на 3389. Проверить на стенде и передать разработке.</p></div>
+<div class="todo"><p><code>RDP:EnabledLogOffDisconnectedRDPUsers</code>: в классе <code>true</code>, но Startup читает со значением по умолчанию <code>false</code>. Без явного ключа завершение отключённых сессий выключено. Аналогично <code>LogOffDisconnectedRDPUsersService</code>: в классе <code>Opt2</code>, в Startup — <code>Legacy</code>.</p></div>
+<div class="todo"><p>Строки «rdp-timeout» в коде Оркестратора нет: это, вероятно, сообщение Студии или робота. Теневой сессии и xrdp для Linux в коде нет.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.RDP2/Startup.cs</code>, <code>Options/Orchestrator.cs</code>, <code>Bl/Services/RdpSessionService.cs</code>, <code>Bl/Client/{ErrorType,RdpConnectionSettings}.cs</code>, <code>Readme.txt</code>, <code>Primo.Orchestrator.RDP2.service</code>; <code>LTools.Orchestrator.WebApi/Options/RDP.cs</code>, <code>Controllers/RdpSessionsController.cs</code>, <code>Startup.cs</code>, <code>Bl/Robots/CommandBus/StartRobotCommandBusService.cs</code>; <code>LTools.Orchestrator.Agent.Runner/XServers/XvncProcess.cs</code>; <code>nginx/nginx.linux.conf</code>; <code>ui4: src/entities/robot/ui/stream-modal/StreamModal.tsx</code>, <code>src/shared/lib/translations/ru/{machines,robots,home}.json</code>; старые статьи <code>orchestrator-admin-ui4/rdp2-machines.mdx</code>, <code>orchestrator-user-ui4/robots/view-rdp-session.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

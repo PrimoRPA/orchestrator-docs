@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/access">
+<main>
+<h1>Пользователь не видит папки, проекты или разделы</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Что видит пользователь, определяют две вещи: права его ролей и доступ к общим папкам. Права записываются в токен при входе, поэтому изменения роли начинают действовать только после повторного входа.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>В меню нет раздела, например <b>Лицензии</b> или <b>Общие папки</b>.</li>
+  <li>Пользователь не видит проекты, роботов или ресурсы, которые видят другие.</li>
+  <li>Права изменили в роли, а у пользователя ничего не поменялось.</li>
+  <li>Действие заканчивается сообщением «Permission error» или страницей «Доступ запрещен».</li>
+</ul>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li>Пользователь не перезашёл после изменения роли или привязки групп.</li>
+  <li>Группа AD или роль Keycloak пользователя не привязана к роли Оркестратора.</li>
+  <li>Включены общие папки, а пользователю не делегирована нужная папка.</li>
+  <li>Пользователь вошёл не в тот тенант.</li>
+  <li>Изменили права встроенной роли администратора: они сбрасываются при перезапуске WebApi.</li>
+</ul>
+
+<h2>Что проверить</h2>
+<ol class="steps">
+  <li>Попросите пользователя выйти и войти снова. <span class="check">Раздел или объекты появились</span></li>
+  <li>Откройте <b>Роли пользователей</b> и роль пользователя. Проверьте права в нужной категории и привязки на вкладках <b>Группы AD</b> или <b>Роли KeyCloak</b>. <span class="check">Право есть, группа или роль пользователя привязана</span></li>
+  <li>Для AD в журнале WebApi найдите «Ошибка авторизации. Группа в AD … не имеет привязки к роли.» и строки «AD group SID: …» со списком групп пользователя. Для Keycloak — «Отсутствует привязка KeyCloak-ролей.» <span class="check">Группы из журнала совпадают с привязкой в роли</span></li>
+  <li>Если включены общие папки, откройте <b>Общие папки</b>, нужную папку и <b>Делегировать</b>. <span class="check">Пользователь есть в списке с нужным уровнем доступа</span></li>
+</ol>
+<div class="todo"><p>Скриншот: экран «Роли пользователей», вкладки «Группы AD» и «Роли KeyCloak»; окно «Делегирование общей папки пользователям».</p></div>
+
+<h2>Как исправить</h2>
+<h3>Права роли</h3>
+<p>UI4 скрывает раздел меню, если у пользователя нет ни одного права в его категории. Права UI4 запоминает при входе. Проверка на сервере тоже берёт права из токена. Токен живёт <code>Security:Jwt:SessionLifetimeMin</code> минут (в Dockerfile — 720). Привязки ролей Keycloak WebApi кэширует на 10 минут.</p>
+<div class="warn"><p>Права ролей Administrator и TenantAdministrator восстанавливаются по умолчанию при каждом запуске WebApi. Свои ограничения задавайте в отдельной роли, а не в этих. Системные роли удалить нельзя: «Системная роль не может быть удалена.» Право управлять лицензиями есть только у Administrator.</p></div>
+
+<h3>Общие папки</h3>
+<p>Режим задаёт <code>Folders:Mode</code>: <code>0</code> — папки выключены (по умолчанию), <code>2</code> — общие папки. Доступ к папке выдаётся конкретному пользователю: локальному, AD или Keycloak. Уровни: «Только чтение», «Использование без редактирования», «Добавление, редактирование (без удаления объекта)», «Удаление». Выдать доступ может только владелец папки или администратор тенанта.</p>
+<p>К корневой папке по умолчанию доступ есть у всех (<code>Folders:RootFolderDefaultAccess=true</code>). Если задать <code>false</code>, без явной выдачи прав пользователь получит «Нет прав на добавление объекта в корневую папку.»</p>
+
+<h3>Тенант</h3>
+<p>Пользователь AD попадает в тенант первой подходящей роли по имени. Роли из других тенантов при этом отбрасываются. Если у пользователя роли в нескольких тенантах, проверьте, в какой он вошёл.</p>
+
+<div class="todo"><p>Делегирование общей папки группе AD или Keycloak в коде не найдено: только отдельным пользователям. По обращениям это частый запрос. Уточнить у разработки планы.</p></div>
+<div class="todo"><p>На ответ 403 UI4 показывает непереведённое «Permission error». Передать разработке.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Controllers/{AccountController,RolesController,Folders2Controller,BaseController}.cs</code>, <code>Bl/Folders/FolderService.cs</code>, <code>Bl/Permissions/PermissionService.cs</code>, <code>Bl/WebSecurity/TokenManager.cs</code>, <code>Options/Folders.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>; <code>LTools.Orchestrator.IdentityDal/SeedData.cs</code>; <code>LTools.Enums/FolderAccessType.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/utils/newMenuUtils.ts</code>, <code>src/app/providers/PermissionContext.tsx</code>, <code>src/shared/lib/fetch.ts</code>, <code>src/shared/lib/translations/ru/{roles,folders,common}.json</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

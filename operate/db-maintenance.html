@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="operate/db-maintenance">
+<main>
+<h1>Обслуживание БД</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Какие фоновые задачи Оркестратора сами чистят и переносят данные, какими параметрами они управляются и что администратору БД нужно делать вручную.</p>
+
+<h2>Что растёт быстрее всего</h2>
+<p>Больше всего данных в БД журналов <code>ltoolslogs</code>: таблицы <code>Logs</code> (журнал робота), <code>OrchEvents</code> (журнал Оркестратора), <code>RobotLogMessages</code>, <code>RobotCustomLogMessages</code>, <code>RobotScreenFiles</code>. Сам Оркестратор старые записи журналов не удаляет — для этого секционирование и ручная очистка секций или всего журнала.</p>
+<p>В оперативной БД <code>ltools</code> растут запуски проектов, очередь проектов и элементы очередей обмена данными. Для них есть фоновые задачи WebApi.</p>
+
+<h2>Перенос старых запусков в БД журналов</h2>
+<p>Служба WebApi периодически переносит завершённые запуски проектов (завершены успешно, с ошибкой, принудительно или по таймауту) старше <code>Period</code> из <code>ltools</code> в <code>ltoolslogs</code> вместе со значениями аргументов. При нескольких узлах WebApi каждая пачка помечается узлом, чтобы узлы не переносили одно и то же. Результат пишется в журнал Оркестратора: 90300 — успешно, 90301 — ошибка.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RpaProjectLaunch:EnableLogsTransfer</code></td><td>Включить перенос. Читается при старте службы.</td><td><code>true</code></td></tr>
+  <tr><td><code>RpaProjectLaunch:Period</code></td><td>Через сколько минут после завершения запуск считается старым.</td><td><code>20160</code> (2 недели)</td></tr>
+  <tr><td><code>RpaProjectLaunch:MaxBatch</code></td><td>Сколько запусков переносится за один проход.</td><td><code>2000</code></td></tr>
+  <tr><td><code>RpaProjectLaunch:LogsThreadSleep</code></td><td>Пауза между проходами, секунды.</td><td><code>300</code></td></tr>
+</table></div>
+<pre><code>"RpaProjectLaunch": {
+  "EnableLogsTransfer": true,
+  "Period": 20160,
+  "MaxBatch": 2000,
+  "LogsThreadSleep": 300
+}</code></pre>
+<div class="warn"><p>В Docker-образе WebApi (<code>k8s/web-api.Dockerfile</code>) перенос выключен: <code>RpaProjectLaunch__EnableLogsTransfer=False</code>, а <code>MaxBatch=500</code>, <code>Period=80640</code>. Если оставить так, таблица запусков в <code>ltools</code> будет только расти. Проверьте значение в своей установке.</p></div>
+<p>Как проверить: в журнале Оркестратора появляются события 90300 «Перенос старых запусков в БД с логами: успешно»; число запусков старше <code>Period</code> в <code>ltools</code> не растёт.</p>
+
+<h2>Очистка очереди проектов</h2>
+<p>Записи очереди проектов (таблица <code>RpaProjectQueue</code>) сначала помечаются, а затем удаляются физически, если они старше <code>ProjectQueue:CleaningDepth</code> дней. Удаление выполняет служба обработки очереди проектов при работе.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>ProjectQueue:CleaningDepth</code></td><td>Возраст записей очереди проектов (дней), после которого они удаляются.</td><td><code>1</code></td></tr>
+</table></div>
+
+<h2>Очереди обмена данными</h2>
+<p>Две фоновые задачи WebApi:</p>
+<ul>
+  <li><b>Удаление просроченных элементов</b> — по TTL, сроку (deadline) и таймауту обработки, каждые <code>DeleteExpiredInterval</code> мс.</li>
+  <li><b>Автоочистка и архивация старых элементов</b> — по правилу, заданному в карточке очереди в UI4: поле «Автоматическая очистка/архивация для старых элементов очереди» со значениями «Очистка / архивация не выполняется», «Очистка при превышении возраста элемента (в днях)», «Очистка при превышении кол-ва элементов в очереди», «Архивация при превышении возраста элемента (в днях)», «Архивация при превышении кол-ва элементов в очереди». Архив — таблицы <code>*Archive</code> в той же БД <code>ltools</code>.</li>
+</ul>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>ExchangeQueue:DeleteExpiredInterval</code></td><td>Интервал удаления просроченных элементов, мс.</td><td><code>4000</code></td></tr>
+  <tr><td><code>ExchangeQueue:AllowDeleteLockedItems</code></td><td>Удалять просроченные элементы, заблокированные роботом.</td><td><code>false</code></td></tr>
+  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteInterval</code></td><td>Интервал автоочистки/архивации, минуты. Меньше 5 не бывает.</td><td><code>60</code></td></tr>
+  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteChunkSize</code></td><td>Размер пачки при автоочистке, записей (1–10000).</td><td><code>100</code></td></tr>
+  <tr><td><code>ExchangeQueue:MinExchangeQueueValuesDeleteLimitDays</code></td><td>Минимально допустимый порог «возраст в днях» в правиле очереди.</td><td><code>30</code></td></tr>
+  <tr><td><code>ExchangeQueue:MinExchangeQueueValuesDeleteLimitElements</code></td><td>Минимально допустимый порог «число элементов» в правиле очереди.</td><td><code>100000</code></td></tr>
+  <tr><td><code>ExchangeQueue:AllowPhysicalRemoval</code></td><td>Удалять элементы физически (<code>true</code>) или логически, с отметкой <code>DeletedAt</code> (<code>false</code>).</td><td><code>false</code></td></tr>
+</table></div>
+<p>Результат автоочистки — события 3030 (успешно) и 3031 (ошибка) в журнале Оркестратора.</p>
+
+<h2>Журналы: секции, дамп, полная очистка</h2>
+<p>Только для PostgreSQL. В UI4 в настройках есть вкладка «Журналы» (видна, если СУБД — PostgreSQL). Там список секций таблиц <code>Logs</code> и <code>OrchEvents</code> БД <code>ltoolslogs</code> с размером, фильтром по году и архивным секциям, кнопками «Сделать дамп» и «Удалить».</p>
+<ul>
+  <li>Список секций строится по наследованию таблиц в PostgreSQL (<code>pg_inherits</code>). Год берётся из имени секции: четыре символа после первого <code>_</code> (например, <code>Logs_2026…</code>); секции с <code>arch</code> в этом месте считаются архивными.</li>
+  <li>Сами секции Оркестратор не создаёт — секционирование настраивает администратор БД.</li>
+  <li>Полная очистка журналов выполняет <code>TRUNCATE</code> таблиц <code>OrchEvents</code>, <code>RobotCustomLogMessages</code>, <code>RobotLogMessages</code>, <code>Logs</code>, <code>RobotScreenFiles</code> и пишет событие 20000 «Очистка логов» (класс «Инцидент безопасности»). Если идёт выгрузка журналов, очистка отклоняется.</li>
+</ul>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>LogsDump:Path</code></td><td>Папка для дампов. WebApi создаёт её при старте, если её нет.</td><td>не задано</td></tr>
+  <tr><td><code>LogsDump:ArchPath</code></td><td>Подпапка (относительно <code>Path</code>) для файла выгрузки <code>LogsDump.zip</code>, который отдаётся на скачивание.</td><td>не задано</td></tr>
+  <tr><td><code>LogsDump:PageSize</code></td><td>Размер страницы выгрузки, записей. В 1.26.9 используется только отключённой службой выгрузки.</td><td><code>20000</code></td></tr>
+  <tr><td><code>LogsDump:MaxPageCount</code></td><td>Максимум страниц в выгрузке. В 1.26.9 используется только отключённой службой выгрузки.</td><td><code>100</code></td></tr>
+</table></div>
+<div class="warn"><p>Удаление секции — это <code>DROP TABLE</code> секции: данные удаляются безвозвратно. Перед удалением сделайте резервную копию.</p></div>
+
+<div class="todo">
+  <p><b>Дамп и удаление секций в 1.26.9 не работают по коду.</b> Кнопки UI4 отправляют команду в WebApi, но обработчики <code>DumpLogsSectionCommandHandler</code> и <code>DeleteLogsSectionCommandHandler</code> закомментированы, а фоновая служба <code>LogsDumpService</code> отключена в <code>Startup.cs</code>. Команда, скорее всего, завершится ошибкой в журнале WebApi «Ошибка обработки события административной команды для БД с логами». Проверить на стенде и уточнить у разработки; до этого секции удалять средствами СУБД.</p>
+  <p><b>Секционирование.</b> Процедура настройки (помесячные секции <code>Logs</code>/<code>OrchEvents</code>, PostgreSQL и MS SQL) в коде отсутствует — есть только статьи на сайте («Секционирование … для PostgreSQL 11+», «… для SQL Server»). Перенести их сюда после сверки со схемой БД 1.26.9.</p>
+  <p><b>Рекомендации по параметрам переноса запусков.</b> В руководстве 1.25.7 рекомендованы <code>MaxBatch=500</code> и <code>Period=80640</code>; в коде по умолчанию <code>2000</code> и <code>20160</code>. Решить, что рекомендовать.</p>
+  <p><b>Аналитическая БД.</b> Процедуры очистки <code>ltoolsanalytic</code> (<code>analytics_purge_old_rows</code>) в коде 1.26.9 нет; по сайту она появится в миграциях с 1.26.11. Для выгрузок Analytic есть параметр <code>LeaveIterations</code> — см. <a href="../configure/integrations.html">Интеграции</a>.</p>
+  <p><b>Версии проектов.</b> Фоновой очистки старых версий проектов в коде не найдено. Есть только <code>RpaProject:RemoveOrphans</code> — удалять ли все версии при удалении v0-версии проекта.</p>
+  <p><b>Регламент СУБД</b> (VACUUM, перестроение индексов, статистика) в коде не описан — нужна методика от команды.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/RpaProjectLaunch.cs</code>, <code>Options/ProjectQueue.cs</code>, <code>Options/ExchangeQueue.cs</code>, <code>Options/LogsDump.cs</code>, <code>Options/RpaProject.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code>; <code>Bl/RpaProjectLaunches/LogsRpaProjectLaunchesService.cs</code>; <code>Bl/ProjectQueue/PostgresReadProjectQueueService.cs</code>; <code>Bl/ExchangeQueues/ExchangeQueueDeleteExpiredService.cs</code>, <code>ExchangeQueueValuesAutoDeleteService.cs</code>; <code>Controllers/SettingsController.cs</code>; <code>Bl/RobotLogs/EventBus/LogsDbAdminEventBusService.cs</code>, <code>Bl/RobotLogs/Commands/Handlers/Postgres/*.cs</code>, <code>Bl/Events/LogsDumpService.cs</code>; <code>Orchestrator/LTools.Orchestrator.RobotLogs/Bl/LogEvents/Queries/Handlers/Postgres/GetLogsSectionsQueryHandler.cs</code>, <code>Bl/LogEvents/Commands/Handlers/Postgres/TruncateLogsCommandHandler.cs</code>; <code>Orchestrator/LTools.Enums/ExchangeQueueValuesDeleteType.cs</code>; <code>k8s/web-api.Dockerfile</code>; UI4: <code>src/features/setting/components/tabs.tsx</code>, <code>src/features/setting/journal/Journal.tsx</code>, <code>src/features/queues/ui/queues-form/QueuesForm.tsx</code>, <code>ru/queues.json</code>, <code>ru/journal.json</code>. Старая документация: руководство 1.25.7, разделы «Настройка очистки старых запусков», «Настройка папки для дампа секций журналов…», «Настройка очереди проектов»; сайт: «Секционирование…», «Очистка аналитической базы данных», «Управление удалением элементов очереди».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

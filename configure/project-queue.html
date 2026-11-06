@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="configure/project-queue">
+<main>
+<h1>Очередь проектов</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Как Оркестратор выбирает робота для проекта из очереди, какие стратегии бывают, как защитить систему от всплесков: замедление очереди при перегрузке машин, лимит длины очереди, сглаживание потока событий от триггеров. В конце — параметры очередей обмена данными.</p>
+
+<h2>Как работает очередь</h2>
+<p>Проект на запуск попадает в очередь проектов. Оркестратор ищет свободного подходящего робота. Нашёл — запускает. Не нашёл — проект уходит в очередь ожидания и через несколько секунд возвращается. Длительность ожидания зависит от поля «Приоритет» проекта.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RobotStart:UseRabbitMQ</code></td><td><code>true</code> — очередь на RabbitMQ (циклическая, порядок не гарантирован); <code>false</code> — очередь на таблице БД с гарантированным порядком по приоритету</td><td><code>true</code></td></tr>
+  <tr><td><code>RabbitMQ:DeferredQueue1:ExpirationSec</code></td><td>Ожидание проекта с «Приоритетом» P1 (значение <code>0</code>), с</td><td><code>3</code> (в Docker <code>2</code>)</td></tr>
+  <tr><td><code>RabbitMQ:DeferredQueue2:ExpirationSec</code></td><td>Ожидание с P2 (<code>1</code>), с</td><td><code>7</code> (в Docker <code>5</code>)</td></tr>
+  <tr><td><code>RabbitMQ:DeferredQueue3:ExpirationSec</code></td><td>Ожидание с P3 (<code>2</code>), с</td><td><code>20</code></td></tr>
+  <tr><td><code>RabbitMQ:PriorityExpirationMilliseconds</code></td><td>Задержка, за которую проекты, поставленные почти одновременно, упорядочиваются по приоритету, мс</td><td><code>1000</code></td></tr>
+  <tr><td><code>RabbitMQ:MaxLength</code></td><td>Максимальная длина основной очереди в RabbitMQ</td><td><code>1000</code></td></tr>
+  <tr><td><code>RobotStart:ProjectEventBusService</code></td><td>Алгоритм подбора робота: <code>0</code> — прежний, <code>1</code> — без блокировок, <code>2</code> — без блокировок с кэшем (параметры кэша — <code>RobotStart:LockFreeWithCache</code>: <code>LockAgentTTL</code>, <code>LockTTL</code>, <code>QueryRobotsTTL</code>, по <code>500</code> мс)</td><td><code>0</code> (в Docker <code>2</code>)</td></tr>
+  <tr><td><code>RobotStart:BatchSize</code></td><td>Только для <code>UseRabbitMQ=false</code>: сколько новых проектов берётся за один проход</td><td><code>10</code> (в Docker <code>5</code>)</td></tr>
+  <tr><td><code>RobotStart:ThreadSleep</code></td><td>Только для <code>UseRabbitMQ=false</code>: пауза между проходами, мс</td><td><code>2000</code> (в Docker <code>5000</code>)</td></tr>
+  <tr><td><code>ProjectQueue:CleaningDepth</code></td><td>Записи таблицы очереди старше этого числа дней удаляются</td><td><code>1</code></td></tr>
+</table></div>
+<p>Чем дольше ожидание, тем выше шанс, что освободившегося робота займёт другой проект. Чем короче — тем выше нагрузка на БД из-за постоянного поиска робота.</p>
+
+<h2>Стратегия очереди</h2>
+<p>Стратегия определяет, каких роботов можно брать для проекта:</p>
+<ul>
+  <li>«Проект могут выполнять Роботы, не привязанные ни к какому проекту» (значение <code>1</code>);</li>
+  <li>«Проект могут выполнять только Роботы, привязанные к проекту» (значение <code>2</code>);</li>
+  <li>оба варианта сразу (<code>3</code>).</li>
+</ul>
+<p>Глобальная стратегия (она же для тенанта по умолчанию) задаётся в UI4: <b>Настройки → Система → Стратегия очереди проектов</b> (вкладка видна только в тенанте по умолчанию). Для отдельного тенанта её можно переопределить в конфиге WebApi:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Tenants:Items[].RpaProjectQueueProcessingType</code></td><td>Стратегия для тенанта. Работает при <code>Tenants:FromAppsettings=true</code>; иначе берётся из записи тенанта в БД</td><td>не задан → глобальная</td></tr>
+</table></div>
+
+<h2>Замедление очереди при перегрузке машин</h2>
+<p>Если машина робота перегружена, проект не запускается на ней, а снова уходит в очередь, пока нагрузка не спадёт. Нужен фоновый сбор метрик машин, а он работает только с новым алгоритмом опроса машин.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Worker:CollectWorkerStatusService</code></td><td>Алгоритм опроса машин: <code>0</code> — прежний, <code>1</code> — новый. Для замедления нужен <code>1</code></td><td><code>0</code></td></tr>
+  <tr><td><code>Worker:CollectBackgroundPerformance</code></td><td>Собирать метрики машин в фоне вместе с проверкой доступности</td><td><code>false</code></td></tr>
+  <tr><td><code>Worker:PerformanceDeltaPrcnt</code></td><td>Шаг шкалы нагрузки 0–100 %</td><td><code>25</code></td></tr>
+  <tr><td><code>Worker:PerformanceDelta100Prcnt</code></td><td>На сколько процентов метрика может не дотягивать до 100 %, чтобы машина считалась перегруженной</td><td><code>2</code></td></tr>
+  <tr><td><code>ProjectQueue:WorkerPerformanceHighDuration</code></td><td>Сколько секунд машина должна быть в зоне высокой нагрузки, чтобы проект вернулся в очередь. <code>0</code> — замедление выключено</td><td><code>60</code> (в Docker <code>0</code>)</td></tr>
+  <tr><td><code>ProjectQueue:WorkerPerformanceHighCPUOnly</code></td><td>Судить о перегрузке только по CPU</td><td><code>true</code></td></tr>
+  <tr><td><code>ProjectQueue:WorkerPerformanceHighResolver</code></td><td>Как определять высокую нагрузку: <code>0</code> — порог <code>AbsoluteWorkerPerformanceHigh</code>, <code>1</code> — последний интервал шкалы (100 % − <code>PerformanceDeltaPrcnt</code>)</td><td><code>0</code></td></tr>
+  <tr><td><code>ProjectQueue:AbsoluteWorkerPerformanceHigh</code></td><td>Порог высокой нагрузки, %</td><td><code>95</code></td></tr>
+</table></div>
+
+<h2>Лимит длины очереди</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th><th>С версии</th></tr>
+  <tr><td><code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code></td><td>Максимум элементов в очереди. При превышении новые проекты отклоняются, в журнал пишется ошибка с кодом <code>96000</code></td><td><code>1000</code></td><td>1.26.4</td></tr>
+  <tr><td><code>ProjectQueue:StaticProjectQueueLimiterMaxCountCacheDuration</code></td><td>Время жизни кэша счётчика, мс. Чем меньше лимит, тем меньше должно быть это время</td><td><code>1000</code></td><td>1.26.4</td></tr>
+</table></div>
+
+<h2>Сглаживание потока событий от триггеров: <code>Assignment</code></h2>
+<p>При всплеске событий (расписания, почта, запуски из роботов) их можно пропускать через промежуточную очередь и разбирать с постоянной скоростью — одно событие за интервал.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Assignment:ChainLimiterTriggerEventTime</code></td><td>Интервал разбора промежуточной очереди, мс. <code>0</code> — сглаживание выключено</td><td>в классе <code>500</code>; без ключа в конфиге служба не включается (в Docker <code>500</code>)</td></tr>
+  <tr><td><code>Assignment:ChainLimiterTriggerEventSchedule</code> / <code>Email</code> / <code>FromRobot</code></td><td>Для каких триггеров включить сглаживание. Если все <code>false</code> — выключено</td><td><code>false</code> (в Docker <code>True</code>)</td></tr>
+  <tr><td><code>Assignment:MaxTriggerQueueLength</code></td><td>Размер промежуточной очереди. При переполнении события теряются</td><td><code>10000</code></td></tr>
+  <tr><td><code>Assignment:EnableIntegralIntensityWidget</code></td><td>Виджет нагрузки на главной странице</td><td><code>false</code> (в Docker <code>True</code>)</td></tr>
+  <tr><td><code>Assignment:MaxLastEventsInterval</code></td><td>За сколько минут виджет показывает последние события очереди</td><td><code>5</code></td></tr>
+</table></div>
+<p>Заполнение промежуточной очереди видно по событиям журнала: <code>9016</code> — очередь растёт, <code>9017</code> — уменьшается, <code>9018</code> — «Переполнение очереди событий от триггеров». Поле <code>EntityId</code> у 9016/9017: <code>1</code> — 25 %, <code>2</code> — 50 %, <code>3</code> — 75 % от <code>MaxTriggerQueueLength</code>. Если 9018 не бывает, а рост только до 25 %, увеличивать очередь не нужно; при запасе мощности можно уменьшить интервал.</p>
+
+<h2>Очереди обмена данными: <code>ExchangeQueue</code></h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>ValuesRobotLockTimeout</code></td><td>Через сколько секунд снимается блокировка элемента роботом</td><td><code>120</code> (в Docker <code>60</code>)</td></tr>
+  <tr><td><code>FIFORetry</code></td><td>Повторов при извлечении по FIFO; если задано в настройках очереди, берётся оттуда</td><td><code>0</code> (в Docker <code>3</code>)</td></tr>
+  <tr><td><code>PrefetchDepth</code></td><td>Глубина предвыборки в скоростном режиме; <code>0</code> — без предвыборки. Выше 500 не рекомендуется</td><td><code>0</code> (в Docker <code>500</code>)</td></tr>
+  <tr><td><code>SpeedModeInterval</code></td><td>Если два чтения по FIFO пришли чаще этого интервала (мс), очередь переходит в скоростной режим</td><td><code>500</code> (в Docker <code>1500</code>)</td></tr>
+  <tr><td><code>PrefetchBufferResetInterval</code></td><td>Период синхронизации буфера предвыборки с БД, мс</td><td><code>2000</code></td></tr>
+  <tr><td><code>StatisticAvgWindow</code> / <code>StatisticAvgLastWindowsCount</code></td><td>Окно усреднения, с / сколько последних окон отдавать на график</td><td><code>120</code> / <code>100</code></td></tr>
+  <tr><td><code>StatisticRecalcInterval</code> / <code>StatisticBatchSize</code></td><td>Период пересчёта статистики, мс / пачка событий за проход</td><td><code>2000</code> / <code>500</code></td></tr>
+  <tr><td><code>AllowPhysicalRemoval</code></td><td>Удалять элементы физически, а не логически</td><td><code>false</code></td></tr>
+  <tr><td><code>DeletedNaturalKeysIsGlobalUniqueRequired</code> / <code>DeletedNaturalKeysIsUniqueRequired</code></td><td><code>true</code> — удалённые элементы не участвуют в проверке уникальности глобального / локального ключа</td><td><code>false</code></td></tr>
+  <tr><td><code>Limits:PeekByFilterMaxPageSize</code>, <code>Limits:RateLimiters:PeekByFilter</code></td><td>Ограничение размера страницы и частоты запросов выборки по фильтру (<code>Enabled</code>, <code>PermitLimit</code>=10, <code>Window</code>=10 с, <code>QueueLimit</code>=0)</td><td>не заданы</td></tr>
+</table></div>
+<p>Автоочистка старых элементов очередей обмена — на странице <a href="../operate/db-maintenance.html">Обслуживание БД</a>.</p>
+
+<h2>Пример</h2>
+<pre><code>"RobotStart": { "UseRabbitMQ": true, "ProjectEventBusService": 2 },
+"RabbitMQ": {
+  "DeferredQueue1": { "ExpirationSec": 2 },
+  "DeferredQueue2": { "ExpirationSec": 5 },
+  "DeferredQueue3": { "ExpirationSec": 20 }
+},
+"Worker": { "CollectWorkerStatusService": 1, "CollectBackgroundPerformance": true },
+"ProjectQueue": { "WorkerPerformanceHighDuration": 60, "AbsoluteWorkerPerformanceHigh": 95,
+                  "StaticProjectQueueLimiterMaxCount": 1000 },
+"Assignment": { "ChainLimiterTriggerEventTime": 500, "ChainLimiterTriggerEventSchedule": true,
+                "ChainLimiterTriggerEventEmail": true, "ChainLimiterTriggerEventFromRobot": true },
+"Tenants": { "FromAppsettings": true,
+             "Items": [ { "Id": "BUCH", "Name": "Бухгалтерия", "RpaProjectQueueProcessingType": 2 } ] }</code></pre>
+
+<h2>Как проверить</h2>
+<ol class="steps">
+  <li>Поставьте проект в очередь при занятых роботах. <span class="check">В «Очередь проектов» проект висит и уходит в работу, когда робот освобождается.</span></li>
+  <li>После смены стратегии для тенанта войдите в тенант и откройте проект. <span class="check">Подсказки у роботов и проектов («Робот не привязан к проектам» и т. п.) соответствуют выбранной стратегии.</span></li>
+  <li>При включённом сглаживании дайте нагрузку триггерами и посмотрите журнал. <span class="check">Есть события 9016/9017, нет 9018.</span></li>
+</ol>
+
+<div class="todo"><p>По коду <code>ProjectQueue:WorkerPerformanceHighDuration</code> по умолчанию <code>60</code>, то есть замедление включается сразу, как только включён фоновый сбор метрик. Старое руководство и Docker-образ подразумевают <code>0</code>. Уточнить, какое значение задумано.</p>
+<p>Подписи «Приоритета» путаные: в таблице проектов UI4 при очереди на RabbitMQ значения показаны как P1/P2/P3, при очереди на БД — как «High = 0», «Medium = 1», «Low = 2», а в коде бэкенда то же значение <code>0</code> называется <code>Low</code> и даёт самое короткое ожидание (<code>DeferredQueue1</code>). Сверить подписи в форме проекта на стенде.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/RobotStart.cs</code>, <code>RabbitMQ.cs</code>, <code>ProjectQueue.cs</code>, <code>Worker.cs</code>, <code>Assignment.cs</code>, <code>ExchangeQueue.cs</code>, <code>Tenants.cs</code>; <code>WebApi/Startup.cs</code> (регистрация служб очереди и триггеров); <code>Bl/ProjectQueue/ProjectQueueEventDefferedHub.cs</code>, <code>Bl/ProjectQueue/WorkerOverflowService.cs</code>, <code>Bl/ProjectQueue/EventBus/BaseTenantProjectEventBusService.cs</code>, <code>Bl/Tenants/TenantService.cs</code>, <code>Bl/Workers/CollectWorkerStatusService2.cs</code>; <code>Controllers/EmailController.ru-RU.resx</code>; <code>LTools.Enums/RpaProjectQueueProcessingType.cs</code>, <code>DurationLevel.cs</code>, <code>OrchestratorEvent.cs</code>; <code>WebApi/Readme.txt</code> (1.26.4); <code>docker/astra/web-api.Dockerfile</code>; UI4: <code>src/pages/setting/ui/queues-page/QueuesSetting.tsx</code>, <code>translations/ru/common.json</code>, <code>projects.json</code>, <code>robots.json</code>. Руководство 1.25.7: «Настройка очереди проектов», «Настройка стратегии очереди проектов для тенанта», «Ограничение потока событий от триггеров», «Автоматическое временное замедление…», «Настройка параметров очереди обмена данными».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

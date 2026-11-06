@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/verify">
+<main>
+<h1>Как проверить, что всё работает</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Проверка после установки или обновления: состояние каждой службы, связь с агентами и работа через UI4.</p>
+
+<h2>Эндпоинты проверки состояния</h2>
+<p>Каждая служба (WebApi, MachineInfo, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2, RDP2, ArcSight, агент) отвечает на три адреса без авторизации:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Адрес</th><th>Что значит</th></tr>
+  <tr><td><code>/health</code></td><td>Общее состояние (у большинства служб совпадает с readiness)</td></tr>
+  <tr><td><code>/health/readiness</code></td><td>Готова принимать запросы</td></tr>
+  <tr><td><code>/health/liveness</code></td><td>Процесс жив</td></tr>
+</table></div>
+<p>Ответ — <code>Healthy</code> (HTTP 200) или <code>Unhealthy</code> (HTTP 503).</p>
+
+<h3>Когда readiness будет Unhealthy</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Условие готовности</th></tr>
+  <tr><td>WebApi, MachineInfo, Notifications, LogEventsWebhook, ArcSight</td><td>Всегда <code>Healthy</code>, если процесс отвечает. Подключение к БД и RabbitMQ эта проверка не показывает.</td></tr>
+  <tr><td>RobotLogs, Analytic, States, Queues, Licenses, RDP2</td><td><code>Healthy</code>, когда служба знает адрес WebApi: задан <code>Orchestrator:BaseUrl</code> или адрес пришёл от WebApi.</td></tr>
+  <tr><td>Агент</td><td><code>Healthy</code> только после того, как WebApi хотя бы раз к нему обратился (т. е. машина зарегистрирована и опрошена).</td></tr>
+  <tr><td>MCP Server</td><td><code>/mcp/health</code>; 503, пока Оркестратор недоступен.</td></tr>
+</table></div>
+
+<h3>Как проверить</h3>
+<p>На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
+<pre><code>curl -f http://localhost:5001/health        # WebApi
+curl -f http://localhost:5051/health        # MachineInfo
+curl -f http://localhost:56748/health       # RobotLogs
+curl -k -f https://localhost:44392/api/Version   # WebApi через nginx, без авторизации</code></pre>
+<p>С сервера WebApi — до агента:</p>
+<pre><code>curl -k https://&lt;IP машины робота&gt;:5002/api/Worker   # 200 и версия агента
+curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pre>
+
+<h2>Docker</h2>
+<ol class="steps">
+  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose сам опрашивает <code>/health</code> каждые 30 секунд</span></li>
+  <li>Если сервис <code>unhealthy</code> — <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
+</ol>
+
+<h2>Linux</h2>
+<ol class="steps">
+  <li><code>systemctl status Primo.Orchestrator.&lt;Имя&gt;</code> (или <code>systemctl --user status …</code>). <span class="check"><code>active (running)</code></span></li>
+  <li>Журнал службы: <code>journalctl -t Primo.Orchestrator.&lt;Имя&gt;</code> — имя задано в юните (<code>SyslogIdentifier</code>).</li>
+  <li>nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>.</li>
+</ol>
+
+<h2>Windows</h2>
+<ol class="steps">
+  <li><code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
+  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и посмотрите ошибку в консоли.</li>
+</ol>
+
+<h2>В UI4</h2>
+<ol class="steps">
+  <li><b>Настройки → Лицензии</b>. <span class="check">есть действующая лицензия</span></li>
+  <li><b>Настройки → Система → Машины роботов</b>. <span class="check">у каждой машины заполнены <b>Доступна</b> и <b>Версия агента</b></span></li>
+  <li>Тестовый запуск робота — см. <a href="../deploy/first-run.html">Первый запуск</a>. <span class="check">событие запуска в <b>Журналы → События оркестратора</b></span></li>
+</ol>
+
+<div class="todo"><p>Старые доки: проверка агента <code>https://{IP}:5002/api/Worker</code> «вернёт HTTP 204». По коду 1.26.9 <code>GET api/Worker</code> возвращает 200 и строку версии агента.</p></div>
+<div class="todo"><p>Healthcheck WebApi не проверяет БД и RabbitMQ — для мониторинга этого мало. Описать в «Мониторинг и метрики» метрики Prometheus (порт <code>10052</code>) как основной сигнал.</p></div>
+<div class="todo"><p>В Docker (ubuntu) у nginx нет отдельного <code>location /health</code>: <code>https://localhost:44392/health</code> отдаёт <code>index.html</code> с кодом 200. Проверяет только nginx, не службы.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>, <code>HealthCheckNames.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Bl/HealthCheck/HealthCheckService.cs</code>, <code>LTools.Orchestrator.MachineInfo/BL/HealthCheckService.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (<code>AddHealthChecks</code>, <code>MapHealthCheckEndpoints</code>); <code>BaGet/src/BaGet/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Controllers/WorkerController.cs</code>, <code>VersionController.cs</code>, <code>Bl/OrchestratorSession/OrchestratorBaseUrlService.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/VersionController.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (<code>healthcheck</code>); <code>docker/ubuntu/*.Dockerfile</code> (<code>Serilog__*</code>); <code>Orchestrator/LTools.Orchestrator.*/*.service</code> (<code>SyslogIdentifier</code>); <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.docker.conf</code>; руководство 1.25.7, раздел «Устранение типовых проблем».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

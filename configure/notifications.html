@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="configure/notifications">
+<main>
+<h1>Почта и оповещения</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Как Оркестратор рассылает письма: кто формирует оповещения (служба States), кто отправляет (служба Notifications, SMTP), где задать пороги оповещений и ящик для почтовых триггеров.</p>
+
+<h2>Как устроено</h2>
+<p>Служба States отслеживает события и состояния — недоступность агента, рост очереди проектов, истечение лицензии и пароля — и по подпискам пользователей передаёт письма через RabbitMQ службе Notifications. Notifications отправляет их через SMTP-сервер. Подписки настраиваются в UI4: <b>Настройки → Администрирование → Подписки</b>; системные события там называются «Агент не доступен», «Очередь ожидания проектов растет», «Срок действия лицензии истекает». Очередь писем видна в <b>Настройки → Администрирование → Уведомления</b>.</p>
+
+<h2>SMTP: секция <code>Email</code> службы Notifications</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>FromSmtp</code>, <code>FromSmtpPort</code></td><td>SMTP-сервер и порт</td><td>— / <code>0</code></td></tr>
+  <tr><td><code>FromEmail</code>, <code>FromName</code></td><td>Адрес и имя отправителя</td><td>—</td></tr>
+  <tr><td><code>FromUserName</code>, <code>FromPassword</code></td><td>Учётка SMTP. Пароль зашифрован (см. <a href="security.html">Безопасность</a>)</td><td>—</td></tr>
+  <tr><td><code>RequireAuthenticate</code></td><td>Аутентифицироваться на SMTP</td><td><code>false</code></td></tr>
+  <tr><td><code>SecureSocketOption</code></td><td>Режим TLS: <code>0</code> — None, <code>1</code> — Auto, <code>2</code> — SslOnConnect, <code>3</code> — StartTls, <code>4</code> — StartTlsWhenAvailable. Если задан, <code>UseSsl</code> не используется</td><td>не задан</td></tr>
+  <tr><td><code>UseSsl</code></td><td>SSL при подключении (если <code>SecureSocketOption</code> не задан)</td><td><code>false</code></td></tr>
+  <tr><td><code>MaxLetSim</code></td><td>Сколько писем отправлять одновременно (минимум 1)</td><td><code>20</code></td></tr>
+  <tr><td><code>ClientTimeOut</code></td><td>Таймаут SMTP-клиента, мс</td><td><code>120000</code></td></tr>
+  <tr><td><code>UseProtocolLogger</code></td><td>Писать протокол обмена в файл <code>smtp.log</code> в папке службы — для отладки</td><td><code>false</code></td></tr>
+</table></div>
+<p>Задержки повторной отправки (секция <code>RabbitMQ</code> службы Notifications): <code>EmailDefferedGeneralMilliseconds</code> — общая задержка писем, <code>500</code> мс; <code>EmailDefferedAfterFailMilliseconds</code> — задержка после неудачной попытки, <code>1000</code> мс; <code>EmailQueueMaxLength</code> — длина очереди писем, <code>10000</code>.</p>
+<p>В WebApi есть только один параметр почты: <code>Email:MaxAttachmentsLengthInMB</code> — предельный размер вложений в письмах, которые отправляются через Оркестратор, по умолчанию <code>10</code>.</p>
+
+<h2>Пороги оповещений: служба States</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>UserExpired:StartBefore</code></td><td>За сколько минут до истечения пароля начинать оповещать</td><td><code>1440</code> (в Docker <code>3</code>)</td></tr>
+  <tr><td><code>UserExpired:NotificationInterval</code></td><td>Повтор оповещения об истечении пароля, минуты</td><td><code>1440</code> (в Docker <code>1</code>)</td></tr>
+  <tr><td><code>LicenseExpired:DaysStartBefore</code></td><td>За сколько дней до истечения лицензии начинать оповещать</td><td><code>15</code></td></tr>
+  <tr><td><code>LicenseExpired:NotificationInterval</code></td><td>Повтор оповещения о лицензии, часы</td><td><code>24</code></td></tr>
+  <tr><td><code>SLAFromDb</code></td><td><code>true</code> — пороги SLA берутся из БД, <code>false</code> — из секции <code>SLA</code></td><td><code>false</code></td></tr>
+  <tr><td><code>SLA:AgentUnavailability:FirstSec</code></td><td>Сколько секунд агент должен быть недоступен, чтобы пришло оповещение</td><td>не задан (в Docker <code>30</code>)</td></tr>
+  <tr><td><code>SLA:AgentUnavailability:RepeatedlySec</code></td><td>Повтор оповещения о недоступности, с</td><td>не задан (в Docker <code>300</code>)</td></tr>
+  <tr><td><code>SLA:RpaProjectQueueRise:CriticalQueueLength</code></td><td>Критическая длина очереди проектов</td><td>не задан (в Docker <code>4</code>)</td></tr>
+  <tr><td><code>SLA:RpaProjectQueueRise:RepeatedlySec</code></td><td>Повтор оповещения о росте очереди, с</td><td>не задан (в Docker <code>300</code>)</td></tr>
+</table></div>
+<div class="warn"><p>У порогов <code>SLA</code> в коде нет значений по умолчанию. Если секции нет и <code>SLAFromDb=false</code>, задайте её явно.</p></div>
+
+<h2>Входящая почта для триггеров</h2>
+<p>Ящик для заданий с триггером «Запуск при получении Email» задаётся в WebApi: базовый — <code>Tenants:IncomingEmail</code>, для тенанта — <code>Tenants:Items[].IncomingEmail</code>. Дополнительные ящики добавляются в UI4: <b>Настройки → Система → Email входящей почты</b>.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>IncomingEmail:UserName</code>, <code>Login</code>, <code>Password</code></td><td>Ящик; <code>Login</code>, если задан, используется вместо <code>UserName</code>. Пароль зашифрован</td><td>—</td></tr>
+  <tr><td><code>IncomingEmail:Imap</code>, <code>ImapPort</code>, <code>ImapFolder</code></td><td>IMAP-сервер, порт, папка</td><td>—</td></tr>
+  <tr><td><code>IncomingEmail:Pop3</code>, <code>Pop3Port</code></td><td>POP3-сервер и порт (вместо IMAP)</td><td>—</td></tr>
+  <tr><td><code>IncomingEmail:UseSsl</code> / <code>RequireAuthenticate</code></td><td>SSL/TLS / аутентификация</td><td><code>true</code> / <code>true</code></td></tr>
+  <tr><td><code>IncomingEmail:UseStandartNotSSLPort</code></td><td>Сервер на стандартном порту без SSL (IMAP 143, POP3 110); <code>UseSsl</code> игнорируется</td><td><code>false</code></td></tr>
+  <tr><td><code>IncomingEmail:RemoveReceived</code></td><td>Удалять обработанные письма</td><td><code>false</code></td></tr>
+  <tr><td><code>Triggers:Email:IntevalInSeconds</code></td><td>Период опроса ящика, с</td><td><code>20</code></td></tr>
+  <tr><td><code>Triggers:Email:WindowSize</code></td><td>Писем за один опрос</td><td><code>5</code></td></tr>
+  <tr><td><code>Triggers:Email:MaxFolderUnseenMessagesCount</code></td><td>Если непрочитанных больше — обработка триггера прерывается с ошибкой</td><td><code>100</code></td></tr>
+  <tr><td><code>Triggers:Email:SecureSocketOption</code></td><td>Режим TLS (значения как у SMTP выше)</td><td><code>1</code> (Auto)</td></tr>
+  <tr><td><code>Triggers:Email:UseProtocolLogger</code></td><td>Писать протокол IMAP в <code>imap.log</code> в папке Оркестратора</td><td><code>false</code></td></tr>
+  <tr><td><code>Triggers:Email:RemoveAuthenticationMechanisms</code>, <code>RemoveGSSAPI</code>, <code>RemoveNTLM</code>, <code>UseManagedNtlm</code></td><td>Управление механизмами аутентификации IMAP (если сервер предлагает неработающие)</td><td>пусто / <code>false</code></td></tr>
+</table></div>
+
+<h2>Пример (Notifications)</h2>
+<pre><code>"Email": {
+  "FromSmtp": "smtp.example.local",
+  "FromSmtpPort": 587,
+  "SecureSocketOption": 3,
+  "RequireAuthenticate": true,
+  "FromUserName": "orch-notify@example.local",
+  "FromPassword": "&lt;зашифрованный пароль&gt;",
+  "FromEmail": "orch-notify@example.local",
+  "FromName": "Primo RPA",
+  "MaxLetSim": 20
+}</code></pre>
+<p>States:</p>
+<pre><code>"UserExpired": { "StartBefore": 4320, "NotificationInterval": 1440 },
+"LicenseExpired": { "DaysStartBefore": 15, "NotificationInterval": 24 },
+"SLAFromDb": false,
+"SLA": {
+  "AgentUnavailability": { "FirstSec": 60, "RepeatedlySec": 600 },
+  "RpaProjectQueueRise": { "CriticalQueueLength": 50, "RepeatedlySec": 600 }
+}</code></pre>
+
+<h2>Как проверить</h2>
+<ol class="steps">
+  <li>Создайте подписку на системное событие «Агент не доступен» со своим адресом и остановите агент на тестовой машине. <span class="check">Через <code>SLA:AgentUnavailability:FirstSec</code> приходит письмо.</span></li>
+  <li>Если письма нет — откройте «Уведомления». <span class="check">Письмо в очереди есть → проблема в SMTP: включите <code>UseProtocolLogger</code> и смотрите <code>smtp.log</code>. Письма нет → проверьте подписку и службу States.</span></li>
+</ol>
+
+<div class="todo"><p>Старое руководство говорит, что параметры оповещений настраиваются в <code>appsettings.json</code> службы States, и перечисляет только <code>UserExpired</code> и <code>LicenseExpired</code>. Пороги <code>SLA</code> и флаг <code>SLAFromDb</code> в нём не описаны; где в UI4 редактировать SLA из БД, не найдено.</p>
+<p>В Docker-образе States <code>UserExpired:StartBefore=3</code> и <code>NotificationInterval=1</code> (минуты) — похоже на тестовые значения. Сверить с разработкой.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.Notifications/Options/Email.cs</code>, <code>Options/RabbitMQ.cs</code>, <code>Bl/SendEmailService.cs</code>, <code>Bl/EmailQueue/EmailQueueService.cs</code>; <code>LTools.Orchestrator.States/Options/UserExpired.cs</code>, <code>LicenseExpired.cs</code>, <code>SLA.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.WebApi/Options/Email.cs</code>, <code>Options/Tenants.cs</code>, <code>Options/Triggers.cs</code>; <code>WebApi/Controllers/SystemEventTypesController.cs</code>; <code>docker/astra/notifications.Dockerfile</code>, <code>docker/astra/states.Dockerfile</code>; UI4: <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>translations/ru/common.json</code>, <code>subscriptions.json</code>, <code>notifications.json</code>, <code>email.json</code>. Руководство 1.25.7: «Настройка параметров оповещения», «Мультитенантность» (IncomingEmail).</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

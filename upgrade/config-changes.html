@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="upgrade/config-changes">
+<main>
+<h1>Изменения в конфигах между LTS</h1>
+<div class="applies">Применимо: <span>1.25.7 LTS → 1.26.7 LTS → 1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Какие параметры появились, переименованы, удалены или получили другое значение по умолчанию на пути 1.25.7 LTS → 1.26.7 LTS → 1.26.9. Сравнивались классы опций, <code>appsettings*.json</code>, Dockerfile, compose и юниты в ветках <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.9.0</code> (состояние на 06.11.2026, то есть с последними патчами LTS).</p>
+
+<h2>Главное правило</h2>
+<p>Не копируйте старый файл конфигурации поверх нового. В каждом пакете лежит свой <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> или <code>appsettings.ProdLinux.json</code> с актуальными ключами — переносите в него только свои значения: подключения к БД, RabbitMQ, адреса, пароли.</p>
+<p>Колонка «В какой версии»: <b>1.26.7 LTS</b> — изменение есть в 1.26.7 LTS, но не в 1.25.7 LTS; <b>1.26.9</b> — есть в 1.26.9, но не в 1.26.7 LTS; <b>только LTS</b> — есть в последних патчах LTS, но нет в 1.26.9.0.</p>
+
+<h2>Есть в LTS, но нет в 1.26.9.0</h2>
+<p>Эти параметры добавлены в патчи LTS позже, чем ответвилась 1.26.9. После перехода на 1.26.9.0 они перестают читаться, и служба ведёт себя как до исправления.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
+  <tr><td>WebApi</td><td><code>Scheduler:TimeZoneId</code> — часовой пояс расписаний и производственного календаря</td><td>есть с 1.25.7.64 и 1.26.7.6; в поставочном конфиге <code>Russian Standard Time</code></td><td>не читается: используется часовой пояс ОС сервера</td><td>только LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Security:Jwt:TokenVersionStore</code></td><td>есть с 1.26.7.18</td><td>не читается</td><td>только LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:OverlayTimeOutInMinutes</code></td><td><code>30</code></td><td>не читается</td><td>только LTS</td></tr>
+  <tr><td>Notifications</td><td><code>Email:MaxRetryCount</code></td><td>по умолчанию <code>50</code>, в поставочном конфиге <code>100</code></td><td>не читается</td><td>только LTS</td></tr>
+  <tr><td>Агент</td><td><code>Agent:CredentialsCheckDelayMsec</code></td><td><code>3000</code></td><td>не читается</td><td>только LTS</td></tr>
+  <tr><td>RDP2</td><td><code>SuppressOutputWhenIdle</code></td><td><code>false</code></td><td>не читается</td><td>только LTS</td></tr>
+</table></div>
+<div class="warn"><p>Если вы задавали <code>Scheduler:TimeZoneId</code>, после перехода на 1.26.9.0 расписания считаются по часовому поясу ОС. Проверьте его на сервере WebApi до обновления.</p></div>
+
+<h2>Переименованы или удалены</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
+  <tr><td>WebApi</td><td><code>RpaProjectArchiveUpload:DbStore</code> → <code>RpaProjectArchiveUpload:StoreType</code></td><td><code>DbStore=true</code> (архивы в БД)</td><td><code>StoreType</code>: <code>0</code> — файлы, <code>1</code> — БД (по умолчанию), <code>2</code> — S3. Старый флаг не читается</td><td>1.26.9</td></tr>
+  <tr><td>WebApi</td><td><code>FileStore:MinioKerberosKeytabs</code> → <code>FileStore:S3KerberosKeytabs</code></td><td>появился в 1.26.7 LTS</td><td>старое имя не читается</td><td>1.26.9</td></tr>
+  <tr><td>WebApi</td><td><code>Secrets:External</code></td><td><code>true</code>/<code>false</code>; в поставочных конфигах <code>false</code></td><td>тип: <code>0</code> — БД секретов, <code>1</code> — Vault. Старое <code>true</code> понимается как <code>0</code> с предупреждением в журнале. Строка убрана из конфигов WebApi, Analytic, Notifications, RobotLogs, States</td><td>1.26.7 LTS</td></tr>
+  <tr><td>Analytic</td><td><code>Schedules:RefreshMaterializedViews:*</code></td><td>ключи <code>WorkersUsage</code>, <code>RobotsUsage</code>, <code>DpaEvents</code></td><td>ключи <code>mv_WorkersUsage</code>, <code>mv_RobotsUsage</code>, <code>mv_DpaEvents</code>; старые ключи не запускают обновление</td><td>1.26.7 LTS</td></tr>
+  <tr><td>Агент (Linux)</td><td><code>Agent:RobotStartMethod</code></td><td><code>systemd</code></td><td>удалён; AgentUpdater его больше не переносит</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>InstanceInfo:UpdateStatusGap</code></td><td><code>2000</code></td><td>удалён</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>MaxWorkerThreads</code>, <code>MaxCompletionPortThreads</code></td><td><code>32767</code>, <code>1000</code></td><td>удалены из <code>appsettings.json</code></td><td>1.26.7 LTS</td></tr>
+</table></div>
+<div class="note"><p>Если переносите старый <code>appsettings.json</code> Analytic целиком, материализованные представления аналитики перестанут обновляться: в новой версии имена расписаний начинаются с <code>mv_</code>.</p></div>
+
+<h2>Изменились значения по умолчанию</h2>
+<p>Если вы перенесёте старое значение, сохранится старое поведение.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:WaitUserProfileLoaded</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:ReEnqueueNoRdpOrProfile</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:DisableReleaseRdpSessionTimeOut</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:IntervalForReleaseInSeconds</code></td><td><code>120</code></td><td><code>180</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:TimeOutInMinutesForUnlock</code></td><td><code>2</code></td><td><code>3</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>RobotStart:AttemptsKeepRDPSessionLevels</code> (число попыток / срок, с)</td><td>3/3, 3/5, 3/10</td><td>3/5, 2/15, 1/120</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Folders:CacheDurationInSeconds</code></td><td><code>5</code></td><td><code>2</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>NuGet:Timeout</code></td><td><code>2</code></td><td><code>10</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi, Licenses</td><td><code>MinWorkerThreads</code>; у WebApi также <code>MinCompletionPortThreads</code></td><td><code>500</code></td><td><code>-1</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>States</td><td><code>Culture</code> в <code>appsettings.json</code></td><td><code>ru-RU</code></td><td><code>en-US</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>RDP2</td><td><code>ColorDepth</code> подключения</td><td><code>32</code></td><td><code>24</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>NuGet2</td><td><code>Storage:Type</code></td><td><code>Minio</code></td><td><code>FileSystem</code>; на Windows <code>FileSystem:Path</code> = <code>C:\OrchNuget</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>NuGet2</td><td><code>AllowPackageOverwrites</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>Агент (Windows)</td><td><code>Kestrel:EndPoints:ExternalHttps:Certificate:Path</code></td><td><code>C:\Primo\Agent\cert1.pfx</code></td><td><code>cert1.pfx</code> (относительный путь)</td><td>1.26.7 LTS</td></tr>
+  <tr><td>Licenses, NuGet2</td><td><code>DbConnection:Items:Licenses:CommandTimeOut</code> (Windows); <code>Database:DbConnection:CommandTimeOut</code></td><td><code>20</code></td><td><code>120</code></td><td>1.26.9</td></tr>
+</table></div>
+
+<h2>Новые параметры</h2>
+<p>Значения по умолчанию подходят, если вы не используете соответствующую функцию.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
+  <tr><td>WebApi</td><td><code>WS:Path</code>, <code>WS:LongPolling</code></td><td>—</td><td><code>/events</code>, <code>false</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Email:MaxAttachmentsLengthInMB</code></td><td>—</td><td><code>10</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Triggers:EmailTrigger:MaxFolderUnseenMessagesCount</code></td><td>—</td><td><code>100</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>ExchangeQueue:Limits:PeekByFilterMaxPageSize</code>, <code>ExchangeQueue:Limits:RateLimiters:*</code></td><td>—</td><td><code>0</code>; ограничитель выключен</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code></td><td>—</td><td><code>1000</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Studio:UseRoleCitizen</code>, <code>Studio:UseRoleLimitedRobotRunner</code></td><td>—</td><td><code>false</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>UseHttpLogging</code></td><td>—</td><td><code>false</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi, Analytic</td><td><code>Integration:Unloading:*</code> (выгрузки), <code>DPA:*</code></td><td>—</td><td>выключено (<code>Enabled=false</code>)</td><td>1.26.7 LTS</td></tr>
+  <tr><td>RobotLogs</td><td><code>InputBufferRobotStatuses:*</code></td><td>—</td><td><code>MaxQueueLength=50000</code>, <code>ThreadSleep=1000</code>, <code>MaxEventCountForSleep=20000</code>, <code>Period=24</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>Notifications</td><td><code>Email:ClientTimeOut</code>, <code>Email:UseProtocolLogger</code></td><td>—</td><td><code>120000</code>, <code>false</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>Licenses, Queues, LogEventsWebhook</td><td>секция <code>Secrets</code> (БД секретов)</td><td>—</td><td>есть в поставочных конфигах</td><td>1.26.7 LTS</td></tr>
+  <tr><td>LogEventsWebhook, Queues</td><td><code>DBVendor</code>; у LogEventsWebhook — <code>DbConnection:Items:*</code>, у Queues — <code>PostgresWithSslOptions:*</code></td><td>—</td><td><code>Postgres</code>; SSL выключен</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>ActiveDirectory:KerberosKeytabVault</code></td><td>—</td><td>не задан</td><td>1.26.7 LTS</td></tr>
+  <tr><td>Агент</td><td><code>Agent:DownloadScreenFile</code></td><td>—</td><td>пусто (без ограничений)</td><td>1.26.7 LTS</td></tr>
+  <tr><td>Агент (Linux)</td><td><code>Agent:UserName</code>, <code>Agent:GroupName</code></td><td>—</td><td><code>agent</code>, <code>primo-rpa</code></td><td>1.26.7 LTS (с 1.26.7.3), 1.26.9</td></tr>
+  <tr><td>WebApi, RDP2</td><td><code>Mqtt:Url</code>, <code>Mqtt:Username</code>, <code>Mqtt:Password</code></td><td>—</td><td>не заданы</td><td>1.26.8 (убраны в ветке следующей версии)</td></tr>
+  <tr><td>WebApi</td><td><code>Assignment:LaunchTimeoutPeriod</code></td><td>—</td><td><code>30</code></td><td>1.26.9</td></tr>
+  <tr><td>WebApi</td><td><code>Vault:AssetsCredentialsPath</code>, <code>Vault:AllCredentialsPath</code></td><td>—</td><td><code>asset</code>, <code>credentials</code></td><td>1.26.9</td></tr>
+  <tr><td>WebApi</td><td><code>FileStore:S3</code>, <code>FileStore:Ceph:*</code></td><td>только MinIO</td><td><code>0</code> — MinIO, <code>1</code> — Ceph</td><td>1.26.9</td></tr>
+  <tr><td>Analytic</td><td><code>Schedules:RefreshMaterializedViews:*:CommandTimeoutInSeconds</code></td><td>—</td><td><code>600</code></td><td>1.26.9</td></tr>
+</table></div>
+
+<h2>Docker и юниты Linux</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
+  <tr><td>compose</td><td>сервис <code>0minio</code>, том <code>miniodata</code></td><td>есть</td><td>удалены; добавлены тома <code>webapidata</code>, <code>nugetdata</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>web-api (образ)</td><td><code>FileStore__Type</code></td><td><code>1</code> (S3)</td><td><code>0</code> (файлы)</td><td>1.26.7 LTS</td></tr>
+  <tr><td>web-api (образ)</td><td><code>AgentDistrUpload__TargetFilePath</code>, <code>RobotDistrUpload__TargetFilePath</code></td><td><code>/tmp</code></td><td><code>/data/agent-distrs</code>, <code>/data/robot-distrs</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>nuget (образ)</td><td><code>Storage__Type</code></td><td><code>Minio</code></td><td><code>FileSystem</code>, <code>FileSystem__Path=/data</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>compose</td><td>сервис <code>mcp</code></td><td>—</td><td>добавлен</td><td>1.26.7 LTS</td></tr>
+  <tr><td>все образы с БД</td><td><code>…__CommandTimeOut</code></td><td><code>20</code></td><td><code>120</code></td><td>1.26.9</td></tr>
+  <tr><td>states (образ)</td><td><code>Cache__*</code></td><td>заданы в образе</td><td>убраны из образа, значения в <code>appsettings.json</code></td><td>1.26.9</td></tr>
+  <tr><td>юниты Linux</td><td>nginx: <code>Primo.Orchestrator.Nginx.service</code>, <code>Primo.Orchestrator.Nginx.user.service</code></td><td>—</td><td>добавлены</td><td>1.26.7 LTS</td></tr>
+  <tr><td>юниты агента</td><td><code>#Environment=PRIMOSALT=</code>, <code>#Environment=PRIMOSIGNINGKEY=</code></td><td>—</td><td>добавлены закомментированными</td><td>1.26.7 LTS</td></tr>
+</table></div>
+<p>Что делать с MinIO при переходе с compose 1.25.7 — на странице <a href="order.html">Порядок обновления</a>, раздел Docker.</p>
+
+<h2>Агент при автообновлении</h2>
+<p>AgentUpdater переносит в новый конфиг агента только фиксированный список ключей (таблица — в <a href="order.html">Порядке обновления</a>). Новые параметры агента после автообновления получают значения по умолчанию.</p>
+
+<h2>Устаревшее, но ещё в коде</h2>
+<ul>
+  <li><code>Orchestrator:DownloadRpaProject</code> в конфиге агента помечен <code>[Obsolete]</code>.</li>
+  <li><code>ConnectionStrings:*</code> для PostgreSQL работают, если не задана секция <code>DbConnection:Items</code>. Для MS SQL используются только они.</li>
+  <li><code>Secrets:External=true</code> читается с предупреждением «Secrets:External bool type is obsolete».</li>
+</ul>
+
+<div class="todo">
+<p>Параметры из таблицы «Есть в LTS, но нет в 1.26.9.0»: будут ли они в следующих патчах 1.26.9.x — уточнить у разработки. <code>TokenVersion</code> уже есть в ветке 1.26.11.</p>
+<p>Расхождение со старыми доками: <code>UseExternalClient</code> и <code>rdpclientexternalsettings.json</code> («Внешняя поддержка RDP-сессии») не встречаются ни в 1.25.7 LTS, ни в 1.26.7 LTS, ни в 1.26.9 — уточнить, в какой поставке они были.</p>
+<p>Расхождение: комментарий в коде говорит, что <code>DbStore</code> не учитывается «при обновлении на 1.26.8.0», но в ветке <code>releases/v1.26.8.0</code> он ещё читается. По коду переход — в 1.26.9, как и в старых доках.</p>
+<p>Параметры <code>RabbitMQ:VirtualHost</code>, <code>Redis:Password</code>, <code>Triggers:Email:UseManagedNtlm</code>, <code>RobotLogs:ClientTimeoutInSec</code>, <code>SchedulerTaskSettings:*</code> есть уже в 1.25.7 LTS (перенесены патчами), поэтому в таблицы не вошли.</p>
+<p>Имена очередей и обменников RabbitMQ в классах <code>RabbitMQ</code> служб менялись между версиями (например, <code>AssetCacheInvalidation*</code> в 1.25.7 и 1.26.9 против <code>CacheInvalidation*</code> в 1.26.7). Нужно ли что-то делать с брокером при переходе — уточнить у разработки.</p>
+<p>Ключи <code>Mqtt:*</code> — необязательный режим связи WebApi и RDP2 (1.26.8–1.26.11), по умолчанию работает REST. В текущей ветке разработки проект MQTT удалён — подтвердить у разработки, в какой версии.</p>
+</div>
+
+<div class="src">Источники: ветки Orchestrator.Backend <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.8.0</code>, <code>releases/v1.26.9.0</code> (выгрузка 06.11.2026). Сравнивались: <code>Orchestrator/*/Options/*.cs</code>, <code>Orchestrator/LTools.Shared/Config/*.cs</code>, <code>Orchestrator/*/appsettings.json</code>, <code>appsettings.ProdWin.json</code>, <code>appsettings.ProdLinux.json</code>, <code>Orchestrator/LTools.Orchestrator.Agent.Runner/appsettings.Runner.json</code>, <code>BaGet/src/BaGet/appsettings*.json</code>; вызовы <code>GetValue</code>/<code>GetSection</code>/<code>Configuration[…]</code>; <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/ubuntu/docker-compose.yml.template</code>; <code>Orchestrator/*/Primo.Orchestrator.*.service</code>, <code>nginx/*.service</code>. Отдельно: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>Secrets:External</code>, <code>FileStore:S3</code>, <code>Scheduler:TimeZoneId</code> в 1.26.7), <code>Orchestrator/LTools.Orchestrator.WebApi/Options/RpaProjectArchiveUpload.cs</code>, <code>FileStore.cs</code>, <code>Scheduler.cs</code> (1.26.7); <code>Orchestrator/LTools.Orchestrator.Analytic/Options/Schedules.cs</code>, <code>Bl/Aggregator/RefreshMVTriggerEventScheduleJob.cs</code>, <code>TriggerEventScheduleJob.cs</code> (1.25.7); <code>Orchestrator/LTools.Orchestrator.AgentUpdater/ConfigTransformers/AgentTransformer.cs</code>; <code>Orchestrator/*/Readme.txt</code>. Старые доки: сайт, «Интеграция с S3-хранилищем», «Внешняя поддержка RDP-сессии».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

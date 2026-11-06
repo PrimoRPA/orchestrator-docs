@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="configure/scaling">
+<main>
+<h1>Масштабирование и отказоустойчивость</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Что в коде 1.26.9 есть для работы нескольких экземпляров служб: узлы WebApi, балансировка через nginx, прямые адреса между службами, кластер RabbitMQ, Redis, привязка лицензий к нескольким серверам, helm-чарты.</p>
+
+<h2>Несколько экземпляров WebApi</h2>
+<p>Экземпляры WebApi работают с общими БД и общим RabbitMQ. Каждый экземпляр — узел со своим номером. Узлы раз в несколько секунд отмечаются в БД; по этим отметкам Оркестратор видит состав кластера и пишет события «Добавился узел» (<code>90500</code>) и «Потерян узел» (<code>90501</code>). Часть очередей RabbitMQ создаётся на каждый узел отдельно — имя очереди дополняется номером узла (события для веб-сокетов, KeepAlive роботов, сброс кэшей).</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>InstanceInfo:Id</code></td><td>Номер узла. У каждого экземпляра — свой. Отрицательное значение — номер генерируется сам и сохраняется в файл <code>InstanceInfoId</code> в рабочей папке службы</td><td><code>0</code> (в Docker <code>0</code>)</td></tr>
+  <tr><td><code>InstanceInfo:RunInBackgroundContextThreadSleep</code></td><td>Период отметки узла, мс. Узел считается потерянным, если не отмечался дольше периода + 2 с</td><td><code>2000</code></td></tr>
+  <tr><td><code>InstanceInfo:DisableUpdateStatus</code></td><td>Отключить отслеживание узлов</td><td><code>false</code></td></tr>
+  <tr><td><code>InstanceInfo:NodesDesynchronizationTimeout</code></td><td>Сколько секунд ждать, пока все узлы подтвердят наличие файла дистрибутива робота. Потом — событие «Рассинхронизация дистрибутива робота на узлах» (<code>1204</code>)</td><td><code>60</code></td></tr>
+  <tr><td><code>InstanceInfo:MaxSequentialSwitching</code></td><td>Сколько переключений подтверждения подряд считать «мерцанием» (событие <code>1205</code>)</td><td><code>10</code></td></tr>
+  <tr><td><code>Assignment:LockTimeout</code>, <code>ReleaseLockTimeoutPeriod</code></td><td>Блокировка заданий между узлами: через сколько секунд снимается зависшая блокировка и как часто это проверяется</td><td><code>5</code>, <code>60</code></td></tr>
+  <tr><td><code>MinWorkerThreads</code>, <code>MinCompletionPortThreads</code></td><td>Минимум потоков пула .NET; значение ≤ 0 — системное</td><td><code>-1</code></td></tr>
+</table></div>
+<div class="warn"><p>В Docker-образе WebApi <code>InstanceInfo__Id=0</code>. При нескольких репликах переопределите его — уникальным числом или отрицательным значением, — иначе узлы будут делить одни и те же очереди.</p></div>
+<p>Дистрибутивы робота и агента без S3 лежат в папке каждого узла, и каждый узел проверяет их у себя. Для нескольких узлов удобнее S3 (см. <a href="storage.html">Хранилища</a>).</p>
+
+<h2>Балансировка и nginx</h2>
+<p>В поставочных <code>nginx/nginx.*.conf</code> каждая служба описана блоком <code>upstream</code> с одним сервером (<code>app_server</code> — WebApi, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>rdpstream</code> и др.). Чтобы балансировать, добавьте серверы в нужный <code>upstream</code>. Веб-сокеты UI4 идут через <code>/events/</code> к WebApi; вместо веб-сокетов можно включить long polling: <code>WS:LongPolling=true</code> (путь — <code>WS:Path</code>, по умолчанию <code>/events</code>).</p>
+<p>Проверка живости для балансировщика — <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code> у каждой службы.</p>
+
+<h2>Прямые адреса между службами</h2>
+<p>По умолчанию службы обращаются друг к другу через внешний адрес Оркестратора (nginx). Можно задать внутренние адреса — так удобнее в Kubernetes.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Параметр</th><th>Если не задан</th></tr>
+  <tr><td>WebApi → RobotLogs</td><td><code>RobotLogs:BaseUrl</code> (к нему добавляется <code>/api</code>)</td><td><code>RobotDeployment:RobotLogsBaseUrl</code> или <code>RobotDeployment:OrchBaseUrl</code> + <code>/logs</code></td></tr>
+  <tr><td>RobotLogs, States, Analytic, RDP2 → WebApi</td><td><code>Orchestrator:BaseUrl</code></td><td>States берёт адрес из полученных событий</td></tr>
+  <tr><td>WebApi → MachineInfo</td><td><code>License:MachineInfoUrl</code></td><td>сведения о «железе» для лицензии читаются SQL-запросом на сервере БД</td></tr>
+</table></div>
+
+<h2>RabbitMQ</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RabbitMQ:Hosts</code></td><td>Список узлов кластера RabbitMQ. Используется, только если <code>Host</code> пуст</td><td>—</td></tr>
+  <tr><td><code>RabbitMQ:VirtualHost</code></td><td>Виртуальный хост — несколько Оркестраторов на одном RabbitMQ (с 1.25.7)</td><td>пусто</td></tr>
+  <tr><td><code>RabbitMQ:RetryCount</code>, <code>RetryTimeOutInSeconds</code></td><td>Повторы подключения при недоступности брокера</td><td><code>5</code>, <code>10</code> (WebApi)</td></tr>
+</table></div>
+<p>Задавайте одинаковые <code>VirtualHost</code> и учётку во всех службах одного Оркестратора.</p>
+
+<h2>Redis</h2>
+<p>Redis не обязателен. Без него отозванные токены хранятся в БД <code>ltoolsidentity</code> (таблица <code>RevokedTokens</code>) с кэшем в памяти на минуту, а кэши — в памяти каждого узла. С Redis токены и часть кэшей становятся общими для узлов.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>UseRedis</code></td><td>Включить Redis</td><td><code>false</code></td></tr>
+  <tr><td><code>Redis:ConnectionString</code></td><td>Адрес Redis</td><td>—</td></tr>
+  <tr><td><code>Redis:Password</code></td><td>Пароль, зашифрован</td><td>пусто</td></tr>
+</table></div>
+
+<h2>БД и лицензии</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>IsMultiMaster</code></td><td>Режим для PostgreSQL с несколькими мастерами: WebApi не считает ошибками часть ошибок команд</td><td><code>false</code></td></tr>
+  <tr><td><code>License:MachineInfoUrls</code></td><td>Адреса служб MachineInfo на всех серверах — лицензия привязывается к нескольким серверам. Порядок важен: по нему формируется запрос лицензии</td><td>—</td></tr>
+  <tr><td><code>License:MachineInfoUrl</code></td><td>Один сервер MachineInfo</td><td>—</td></tr>
+</table></div>
+
+<h2>RDP2</h2>
+<p>Несколько экземпляров RDP2 делят машины роботов через <code>AddressFilter</code>, WebApi сопоставляет их по <code>RDP:RdpBaseUrls</code> — см. <a href="robots-rdp.html">Запуск роботов и RDP-сессии</a>.</p>
+
+<h2>Kubernetes (helm)</h2>
+<p>В <code>k8s/helm</code> есть чарты <code>webapi</code>, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>machineinfo</code>, <code>nuget2</code>, <code>ui</code>. Чарт создаёт Deployment и Service: порт <code>8080</code> (http, сервис — 80) и <code>10052</code> (метрики), пробы <code>/health</code>, <code>/health/liveness</code>, <code>/health/readiness</code>. Параметры службы передаются переменными окружения из <code>values.yaml</code> (<code>env:</code>).</p>
+
+<h2>Пример: второй узел WebApi</h2>
+<pre><code>"InstanceInfo": { "Id": 2 },
+"RobotLogs": { "BaseUrl": "http://robotlogs" },
+"RabbitMQ": { "Hosts": [ "rabbit1", "rabbit2", "rabbit3" ], "VirtualHost": "orch-prod" },
+"UseRedis": true,
+"Redis": { "ConnectionString": "redis:6379", "Password": "&lt;зашифрованный&gt;" },
+"License": { "MachineInfoUrls": [ "http://app1:&lt;порт&gt;", "http://app2:&lt;порт&gt;" ] }</code></pre>
+
+<h2>Как проверить</h2>
+<ol class="steps">
+  <li>Запустите второй узел. <span class="check">В «События оркестратора» есть «Добавился узел».</span></li>
+  <li>Остановите один узел. <span class="check">Через несколько секунд — «Потерян узел»; UI4 и роботы продолжают работать через оставшийся.</span></li>
+  <li>Загрузите дистрибутив робота. <span class="check">Нет события <code>1204</code> «Рассинхронизация дистрибутива робота на узлах».</span></li>
+</ol>
+
+<div class="todo"><p>Helm-чарты не задают число реплик (по умолчанию одна), значения <code>values.yaml</code> — для стенда разработки. Рекомендованной схемы кластера (сколько узлов каких служб) в коде нет.</p>
+<p>Нужна ли «липкая» балансировка для <code>/events/</code> (SignalR) при нескольких узлах WebApi, по коду не определить — проверить на стенде.</p>
+<p>Можно ли запускать несколько экземпляров RobotLogs, States, Notifications, Analytic одновременно и как они делят работу, в коде явно не описано. Чтения журналов с реплики БД (о чём пишут старые статьи о масштабировании журнала робота) в коде 1.26.9 не найдено: у RobotLogs одно подключение <code>Logs</code>.</p>
+<p>Значение по умолчанию <code>InstanceInfo:Id=0</code>: генерация номера срабатывает только для отрицательных значений. Как ведут себя два узла с <code>0</code>, не проверено.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/InstanceInfo.cs</code>, <code>Options/RabbitMQ.cs</code>, <code>Options/License.cs</code>, <code>Options/RobotLogs.cs</code>, <code>Options/RobotDeployment.cs</code>, <code>Options/WS.cs</code>, <code>Options/Assignment.cs</code>; <code>WebApi/Startup.cs</code> (Redis, IsMultiMaster, MinWorkerThreads, MachineInfo); <code>Bl/Nodes/NodeStatusService.cs</code>; <code>Bl/WebSecurity/TokenManager2.cs</code>; <code>Bl/RobotLogs/RobotLogsClient.cs</code>; <code>Bl/Distrs/RobotDistrsStateService.cs</code>; <code>LTools.Orchestrator.States/Bl/OrchestratorClient.cs</code>; <code>LTools.Shared/RabbitMQ/RabbitMQExtensions.cs</code>; <code>LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>; <code>LTools.Enums/OrchestratorEvent.cs</code>; <code>WebApi/Controllers/OrchEventsController.cs</code>; <code>nginx/nginx.linux.conf</code>; <code>k8s/helm/*</code>; <code>docker/astra/web-api.Dockerfile</code>. Руководство 1.25.7: «Перенаправление http-зависимостей между службами»; сайт: <code>orchestrator-sys-admin/robot-log-scaling.md</code>, <code>georedundancy.md</code> (только как подсказка).</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

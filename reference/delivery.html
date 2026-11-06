@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/delivery">
+<main>
+<h1>Комплект поставки</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Какие архивы и файлы собирает конвейер сборки Оркестратора 1.26.9 и что лежит внутри. Список составлен по сценариям сборки, а не по старому руководству: сторонние дистрибутивы (СУБД, RabbitMQ и т. п.) конвейер не собирает.</p>
+
+<h2>Архивы служб</h2>
+<p>Каждая служба собирается отдельно для Windows (<code>win-x64</code>) и Linux (<code>linux-x64</code>) как самостоятельное приложение .NET (self-contained).</p>
+<div class="tbl-wrap"><table>
+<tr><th>Компонент</th><th>Windows</th><th>Linux</th><th>Примечание</th></tr>
+<tr><td>WebApi</td><td><code>WebApi</code></td><td><code>WebApi-linux</code></td><td>Внутри — архивы обновления агента <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code>.</td></tr>
+<tr><td>RobotLogs</td><td><code>RobotLogs</code></td><td><code>RobotLogs-linux</code></td><td></td></tr>
+<tr><td>States</td><td><code>States</code></td><td><code>States-linux</code></td><td></td></tr>
+<tr><td>Notifications</td><td><code>Notifications</code></td><td><code>Notifications-linux</code></td><td></td></tr>
+<tr><td>Analytic</td><td><code>Analytic</code></td><td><code>Analytic-linux</code></td><td></td></tr>
+<tr><td>Licenses</td><td><code>Licenses</code></td><td><code>Licenses-linux</code></td><td></td></tr>
+<tr><td>Queues</td><td><code>Queues</code></td><td><code>Queues-linux</code></td><td></td></tr>
+<tr><td>MachineInfo</td><td><code>MachineInfo</code></td><td><code>MachineInfo-linux</code></td><td></td></tr>
+<tr><td>LogEventsWebhook</td><td><code>LogEventsWebhook</code></td><td><code>LogEventsWebhook-linux</code></td><td></td></tr>
+<tr><td>RDP2</td><td><code>RDP2</code></td><td><code>RDP2-linux</code></td><td></td></tr>
+<tr><td>ArcSight</td><td><code>ArcSight</code></td><td><code>ArcSight-linux</code></td><td></td></tr>
+<tr><td>NuGet-сервер</td><td><code>NuGet2</code></td><td><code>NuGet2-linux</code></td><td>Сборка проекта <code>BaGet</code>.</td></tr>
+<tr><td>Агент</td><td><code>Agent</code></td><td><code>Agent-linux</code></td><td>Linux-архив дополнительно содержит <code>LTools.Orchestrator.Agent.Runner</code> и <code>appsettings.Runner.json</code>.</td></tr>
+<tr><td>Обновление агента</td><td><code>AgentUpdater</code></td><td><code>AgentUpdater-linux</code></td><td>Один исполняемый файл <code>Primo.Orchestrator.AgentUpdater</code>.</td></tr>
+<tr><td>Шифрование паролей</td><td><code>PasswordEncryptor</code></td><td><code>PasswordEncryptor-linux</code></td><td>Утилита для паролей в конфигах.</td></tr>
+<tr><td>DPA-агент</td><td>—</td><td><code>DpaAgent-linux</code></td><td>Собирается по отдельному флагу. Для установки — deb-пакеты (см. ниже).</td></tr>
+</table></div>
+
+<h3>Что внутри архива службы</h3>
+<ul>
+  <li>Исполняемый файл <code>Primo.Orchestrator.&lt;Служба&gt;</code> и библиотеки, включая среду .NET.</li>
+  <li><code>appsettings.json</code> и файл окружения: в Windows-архивах — <code>appsettings.ProdWin.json</code>, в Linux-архивах — <code>appsettings.ProdLinux.json</code>. <code>appsettings.Development.json</code> удаляется.</li>
+  <li>В Linux-архивах — файлы юнитов systemd <code>Primo.Orchestrator.&lt;Служба&gt;.service</code> и <code>.user.service</code>; из Windows-архивов они удаляются.</li>
+  <li><code>Version.txt</code> с версией файла (<code>FileVersion</code> проекта, для WebApi — <code>1.26.9.0</code>).</li>
+</ul>
+
+<h3>Имена архивов в репозитории</h3>
+<p>При выкладке в репозиторий артефактов имя приводится к виду <code>primo-rpa-orchestrator-&lt;компонент&gt;-&lt;версия&gt;-windows.zip</code> или <code>…-linux.zip</code> (например, <code>primo-rpa-orchestrator-webapi-1.26.9.0-linux.zip</code>). Без версии в имени архив выкладывается как <code>&lt;компонент&gt;.zip</code> в папки <code>Windows</code> и <code>Linux</code>.</p>
+
+<h2>Другие артефакты</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Артефакт</th><th>Что это</th></tr>
+<tr><td><code>Primo-RPA-Orchestrator-UI-&lt;версия&gt;.zip</code></td><td>Собранный UI4 (репозиторий UI). Один архив для Windows и Linux; в репозиторий выкладывается как <code>primo-rpa-orchestrator-ui-&lt;версия&gt;-windows.zip</code> и <code>-linux.zip</code> или <code>ui.zip</code>.</td></tr>
+<tr><td>Папка <code>NGINX</code></td><td>Содержимое папки <code>nginx</code> репозитория: <code>nginx.win.conf</code>, <code>nginx.linux.conf</code>, <code>nginx.docker.conf</code>, юниты <code>Primo.Orchestrator.Nginx.service</code> и <code>.user.service</code>, самоподписанный сертификат <code>certificates/cert1.crt</code> и <code>cert1.rsa</code>, инструкции <code>readme-nginx*.md</code>.</td></tr>
+<tr><td><code>primo-rpa-orchestrator-dpa-agent_&lt;версия&gt;_amd64.deb</code>, <code>primo-rpa-orchestrator-dpa-common_&lt;версия&gt;_all.deb</code></td><td>Пакеты DPA-агента для Linux.</td></tr>
+<tr><td>Docker-образы</td><td><code>web-api</code>, <code>robot-logs</code>, <code>states</code>, <code>notifications</code>, <code>analytic</code>, <code>licenses</code>, <code>queues</code>, <code>machine-info</code>, <code>log-events-webhook</code>, <code>nuget2</code>, <code>ui</code>, для Ubuntu также <code>mcp</code>. Две базы: Ubuntu 24.04 и Astra Linux. Тег — <code>&lt;версия&gt;-&lt;база&gt;</code> (по выбору с меткой времени), образы подписываются.</td></tr>
+<tr><td><code>docker-compose.yml</code></td><td>Готовый compose из шаблона <code>docker-compose.yml.template</code> с подставленными именами образов.</td></tr>
+</table></div>
+
+<div class="warn"><p>Перед запуском задайте в конфигах служб строки подключения, пароли (в зашифрованном виде) и адреса служб — см. <a href="config.html">«Параметры конфигурации»</a>. Сертификат <code>cert1</code> из папки <code>nginx/certificates</code> самоподписанный — для промышленной установки замените его.</p></div>
+
+<h2>Сравнение со старым руководством</h2>
+<div class="todo">
+<p>Таблица «Дистрибутивы» в руководстве 1.25.7 (раздел «Комплект поставки») и файл <code>LTools.Orchestrator.ComplectDescriber/Describe.json</code> в коде 1.26.9 описывают комплект версии 1.25.1. Расхождения с конвейером 1.26.9:</p>
+<ul>
+  <li>Новые архивы, которых нет в старом списке: Licenses, Queues, ArcSight, отдельные AgentUpdater, PasswordEncryptor для Linux, DpaAgent и deb-пакеты DPA, Docker-образы и compose.</li>
+  <li>Конвейер не собирает и не выкладывает сторонние дистрибутивы из старого списка: PostgreSQL, TimescaleDB, MSSQL.zip, RabbitMQ, PowerShell 7.1.3, Chrome, Grafana и отчёты Report-*.zip, syncthing, logstash, haproxy, pg_cron, <code>pg_ms.sh</code>, <code>RDP-Disconnector.xml</code>, <code>restore_console.bat</code>, <code>scr2.ps1</code>, <code>web.config</code>, SQL-скрипты <code>reset-ExchangeQueueStatistics-*.sql</code>. Уточнить, собираются ли они в комплект вручную.</li>
+  <li><code>AgentInstaller.zip</code>: проекта <code>LTools.Orchestrator.AgentInstaller</code> в решении 1.26.9 нет, конвейер его не собирает. Скрипт <code>PrimoWorker.ps1</code> лежит в проекте агента.</li>
+  <li>Архив nginx: вместо <code>nginx-1.21.1.zip</code>/<code>nginx-linux.zip</code> выкладываются конфиги и сертификат из папки <code>nginx</code>; бинарного nginx в конвейере нет.</li>
+  <li>Документация из старой таблицы 2 (руководства под CentOS 8, Windows 2016) конвейером не формируется.</li>
+</ul>
+</div>
+
+<div class="src">Источники: <code>azure-pipelines-backend.yml</code> (выкладка архивов, UI, NGINX, DPA, Docker), <code>azure/build.ps1</code>, <code>azure/docker.ps1</code>, <code>azure/build-publish-dpa.ps1</code>; <code>docker/ubuntu/docker-compose.yml.template</code>; <code>nginx/</code>; <code>Orchestrator.Backend.sln</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/LTools.Orchestrator.WebApi.csproj</code> (версия); <code>Directory.Build.props</code>; <code>Orchestrator/LTools.Orchestrator.ComplectDescriber/Describe.json</code>. Руководство 1.25.7, раздел «Комплект поставки» (<code>SCRATCH/docx/full.md</code>) и статья сайта <code>orchestrator-sys-admin/deployment/kit.md</code> — для сравнения.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/ports">
+<main>
+<h1>Порты</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Порты служб Оркестратора и внешних компонентов: кто слушает, по какому протоколу и кто подключается. Значения взяты из конфигов nginx, Dockerfile, шаблона docker-compose и кода.</p>
+
+<p>Порт службы задаётся адресом точки Kestrel: <code>Kestrel:EndPoints:InternalHttp:Url</code> (HTTP) или <code>Kestrel:EndPoints:ExternalHttps:Url</code> (HTTPS). Номера ниже — те, на которые настроены поставляемые nginx-конфиги и Docker-образы для Ubuntu. Если вы меняете порт службы, поменяйте и <code>upstream</code> в nginx.</p>
+
+<h2>Точка входа</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
+<tr><td>nginx (UI и прокси API)</td><td>44392</td><td>HTTPS</td><td>Браузеры пользователей, Студия, роботы, агенты, внешние системы. Единственный порт, который нужно открывать для клиентов.</td></tr>
+</table></div>
+<p>Маршруты nginx к службам (одинаковы в <code>nginx.win.conf</code>, <code>nginx.linux.conf</code> и <code>nginx.docker.conf</code>):</p>
+<div class="tbl-wrap"><table>
+<tr><th>Путь</th><th>Куда</th></tr>
+<tr><td><code>/</code></td><td>Файлы UI</td></tr>
+<tr><td><code>/api/</code>, <code>/events/</code></td><td>WebApi</td></tr>
+<tr><td><code>/api/robotlogs</code> (POST, PUT), <code>/api/robotlogs/…/ScreenFile</code>, <code>/logs/</code></td><td>RobotLogs. GET-запросы <code>/api/robotlogs</code> идут в WebApi.</td></tr>
+<tr><td><code>/api/robotnotificationevents</code>, <code>/queues/</code></td><td>Queues</td></tr>
+<tr><td><code>/api/robotlicenseresponses</code>, <code>/licenses/</code></td><td>Licenses</td></tr>
+<tr><td><code>/nuget/</code></td><td>NuGet2</td></tr>
+<tr><td><code>/rdpstream/</code>, <code>/rdpsessions/</code></td><td>RDP2 (HTTPS)</td></tr>
+<tr><td><code>/mcp</code></td><td>MCP-сервер</td></tr>
+<tr><td><code>/grafana/</code></td><td>Grafana (нет в <code>nginx.docker.conf</code>)</td></tr>
+<tr><td><code>/apiendpoint</code></td><td>закрыт, возвращает 404</td></tr>
+</table></div>
+
+<h2>Службы Оркестратора</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
+<tr><td>WebApi</td><td>5001</td><td>HTTP</td><td>nginx; RobotLogs, States, Analytic, Licenses, Queues, RDP2, MCP (<code>Orchestrator:BaseUrl</code>); LogEventsWebhook в поставляемом compose</td></tr>
+<tr><td>RobotLogs</td><td>56748</td><td>HTTP</td><td>nginx; WebApi (<code>RobotLogs:BaseUrl</code>)</td></tr>
+<tr><td>Queues</td><td>5088</td><td>HTTP</td><td>nginx</td></tr>
+<tr><td>Licenses</td><td>5089</td><td>HTTP</td><td>nginx</td></tr>
+<tr><td>NuGet2</td><td>8081</td><td>HTTP</td><td>nginx; в Docker-шаблоне порт опубликован наружу</td></tr>
+<tr><td>RDP2</td><td>5102</td><td>HTTPS</td><td>nginx</td></tr>
+<tr><td>MachineInfo</td><td>5051</td><td>HTTP</td><td>WebApi (<code>License:MachineInfoUrl</code>)</td></tr>
+<tr><td>Analytic</td><td>56749</td><td>HTTP</td><td>— (служебные запросы, health-check)</td></tr>
+<tr><td>States</td><td>56750</td><td>HTTP</td><td>— (health-check)</td></tr>
+<tr><td>Notifications</td><td>56751</td><td>HTTP</td><td>— (health-check)</td></tr>
+<tr><td>LogEventsWebhook</td><td>56770</td><td>HTTP</td><td>— (health-check)</td></tr>
+<tr><td>MCP-сервер</td><td>5080</td><td>HTTP</td><td>nginx</td></tr>
+<tr><td>Метрики любой службы</td><td>10052</td><td>HTTP</td><td>Prometheus или Zabbix, если задан <code>Monitoring:Provider</code> (порт — <code>Monitoring:Port</code>)</td></tr>
+</table></div>
+<p>Порты 5001, 56748, 5088, 5089, 8081, 5102, 5080 и 3000 (Grafana) взяты из <code>upstream</code> nginx-конфигов; 5051, 56749, 56750, 56751, 56770 — из Docker-образов для Ubuntu. У каждой службы есть проверки <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code>.</p>
+<div class="note"><p>Docker-образы на базе Astra Linux и образы из <code>k8s/*.Dockerfile</code> слушают внутри контейнера порт 8080 (метрики — 10052), а не номера из таблицы.</p></div>
+
+<h2>Машины роботов</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
+<tr><td>Агент</td><td>5002</td><td>HTTPS (Windows, по умолчанию) / HTTP (Linux, <code>install.sh</code>)</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code>, <code>Tenants:Agent:Https</code>. <code>PrimoWorker.ps1</code> открывает 5002 в брандмауэре Windows.</td></tr>
+<tr><td>RDP</td><td>3389</td><td>RDP</td><td>RDP2</td></tr>
+<tr><td>Студия</td><td>порт, который сообщила Студия, или <code>Studio:Port</code></td><td>HTTPS (<code>Studio:Https</code>)</td><td>WebApi — проверка занятости лицензий Студии. В Docker-образе WebApi задано <code>Studio__Port=8735</code>.</td></tr>
+</table></div>
+
+<h2>Внешние компоненты</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Компонент</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
+<tr><td>PostgreSQL</td><td>5432</td><td>TCP</td><td>WebApi, RobotLogs, Analytic, Licenses, NuGet2</td></tr>
+<tr><td>RabbitMQ</td><td>5672</td><td>AMQP</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook (порт — <code>RabbitMQ:Port</code>)</td></tr>
+<tr><td>RabbitMQ Management</td><td>15672</td><td>HTTP</td><td>Администратор (опубликован в Docker-шаблоне)</td></tr>
+<tr><td>Grafana</td><td>3000</td><td>HTTP</td><td>nginx</td></tr>
+<tr><td>MinIO (в <code>k8s/docker-compose.yml</code>)</td><td>9000, 9001 (консоль)</td><td>HTTP</td><td>WebApi, RobotLogs, NuGet2</td></tr>
+<tr><td>SMTP-сервер</td><td><code>Email:FromSmtpPort</code></td><td>SMTP</td><td>Notifications</td></tr>
+<tr><td>Почтовый сервер для триггеров</td><td><code>Pop3Port</code> / <code>ImapPort</code> в <code>Tenants:IncomingEmail</code></td><td>POP3/IMAP/EWS</td><td>WebApi</td></tr>
+</table></div>
+
+<div class="todo">
+<p>Docker-образ LogEventsWebhook для Astra (<code>docker/astra/log-events-webhook.Dockerfile</code>) и <code>k8s/log-events-webhook.Dockerfile</code> задают <code>Kestrel__EndPoints__InternalHttp__Url=http://*:80</code>, а объявляют <code>EXPOSE 8080</code>. Проверить на стенде, на каком порту служба реально слушает.</p>
+<p>Расхождения со старой статьёй «Сетевые порты» (раздел для системного администратора): диапазон 8000–9000 «для роботов» в 1.26.9 не используется — параметры <code>RobotDeployment:PortMin</code>/<code>PortMax</code> помечены в коде как неиспользуемые новыми версиями робота. Порт 3389 там приписан RDP2, но по коду RDP2 сам подключается к машинам роботов по 3389, а слушает 5102. В старой таблице нет портов RobotLogs, Queues, Licenses, NuGet2, RDP2, метрик и RabbitMQ Management.</p>
+<p>LDAP/LDAPS (389/636) и SMTP 465 из старой статьи в коде как значения по умолчанию не заданы: порт LDAP задаётся адресом контроллера в <code>ActiveDirectory:MultyForest</code>, SMTP — <code>Email:FromSmtpPort</code>.</p>
+<p>Порт MS SQL Server и порты Redis, Vault, MQTT в коде не заданы: они берутся из строк подключения и адресов в конфиге.</p>
+<p>Путь, по которому служба отдаёт метрики Prometheus, в коде явно не задан (используется <code>KestrelMetricServer</code> с настройками по умолчанию) — сверить на стенде.</p>
+</div>
+
+<div class="src">Источники: <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/nginx.docker.conf</code>; <code>k8s/ui-nginx.conf.template</code>; <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/astra/*.Dockerfile</code>, <code>docker/ubuntu/docker-compose.yml.template</code>; <code>k8s/*.Dockerfile</code>, <code>k8s/docker-compose.yml</code>; <code>k8s/agent/install.sh</code>; <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Tenants.cs</code>, <code>Options/Studio.cs</code>, <code>Bl/Licensing/BusyStudioLicensesService.cs</code>; <code>Orchestrator/LTools.Orchestrator.Monitoring/Options/Monitoring.cs</code>, <code>MonitoringService.cs</code>; <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>; <code>Orchestrator/LTools.Orchestrator.RDP2/Bl/Client/RdpSettings.cs</code>; <code>Orchestrator/LTools.Shared/Config/ConfigExtensions.cs</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

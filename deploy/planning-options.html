@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/planning-options">
+<main>
+<h1>Выбор варианта развертывания</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Какие способы установки поддерживает поставка 1.26.9 и чем они отличаются. Выберите один до начала установки.</p>
+
+<h2>Варианты</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Вариант</th><th>Что в поставке</th><th>Особенности</th></tr>
+  <tr><td><b>Docker Compose</b></td><td>Файл <code>docker-compose.yml</code>, образы служб на базе <code>ubuntu:24.04</code>, <code>nginx.conf</code>, сертификат <code>cert1.crt</code>/<code>cert1.rsa</code></td><td>В compose уже есть PostgreSQL 14 и RabbitMQ 3. Файлы хранятся в томах Docker. RDP2 в compose нет — ставится отдельно.</td></tr>
+  <tr><td><b>Службы Linux</b> (systemd)</td><td>Архивы <code>*-linux.zip</code> с файлами юнитов; конфиг <code>nginx.linux.conf</code> и юнит <code>Primo.Orchestrator.Nginx.service</code></td><td>Каждая служба — в <code>/opt/Primo/&lt;Имя&gt;</code>. Для каждой есть два юнита: системный (от root) и пользовательский (<code>systemctl --user</code>, не от root).</td></tr>
+  <tr><td><b>Службы Windows + nginx</b></td><td>Архивы без суффикса, <code>nginx.win.conf</code></td><td>Службы работают как службы Windows. nginx раздаёт UI и проксирует запросы.</td></tr>
+</table></div>
+
+<div class="note"><p>Во всех вариантах снаружи открыт один адрес — nginx на порту <code>44392</code> по HTTPS. Остальные службы слушают HTTP на своих портах и видны только nginx и друг другу. Подробно — <a href="../deploy/network.html">Порты и сетевой трафик</a>.</p></div>
+
+<h2>СУБД</h2>
+<p>В решении есть миграции для PostgreSQL и для MS SQL Server — поддерживаются обе. Тип задаётся параметром <code>DBVendor</code> (по умолчанию <code>Postgres</code>). Docker-образы настроены только на PostgreSQL.</p>
+
+<h2>Один сервер или несколько</h2>
+<p>Конфиги nginx в поставке рассчитаны на один сервер: все службы указаны как <code>127.0.0.1:&lt;порт&gt;</code>. Чтобы разнести службы:</p>
+<ul>
+  <li>в <code>nginx.conf</code> поменяйте адреса в блоках <code>upstream</code>;</li>
+  <li>в службах поменяйте адреса зависимостей: <code>RabbitMQ:Host</code>, <code>DbConnection:Items:&lt;БД&gt;:Hostname</code>, <code>Orchestrator:BaseUrl</code> (адрес WebApi), в WebApi — <code>License:MachineInfoUrl</code> и <code>RobotLogs:BaseUrl</code>.</li>
+</ul>
+<p>RDP2 удобно ставить на отдельную машину: в Docker-конфиге nginx его адрес задаётся явно, потому что RDP2 работает вне compose.</p>
+
+<h2>Как выбрать</h2>
+<ul>
+  <li>Нужен быстрый стенд или пилот на Linux — Docker.</li>
+  <li>Linux-сервер без Docker (Astra, Ubuntu, РЕД ОС) — службы Linux.</li>
+  <li>Windows-сервер — службы Windows с nginx. Вариант с IIS не поддерживается.</li>
+</ul>
+
+<div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в выгрузке есть, но конвейер сборки сейчас собирает только ubuntu-вариант (<code>BASE_IMAGE: ubuntu</code>, выбор astra закомментирован), а в astra-compose нет служб Queues и Licenses — уточнить, поставляется ли Docker на Astra в 1.26.9.</p></div>
+<div class="todo"><p>Kubernetes: в <code>k8s/helm/</code> есть Helm-чарты, но они для внутреннего стенда разработки (тестовые адреса и значения). Поставки для Kubernetes заказчику в коде не найдено — не обещать в доках, пока не подтвердят.</p></div>
+<div class="todo"><p>Старое руководство 1.25.7 рекомендовало для Windows MS SQL, для Linux — PostgreSQL, и помечало PostgreSQL на Windows как «без гарантии поддержки». В коде это не отражено — сверить актуальную политику.</p></div>
+
+<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code>, <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/astra/docker-compose.yml.template</code>, <code>azure-pipelines-docker.yml</code>, <code>azure/docker.ps1</code>, <code>azure/build.ps1</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/LTools.Orchestrator.WebApi.csproj</code> (<code>AspNetCoreHostingModel</code>), <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/nginx.docker.conf</code>, <code>Orchestrator/LTools.Orchestrator.*/*.service</code>, <code>k8s/helm/</code>; руководство 1.25.7, раздел «Комплект поставки» (таблицы 3–4).</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

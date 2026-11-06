@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/robot-stops">
+<main>
+<h1>Робот останавливается сам или не останавливается по кнопке</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
+<p class="lead">Оркестратор останавливает робота по команде пользователя, по настройкам задания и по таймауту, если робот перестал подавать сигналы. Если остановка случилась «без причины», чаще всего сработало одно из последних двух.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>Робот прекратил выполнение проекта, в журнале робота ошибки нет.</li>
+  <li>Остановились сразу несколько роботов.</li>
+  <li>Кнопка <b>Остановить</b> или <b>Попросить остановиться</b> не действует.</li>
+</ul>
+
+<h2>Робот остановился сам</h2>
+<h3>Вероятные причины</h3>
+<ul>
+  <li>В задании включено <b>Автоматически останавливать робота</b> или есть триггер «Остановка по таймауту».</li>
+  <li>Робот долго не присылал сигнал «жив» (keepalive): Оркестратор освободил его лицензию и отключил RDP-сессию.</li>
+  <li>Оборвалась RDP-сессия или сеанс пользователя робота: см. <a href="rdp.html">Сессия робота не поднимается</a>.</li>
+  <li>Падала служба WebApi: см. <a href="ui-not-opening.html">Интерфейс не открывается или падает WebApi</a>.</li>
+</ul>
+<h3>Что проверить</h3>
+<ol class="steps">
+  <li>Откройте задание, по которому шёл запуск. Проверьте <b>Автоматически останавливать робота</b>, <b>Способ остановки</b> и триггеры типа «Остановка по таймауту» с полем <b>Таймаут (мин)</b>. Отсчёт идёт с момента запуска робота. <span class="check">Время остановки не совпадает с таймаутом задания</span></li>
+  <li>Откройте события Оркестратора на время остановки. Ищите «Лицензия робота освобождена по таймауту». В журнале WebApi — «Освобождение лицензии робота с robotKey=… по таймауту…». <span class="check">Понятно, освобождал ли Оркестратор лицензию</span></li>
+  <li>Проверьте журнал WebApi на перезапуски службы в это время.</li>
+</ol>
+<div class="todo"><p>Скриншот: форма задания, блок «Автоматически останавливать робота» и триггер «Остановка по таймауту».</p></div>
+<h3>Как исправить</h3>
+<p>Если лицензия освобождается по таймауту, робот не присылал keepalive дольше <code>RobotStart:IntervalForReleaseInSeconds</code>. Вместе с лицензией Оркестратор отключает RDP-сессию робота, и проект прерывается. Варианты:</p>
+<ul>
+  <li>Выясните, почему робот молчит: длинная активность, перегруженная машина, нет связи с WebApi.</li>
+  <li>Увеличьте <code>RobotStart:IntervalForReleaseInSeconds</code>.</li>
+  <li>Задайте <code>RobotStart:DisableReleaseRdpSessionTimeOut=true</code>, чтобы при освобождении лицензии сессия не отключалась.</li>
+</ul>
+
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр WebApi</th><th>Назначение</th><th>По умолчанию (класс / Dockerfile)</th></tr>
+  <tr><td><code>RobotStart:IntervalForReleaseInSeconds</code></td><td>Сколько секунд без keepalive до освобождения лицензии. Проверка каждые 10 с</td><td>300 / 120</td></tr>
+  <tr><td><code>RobotStart:DisableReleaseRdpSessionTimeOut</code></td><td>Не отключать RDP-сессию при освобождении лицензии по таймауту</td><td><code>false</code></td></tr>
+  <tr><td><code>RobotStart:AliveInterval</code></td><td>Интервал keepalive для роботов, мс. Используется, если он не задан в самом роботе</td><td>не задан</td></tr>
+  <tr><td><code>Robot:RunStatusTimeout</code></td><td>Сколько секунд без обновления статуса до перевода робота в «Недоступен»</td><td>30 / 11</td></tr>
+  <tr><td><code>Assignment:LaunchTimeoutPeriod</code></td><td>Как часто проверяются триггеры «Остановка по таймауту», с</td><td>30</td></tr>
+</table></div>
+
+<h2>Робот не останавливается по кнопке</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Кнопка</th><th>Что происходит</th><th>Когда не сработает</th></tr>
+  <tr><td><b>Попросить остановиться</b></td><td>Оркестратор ставит сигнал мягкой остановки, робот сам его запрашивает и завершается</td><td>В проекте нет активности обработки сигнала мягкой остановки. Робот не запущен: «Робот не запущен.»</td></tr>
+  <tr><td><b>Остановить</b></td><td>Агент завершает процесс робота, лицензия освобождается, робот становится «Недоступен»</td><td>Агент недоступен. Робот ещё стартует и заблокирован Оркестратором</td></tr>
+</table></div>
+<ol class="steps">
+  <li>Если в ответе «Робот занят Оркестратором …», запуск ещё не завершился. Дождитесь окончания старта или снятия блокировки, затем повторите.</li>
+  <li>Проверьте связь WebApi с агентом машины: <code>curl -k https://&lt;IP/DNS&gt;:5002/api/Worker</code>. <span class="check">Ответ 200</span></li>
+  <li>Если остановка не завершилась за <code>Robot:HardKillStartedTimeout</code> (200 с), в журнале WebApi будет «Таймаут принудительного останова … сек. истек…». Проверьте процессы робота на машине и завершите их вручную. <span class="check">Процессов робота на машине нет, статус «Недоступен»</span></li>
+</ol>
+<div class="warn"><p>Linux: при принудительной остановке агент завершает один процесс робота командой <code>kill</code>, а не всё дерево процессов. Дочерние процессы, например браузер, могут остаться. На Windows завершается всё дерево.</p></div>
+
+<div class="todo"><p>В тексте «Рoбот занят Оркестратором {0}.» в коде буква «o» в слове «Рoбот» латинская. Поиск по журналу с кириллической «о» эту строку не найдёт. Передать разработке.</p></div>
+<div class="todo"><p>Перевод робота в «Недоступен» по <code>Robot:RunStatusTimeout</code> в журнал не пишется. Уточнить у разработки, влияет ли он на выполнение проекта.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/{RobotStart,Robot,Assignment}.cs</code>, <code>Bl/Licensing/RobotTimeoutReleaseLicensesService.cs</code>, <code>Bl/Assignments/LaunchTimeoutService.cs</code>, <code>Bl/Robots/RobotService.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>LTools.Orchestrator.Agent/Bl/Runners/{WindowsScriptRunner,LinuxScriptRunner}.cs</code>; <code>LTools.Enums/OrchestratorEvent.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/{robots,jobs}.json</code>, <code>src/shared/api/agent/robots/index.ts</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

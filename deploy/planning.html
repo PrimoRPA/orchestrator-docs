@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/planning">
+<main>
+<h1>Планирование установки</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Что решить до того, как распаковывать дистрибутивы: где будут работать службы, какая СУБД, какие порты открыть и под какими учётными записями всё запускать.</p>
+
+<h2>Из чего состоит Оркестратор</h2>
+<p>Оркестратор — набор отдельных служб. Каждая поставляется своим архивом для Windows и для Linux (суффикс <code>-linux</code>) и в Docker — своим образом.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Архив</th><th>Что делает</th></tr>
+  <tr><td>WebApi</td><td><code>WebApi</code>, <code>WebApi-linux</code></td><td>Основной API, работает с БД <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, обращается к агентам и роботам.</td></tr>
+  <tr><td>UI</td><td>архив UI4 (отдельный репозиторий)</td><td>Веб-интерфейс, раздаётся nginx; nginx же проксирует запросы к службам.</td></tr>
+  <tr><td>MachineInfo</td><td><code>MachineInfo</code></td><td>Данные об оборудовании для лицензирования; к нему обращается WebApi (<code>License:MachineInfoUrl</code>).</td></tr>
+  <tr><td>RobotLogs</td><td><code>RobotLogs</code></td><td>Принимает журналы роботов, БД <code>ltoolslogs</code>.</td></tr>
+  <tr><td>Queues, Licenses</td><td><code>Queues</code>, <code>Licenses</code></td><td>Принимают уведомления и ответы по лицензиям от роботов.</td></tr>
+  <tr><td>States, Notifications, Analytic</td><td>одноимённые</td><td>Состояния, почтовые оповещения, аналитика (БД <code>ltoolsanalytic</code>).</td></tr>
+  <tr><td>NuGet2</td><td><code>NuGet2</code></td><td>NuGet-сервер (БД <code>ltoolsnuget</code>).</td></tr>
+  <tr><td>RDP2</td><td><code>RDP2</code></td><td>Поддержка RDP-сессий; в Docker-поставку не входит.</td></tr>
+  <tr><td>LogEventsWebhook, ArcSight</td><td>одноимённые</td><td>Передача событий во внешние системы. Можно поставить позже.</td></tr>
+  <tr><td>Agent</td><td><code>Agent</code>, <code>Agent-linux</code></td><td>Ставится на каждую машину робота.</td></tr>
+  <tr><td>PasswordEncryptor</td><td><code>PasswordEncryptor</code></td><td>Утилита шифрования паролей для конфигурации.</td></tr>
+</table></div>
+<p>Все службы обмениваются сообщениями через RabbitMQ. Архивы собираются как self-contained: отдельно ставить .NET на сервер не нужно.</p>
+
+<h2>Что решить до установки</h2>
+<ol>
+  <li><b>Вариант развертывания</b>: Docker, службы Linux или службы Windows с nginx; один сервер или несколько.</li>
+  <li><b>СУБД</b>: PostgreSQL или MS SQL Server. В Docker-поставке — только PostgreSQL.</li>
+  <li><b>Железо</b> под ожидаемое число роботов и RDP-сессий.</li>
+  <li><b>Сеть</b>: адрес, по которому Оркестратор увидят роботы, порты между службами, агентами и роботами.</li>
+  <li><b>Учётные записи</b>: от кого работают службы, агент, роботы; пользователи СУБД и RabbitMQ.</li>
+  <li><b>Сертификат</b> для HTTPS на nginx.</li>
+</ol>
+
+<div id="children"></div>
+
+<p>После планирования пройдите <a href="../deploy/checklist.html">чек-лист подготовки</a>.</p>
+
+<div class="todo"><p>Назначение States, Analytic, ArcSight описано по именам проектов и старым докам — сверить формулировки с разработкой. Архив UI в <code>azure/build.ps1</code> не собирается (UI собирается из репозитория UI4) — уточнить имя архива UI в поставке 1.26.9.</p></div>
+
+<div class="src">Источники: <code>azure/build.ps1</code> (состав архивов, <code>--self-contained true</code>); <code>docker/ubuntu/*.Dockerfile</code> (имена БД <code>DbConnection__Items__*__DbName</code>, <code>DBVendor</code>); <code>Orchestrator/*.Migrations.MSSQL</code>, <code>*.Migrations.Postgres</code>; <code>nginx/nginx.linux.conf</code>; руководство 1.25.7, разделы «Комплект поставки», «Установка компонентов Оркестратора».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

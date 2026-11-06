@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/api">
+<main>
+<h1>API</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Где открыть Swagger, как получить токен и какие группы методов есть в WebApi. Полный список методов с параметрами смотрите в Swagger своей установки.</p>
+<div class="note"><p>API Оркестратора не публичный. Swagger есть в каждой установке, но обязательств по обратной совместимости API нет: методы и их параметры могут меняться от версии к версии. Подробное описание API выдаётся по запросу.</p></div>
+
+<h2>Swagger</h2>
+<p>Swagger включён во всех службах, кроме NuGet2, независимо от окружения: в <code>Startup.cs</code> каждой службы <code>AddSwagger</code> вызывается без условий, отдельного параметра для отключения нет. Пути одинаковые:</p>
+<div class="tbl-wrap"><table>
+<tr><th>Что</th><th>Путь</th></tr>
+<tr><td>Интерфейс Swagger UI</td><td><code>/api/doc</code></td></tr>
+<tr><td>Описание OpenAPI (JSON)</td><td><code>/api/v1/swagger.json</code></td></tr>
+<tr><td>Запрос к <code>/api</code></td><td>перенаправление (301) на <code>/api/v1/swagger.json</code></td></tr>
+</table></div>
+<p>Для WebApi через nginx: <code>https://&lt;сервер&gt;:44392/api/doc</code> — путь <code>/api/</code> проксируется в WebApi. Swagger остальных служб открывается напрямую на порту службы (см. <a href="ports.html">«Порты»</a>), например <code>http://&lt;сервер&gt;:56748/api/doc</code> для RobotLogs.</p>
+<p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2, агента и DpaAgent есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
+<div class="todo"><p>В старой документации были отдельные инструкции «Открытие Swagger в Nginx». По коду 1.26.9 Swagger WebApi доступен через <code>/api/doc</code> без дополнительной настройки nginx — проверить на стенде, не закрыт ли путь в поставляемых конфигах.</p></div>
+
+<h2>Аутентификация</h2>
+<p>API защищено JWT-токенами (схема Bearer). Токен подписывает WebApi; издатель, аудиторию и ключ подписи задают переменные окружения <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code>, <code>PRIMOSIGNINGKEY</code> (см. <a href="config.html#common">«Параметры конфигурации»</a>). Время жизни — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
+<ol class="steps">
+  <li>Отправьте <code>POST /api/Account</code> с телом <code>{"userName": "…", "password": "…"}</code>. Для тенанта передайте заголовок <code>tenantId</code>. <span class="check">В ответе есть поле <code>token</code>.</span></li>
+  <li>Передавайте токен в каждом запросе: заголовок <code>Authorization: Bearer &lt;токен&gt;</code>. <span class="check">Защищённые методы отвечают не 401.</span></li>
+</ol>
+<p>Другие способы входа в <code>AccountController</code>:</p>
+<div class="tbl-wrap"><table>
+<tr><th>Метод</th><th>Для чего</th></tr>
+<tr><td><code>POST /api/Account/{ad}</code></td><td>Вход логином и паролем домена AD (LDAP).</td></tr>
+<tr><td><code>GET /api/Account/LoginNegotiate</code></td><td>Вход по Kerberos (SSO), в том числе для роботов и Студии.</td></tr>
+<tr><td><code>POST /api/Account/KeyCloak1/Login</code></td><td>Вход через Keycloak, простой поток.</td></tr>
+<tr><td><code>GET /api/Account/KeyCloak2/AuthUrl</code>, <code>/KeyCloak2/Login</code>, <code>/KeyCloak2/Token/{state}</code></td><td>Вход через Keycloak с PKCE.</td></tr>
+<tr><td><code>POST /api/Account/AttendedRobot</code>, <code>GET /api/Account/AttendedRobotLoginNegotiate</code></td><td>Вход attended-робота.</td></tr>
+<tr><td><code>POST /api/Account/logout</code></td><td>Выход.</td></tr>
+</table></div>
+<p>Какие способы входа разрешены, задаёт <code>Auth:Type</code>. Доступ к методам проверяется по разрешениям ролей пользователя. Для веб-сокета (SignalR, путь <code>WS:Path</code>, по умолчанию <code>/events</code>) токен можно передать в строке запроса <code>access_token</code>.</p>
+
+<h2>Группы методов WebApi</h2>
+<p>Все контроллеры WebApi доступны по пути <code>/api/&lt;Контроллер&gt;</code>. Отметка «без входа» — в контроллере есть методы, доступные без токена.</p>
+<div class="tbl-wrap"><table>
+<tr><th>Контроллер</th><th>Назначение</th></tr>
+<tr><td><code>Account</code></td><td>Вход и выход, список тенантов и способов входа (без входа).</td></tr>
+<tr><td><code>Users</code>, <code>Roles</code>, <code>Permissions</code>, <code>UserGrants</code></td><td>Пользователи, роли, список разрешений, гранты пользователей (пары «пользователь — тенант»).</td></tr>
+<tr><td><code>PasswordPolicies</code></td><td>Политика паролей.</td></tr>
+<tr><td><code>Ad</code>, <code>AdGroups</code>, <code>KeyCloakRealm</code></td><td>Домены AD и их группы, realm-ы и роли Keycloak (частично без входа).</td></tr>
+<tr><td><code>Tenants</code></td><td>Тенанты.</td></tr>
+<tr><td><code>Robots</code>, <code>RobotGroups</code>, <code>RobotSignals</code></td><td>Роботы, группы роботов, сигналы робота о старте и завершении проекта.</td></tr>
+<tr><td><code>Workers</code>, <code>WorkerIpAddresses</code></td><td>Машины роботов и их IP-адреса.</td></tr>
+<tr><td><code>RdpSessions</code></td><td>RDP-сессии машин (используется RDP2).</td></tr>
+<tr><td><code>AgentCallback</code></td><td>Приём вызовов агента.</td></tr>
+<tr><td><code>AgentDistrs</code>, <code>RobotDistrs</code>, <code>DeployTemplates</code></td><td>Дистрибутивы агента и робота, шаблоны развёртывания.</td></tr>
+<tr><td><code>RpaProjects</code>, <code>RpaProjectVariables</code></td><td>RPA-проекты и их переменные.</td></tr>
+<tr><td><code>RpaProjectQueue</code></td><td>Очередь ожидания проектов.</td></tr>
+<tr><td><code>RpaProjectLaunches</code>, <code>Launches</code></td><td>Запуски проектов, мониторинг запусков.</td></tr>
+<tr><td><code>Assignments</code>, <code>Schedules</code>, <code>Triggers</code>, <code>ProductionCalendars</code>, <code>ProductionCalendars2</code></td><td>Задания, расписания, триггеры, производственные календари (одиночные и множественные).</td></tr>
+<tr><td><code>IncomingEmails</code></td><td>Почтовые ящики для триггеров по почте.</td></tr>
+<tr><td><code>ExchangeQueues</code></td><td>Очереди обмена данными между роботами.</td></tr>
+<tr><td><code>Assets</code></td><td>Ассеты (ресурсы).</td></tr>
+<tr><td><code>Folders</code>, <code>Folders2</code></td><td>Личные и общие папки.</td></tr>
+<tr><td><code>RobotLogs</code>, <code>Logs</code>, <code>OrchEvents</code>, <code>SystemEventTypes</code></td><td>Журналы роботов (чтение), запись журнала, события Оркестратора и типы системных событий.</td></tr>
+<tr><td><code>Subscriptions</code>, <code>NotificationEmailQueue</code>, <code>Email</code></td><td>Подписки на уведомления, очередь писем, отправка писем.</td></tr>
+<tr><td><code>Licenses</code></td><td>Лицензии.</td></tr>
+<tr><td><code>NuGet</code></td><td>Работа с NuGet-сервером.</td></tr>
+<tr><td><code>ProcessRepository</code></td><td>Репозиторий процессов (подсистема DPA).</td></tr>
+<tr><td><code>BlackWhiteIpStudioRules</code></td><td>Чёрный и белый списки IP для Студии.</td></tr>
+<tr><td><code>Settings</code>, <code>UserUISettingsStorage</code>, <code>Culture</code>, <code>Banner</code>, <code>Support</code></td><td>Настройки для UI, пользовательские настройки интерфейса, язык, баннер, ссылка на поддержку (частично без входа).</td></tr>
+<tr><td><code>StatesSlaConfig</code></td><td>Параметры SLA службы States.</td></tr>
+<tr><td><code>ConfigService</code></td><td>Фиксация изменений конфигурации (контроль целостности).</td></tr>
+<tr><td><code>Stats</code></td><td>Статистика.</td></tr>
+<tr><td><code>Version</code>, <code>Test</code></td><td>Версия и время сервера, проверка доступности (без входа).</td></tr>
+</table></div>
+
+<h2>API других служб</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Служба</th><th>Префикс</th><th>Контроллеры</th></tr>
+<tr><td>RobotLogs</td><td><code>/logs/</code></td><td><code>RobotLogs</code> (приём журналов), <code>RobotLogsQueries</code>, <code>OrchEventsQueries</code>, <code>LogsSectionsQueries</code>, <code>Launches</code>, <code>Version</code></td></tr>
+<tr><td>Queues</td><td><code>/queues/</code></td><td><code>Queues</code>, <code>RobotNotificationEvents</code>, <code>Version</code></td></tr>
+<tr><td>Licenses</td><td><code>/licenses/</code></td><td><code>RobotLicenseResponses</code>, <code>Version</code></td></tr>
+<tr><td>Analytic</td><td><code>/analytic/</code></td><td><code>UnloadingEvents</code>, <code>Version</code></td></tr>
+<tr><td>MachineInfo</td><td><code>/api/</code></td><td><code>MachineInfo</code></td></tr>
+<tr><td>RDP2</td><td><code>/api/</code></td><td><code>Desktop</code>, <code>DesktopStream</code>, <code>Version</code></td></tr>
+<tr><td>Агент</td><td><code>/api/</code></td><td><code>Robots</code>, <code>Worker</code>, <code>RDPUsers</code>, <code>Performance</code>, <code>Desktop</code>, <code>DesktopStream</code>, <code>TriggerOrchCommands</code>, <code>Update</code>, <code>Version</code>. Вызовы требуют разрешения <code>Agent.Call</code>.</td></tr>
+</table></div>
+<p>Во всех службах есть служебные методы вне Swagger: <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code>, <code>/info</code> (сведения о службе) и <code>/loggers</code> (просмотр и смена уровня журналирования: <code>POST /loggers/{имя}/{уровень}</code>).</p>
+
+<div class="todo"><p>Маршрут <code>/loggers</code> и <code>/info</code> объявлены в общей библиотеке <code>LTools.Orchestrator</code>; проверить на стенде, что они действительно отвечают в каждой службе.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/Swagger/SwaggerSetupExtensions.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (<code>SetupSwagger</code>/<code>SetupSwaggerWithAuth</code>, <code>AddSwagger</code>, <code>AddJwtBearer</code>, <code>MapHub</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/*.cs</code>, в т. ч. <code>AccountController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Dto/Orchestrator/Security/LoginDto.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Auth.cs</code>; <code>Orchestrator/LTools.Orchestrator.{RobotLogs,Queues,Licenses,Analytic,MachineInfo,RDP2,Agent}/Controllers/*.cs</code>; <code>Orchestrator/LTools.Orchestrator/Controllers/InfoController.cs</code>, <code>LoggersController.cs</code>; <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>; <code>Orchestrator/LTools.Shared/Encryption/Jwt.cs</code>; <code>nginx/nginx.linux.conf</code>. Сборка списка контроллеров — <code>refscripts/ctrls.py</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

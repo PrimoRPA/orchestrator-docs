@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="operate/events">
+<main>
+<h1>События и их коды</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Справочник событий журнала Оркестратора: код, имя в коде, описание и класс. Пригодится при разборе журнала, настройке выгрузки событий во внешние системы и запросах к БД. Заменяет «Приложение 3 — События Оркестратора» прежнего сайта.</p>
+
+<h2>Где хранятся и где видны</h2>
+<p>WebApi и другие службы публикуют события в RabbitMQ, служба RobotLogs записывает их в таблицу <code>OrchEvents</code> БД журналов (<code>ltoolslogs</code>). В UI4 они на странице «События оркестратора»; фильтры «Тип события» (конкретный код) и «Класс события». Право на просмотр — <code>OrchEvents.View</code>.</p>
+<p>Основные поля записи:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Поле</th><th>Что содержит</th></tr>
+  <tr><td><code>Event</code></td><td>Код события — число из таблицы ниже.</td></tr>
+  <tr><td><code>EventType</code></td><td>Класс: <code>1</code> — информационное, <code>2</code> — ошибка, <code>3</code> — инцидент безопасности, <code>4</code> — корректировка.</td></tr>
+  <tr><td><code>EntityId</code></td><td>Идентификатор объекта события (робота, машины, проекта и т.п.).</td></tr>
+  <tr><td><code>UserId</code>, <code>IP</code></td><td>Кто и откуда выполнил действие.</td></tr>
+  <tr><td><code>OrchTimestampUtc</code></td><td>Время события, UTC. В UI показывается со смещением часового пояса тенанта.</td></tr>
+  <tr><td><code>OperationKey</code></td><td>Идентификатор бизнес-операции; объединяет события одной операции. В UI — фильтр «Код операции».</td></tr>
+  <tr><td><code>Text</code></td><td>Дополнительные данные события.</td></tr>
+  <tr><td><code>TenantId</code>, <code>ProjectId</code>, <code>ProjectName</code>, <code>AssignmentId</code></td><td>Тенант, связанный проект и задание.</td></tr>
+  <tr><td><code>NodeId</code></td><td>Узел кластера WebApi, на котором произошло событие.</td></tr>
+</table></div>
+
+<h2>Классы событий</h2>
+<p>Класс назначается по коду события (метод <code>OrchEventManager.GetOrchestratorEventType</code>). Всё, что не отнесено к ошибкам, инцидентам или корректировкам, — информационное. Отдельные места кода могут выставить класс явно (например, ошибка обработки ответа Агента).</p>
+<ul>
+  <li><b>Инцидент безопасности</b> — входы и выходы, изменения пользователей, ролей и прав, лицензий, защищённых ассетов, изменение конфигурационного файла (код 2), очистка журналов (20000) и др.</li>
+  <li><b>Ошибка</b> — недоступность машины, ошибки запуска и выполнения робота, переполнение внутренней очереди триггеров (9018), ошибки разлогинивания RDP, рассинхронизация узлов кластера и др.</li>
+  <li><b>Корректировка</b> — добавление и потеря узла кластера (90500, 90501), резервирование URL Агентом с фактическим портом (7061).</li>
+</ul>
+<div class="note"><p>Без фильтра по классу инциденты безопасности в списке не показываются. Когда пользователь открывает инциденты безопасности, в журнал пишется событие 92000 «Просмотр журнала регистрации событий ИБ» (не чаще раза в 20 секунд на пользователя).</p></div>
+
+<h2>Как найти события в БД</h2>
+<p>Пример для PostgreSQL — события переполнения очереди триггеров за период:</p>
+<pre><code>SELECT "OrchTimestampUtc", "Event", "EntityId", "NodeId"
+FROM "OrchEvents"
+WHERE "Event" IN (9016, 9017, 9018)
+  AND "OrchTimestampUtc" BETWEEN '2026-01-01' AND '2026-01-02'
+ORDER BY "OrchTimestampUtc";</code></pre>
+<p>Те же события уходят во внешние системы через службу LogEventsWebhook — см. <a href="../configure/integrations.html">Интеграции</a>.</p>
+
+<h2>Перечень событий</h2>
+<p>Описания — дословно из кода (словарь <code>OrchEventsController.AllOrchestratorEvents</code>). Класс — по умолчанию для кода события.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Код</th><th>Имя</th><th>Описание</th><th>Класс</th></tr>
+  <tr><td>1</td><td><code>OrchestratorStarted</code></td><td>Оркестратор стартовал</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2</td><td><code>ConfigChanged</code></td><td>Конфигурационный файл изменен</td><td>Инцидент безопасности</td></tr>
+  <tr><td>101</td><td><code>UserCreated</code></td><td>Пользователь создан</td><td>Инцидент безопасности</td></tr>
+  <tr><td>102</td><td><code>AdUserCreated</code></td><td>Пользователь AD зарегистрирован</td><td>Инцидент безопасности</td></tr>
+  <tr><td>103</td><td><code>UserChanged</code></td><td>Пользователь изменен</td><td>Инцидент безопасности</td></tr>
+  <tr><td>104</td><td><code>UserDisabled</code></td><td>Пользователь отключен</td><td>Инцидент безопасности</td></tr>
+  <tr><td>105</td><td><code>UserRolesAssigned</code></td><td>Пользователю назначены роли</td><td>Инцидент безопасности</td></tr>
+  <tr><td>106</td><td><code>UserEnabled</code></td><td>Пользователь включен</td><td>Инцидент безопасности</td></tr>
+  <tr><td>107</td><td><code>UserDeleted</code></td><td>Пользователь удален</td><td>Инцидент безопасности</td></tr>
+  <tr><td>108</td><td><code>UserPasswordChanged</code></td><td>Пользователь изменил свой пароль</td><td>Инцидент безопасности</td></tr>
+  <tr><td>109</td><td><code>UserPasswordChangingFailed</code></td><td>Неудачная попытка изменить пароль у пользователя</td><td>Инцидент безопасности</td></tr>
+  <tr><td>110</td><td><code>UserPasswordChangingAttemptsLimitOut</code></td><td>Исчерпан лимит попыток изменения пароля</td><td>Инцидент безопасности</td></tr>
+  <tr><td>201</td><td><code>RoleCreated</code></td><td>Роль создана</td><td>Инцидент безопасности</td></tr>
+  <tr><td>202</td><td><code>RoleChanged</code></td><td>Роль изменена</td><td>Инцидент безопасности</td></tr>
+  <tr><td>203</td><td><code>RoleDeleted</code></td><td>Роль удалена</td><td>Инцидент безопасности</td></tr>
+  <tr><td>204</td><td><code>RolePermissionsAssigned</code></td><td>Роли назначены права</td><td>Инцидент безопасности</td></tr>
+  <tr><td>301</td><td><code>WorkerCreated</code></td><td>Машина зарегистрирована</td><td>Информационное</td></tr>
+  <tr><td>302</td><td><code>WorkerChanged</code></td><td>Машина изменена</td><td>Информационное</td></tr>
+  <tr><td>303</td><td><code>WorkerDisabled</code></td><td>Машина выведена из эксплуатации</td><td>Информационное</td></tr>
+  <tr><td>304</td><td><code>WorkerRebootStarted</code></td><td>Перезагрузка машины запущена</td><td>Информационное</td></tr>
+  <tr><td>305</td><td><code>WorkerRebootCompleted</code></td><td>Перезагрузка машины завершена</td><td>Информационное</td></tr>
+  <tr><td>306</td><td><code>WorkerTestAvailable</code></td><td>Машина доступна</td><td>Информационное</td></tr>
+  <tr><td>307</td><td><code>WorkerTestNotAvailable</code></td><td>Машина недоступна</td><td>Ошибка</td></tr>
+  <tr><td>308</td><td><code>WorkerIpAddressSended</code></td><td>Машина робота отправила свой IP оркестратору</td><td>Информационное</td></tr>
+  <tr><td>309</td><td><code>WorkerLogOffAll</code></td><td>Разлогинивание всех RDP-пользователей</td><td>Информационное</td></tr>
+  <tr><td>310</td><td><code>WorkerIncreaseLoading</code></td><td>На машине робота растет нагрузка</td><td>Информационное</td></tr>
+  <tr><td>311</td><td><code>WorkerDecreaseLoading</code></td><td>На машине робота падает нагрузка</td><td>Информационное</td></tr>
+  <tr><td>312</td><td><code>WorkerOverflowLoading</code></td><td>На машине робота нагрузка превышает допустимую</td><td>Ошибка</td></tr>
+  <tr><td>313</td><td><code>WorkerStarted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>314</td><td><code>WorkerStopped</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>315</td><td><code>WorkerTagsAdded</code></td><td>К машине робота добавлены теги</td><td>Информационное</td></tr>
+  <tr><td>316</td><td><code>WorkerTagsDeleted</code></td><td>У машины робота удалены теги</td><td>Информационное</td></tr>
+  <tr><td>401</td><td><code>ProjectCreated</code></td><td>Проект создан</td><td>Информационное</td></tr>
+  <tr><td>402</td><td><code>ProjectChanged</code></td><td>Проект изменен</td><td>Информационное</td></tr>
+  <tr><td>403</td><td><code>ProjectDisabled</code></td><td>Проект выведен из эксплуатации</td><td>Информационное</td></tr>
+  <tr><td>404</td><td><code>ProjectRun</code></td><td>Проект запущен</td><td>Информационное</td></tr>
+  <tr><td>405</td><td><code>ProjectAddedRobot</code></td><td>К проекту добавлен робот</td><td>Информационное</td></tr>
+  <tr><td>406</td><td><code>ProjectDeletedRobot</code></td><td>Из проекта(-ов) удален робот</td><td>Информационное</td></tr>
+  <tr><td>407</td><td><code>ProjectChangedRobotOrder</code></td><td>Изменение приоритета роботов проекта</td><td>Информационное</td></tr>
+  <tr><td>408</td><td><code>ProjectEnqueue</code></td><td>Проект добавлен в очередь выполнения</td><td>Информационное</td></tr>
+  <tr><td>409</td><td><code>ProjectPeek</code></td><td>Проект извлечен из очереди выполнения</td><td>Информационное</td></tr>
+  <tr><td>410</td><td><code>ProjectReEnqueue</code></td><td>Проект добавлен в очередь выполнения повторно</td><td>Информационное</td></tr>
+  <tr><td>411</td><td><code>ProjectSwappedMainVersionUp</code></td><td>Проект назначен главной версией</td><td>Информационное</td></tr>
+  <tr><td>412</td><td><code>ProjectSwappedMainVersionDown</code></td><td>Проект больше не является главной версией</td><td>Информационное</td></tr>
+  <tr><td>413</td><td><code>ProjectVersionCreated</code></td><td>Версия проекта создана</td><td>Информационное</td></tr>
+  <tr><td>414</td><td><code>ProjectDeletedFromQueue</code></td><td>Проект удален из очереди на выполнение</td><td>Информационное</td></tr>
+  <tr><td>415</td><td><code>ProjectDownloaded</code></td><td>Скачан архив проекта</td><td>Информационное</td></tr>
+  <tr><td>416</td><td><code>ProjectArchiveUploaded</code></td><td>Архив проекта загружен</td><td>Информационное</td></tr>
+  <tr><td>417</td><td><code>ProjectVariablesChanged</code></td><td>Переменные проекта изменены</td><td>Информационное</td></tr>
+  <tr><td>418</td><td><code>ProjectArchiveIdRequested</code></td><td>ProjectArchiveId запрошен агентом</td><td>Информационное</td></tr>
+  <tr><td>419</td><td><code>ProjectTagsAdded</code></td><td>К проекту добавлены теги</td><td>Информационное</td></tr>
+  <tr><td>420</td><td><code>ProjectTagsDeleted</code></td><td>У проекта удалены теги</td><td>Информационное</td></tr>
+  <tr><td>421</td><td><code>ProjectNotEnqueue</code></td><td>Проект не добавлен в очередь выполнения</td><td>Информационное</td></tr>
+  <tr><td>422</td><td><code>ProjectRobotServiceBreakAssignmentNotAllowOverlay</code></td><td>Проект запущен по заданию и еще не завершен (RobotService)</td><td>Информационное</td></tr>
+  <tr><td>423</td><td><code>ProjectRobotServiceBreakProjectLimitedLaunch</code></td><td>Проект запущен в максимальном количестве экземпляров (RobotService)</td><td>Информационное</td></tr>
+  <tr><td>424</td><td><code>ProjectRobotStartBreakAssignmentNotAllowOverlay</code></td><td>Проект запущен по заданию и еще не завершен (RobotStart)</td><td>Информационное</td></tr>
+  <tr><td>425</td><td><code>ProjectRobotStartBreakProjectLimitedLaunch</code></td><td>Проект запущен в максимальном количестве экземпляров (RobotStart)</td><td>Информационное</td></tr>
+  <tr><td>426</td><td><code>ProjectQueueBreakProjectLimitedLaunch</code></td><td>Проект запущен в максимальном количестве экземпляров (Queue)</td><td>Информационное</td></tr>
+  <tr><td>427</td><td><code>ProjectEnqueueAfterRestart</code></td><td>Проект восстановлен в очереди выполнения после рестарта WebApi</td><td>Информационное</td></tr>
+  <tr><td>428</td><td><code>ProjectNotEnqueueAfterRestart</code></td><td>Проект не восстановлен в очереди выполнения после рестарта WebApi</td><td>Информационное</td></tr>
+  <tr><td>429</td><td><code>ProjectQueueBreakReEnqueueErrorOccurred</code></td><td>Ошибка обработки проекта в очереди (Queue)</td><td>Информационное</td></tr>
+  <tr><td>430</td><td><code>AttendedRobotProjectInfo</code></td><td>Получена информация о проекте Attended-робота</td><td>Информационное</td></tr>
+  <tr><td>501</td><td><code>RobotCreated</code></td><td>Робот зарегистрирован</td><td>Информационное</td></tr>
+  <tr><td>502</td><td><code>RobotDisabled</code></td><td>Робот выведен из эксплуатации</td><td>Информационное</td></tr>
+  <tr><td>503</td><td><code>RobotDeployStarted</code></td><td>Развертывание робота запущено</td><td>Информационное</td></tr>
+  <tr><td>504</td><td><code>RobotStartStarted</code></td><td>Старт робота запущен</td><td>Информационное</td></tr>
+  <tr><td>505</td><td><code>RobotStartCompleted</code></td><td>Старт робота завершен</td><td>Информационное</td></tr>
+  <tr><td>506</td><td><code>RobotEraseStarted</code></td><td>Стирание робота запущено</td><td>Информационное</td></tr>
+  <tr><td>507</td><td><code>RobotEraseCompleted</code></td><td>Стирание робота завершено</td><td>Информационное</td></tr>
+  <tr><td>508</td><td><code>RobotProjectRun</code></td><td>Проект на роботе запущен</td><td>Информационное</td></tr>
+  <tr><td>509</td><td><code>RobotProjectStopped</code></td><td>Проект на роботе остановлен</td><td>Информационное</td></tr>
+  <tr><td>510</td><td><code>RobotDeployCompleted</code></td><td>Развертывание робота завершено</td><td>Информационное</td></tr>
+  <tr><td>511</td><td><code>RobotStartError</code></td><td>Ошибка при запуске робота</td><td>Ошибка</td></tr>
+  <tr><td>512</td><td><code>RobotProjectCompletedSuccess</code></td><td>Зафиксировано удачное завершение выполнения проекта роботом</td><td>Информационное</td></tr>
+  <tr><td>513</td><td><code>RobotProjectCompletedError</code></td><td>Зафиксировано не удачное завершение выполнения проекта роботом</td><td>Ошибка</td></tr>
+  <tr><td>514</td><td><code>RobotHardKillStarted</code></td><td>Старт принудительной остановки робота</td><td>Информационное</td></tr>
+  <tr><td>515</td><td><code>RobotHardKillCompleted</code></td><td>Принудительная остановка робота завершена</td><td>Информационное</td></tr>
+  <tr><td>516</td><td><code>RobotSoftKillStarted</code></td><td>Старт мягкой остановки робота</td><td>Информационное</td></tr>
+  <tr><td>517</td><td><code>RobotSoftKillCompleted</code></td><td>Мягкая остановка робота завершена</td><td>Информационное</td></tr>
+  <tr><td>518</td><td><code>RobotStartedFromAssignment</code></td><td>Робот запущен из задания</td><td>Информационное</td></tr>
+  <tr><td>519</td><td><code>RobotUnavailableRDPLogOff</code></td><td>Робот не доступен - RDPLogOff</td><td>Информационное</td></tr>
+  <tr><td>520</td><td><code>RobotStartedFromAssignmentError</code></td><td>Ошибка запуска робота из задания</td><td>Ошибка</td></tr>
+  <tr><td>521</td><td><code>RobotManualAgentUnlocked</code></td><td>Ручная разблокировка робота, заблокированного агентом</td><td>Информационное</td></tr>
+  <tr><td>522</td><td><code>RobotDeletedProject</code></td><td>У робота удален проект(-ы)</td><td>Информационное</td></tr>
+  <tr><td>523</td><td><code>RobotManualAgentUnlockedError</code></td><td>Ошибка ручной разблокировки робота, заблокированного агентом</td><td>Ошибка</td></tr>
+  <tr><td>524</td><td><code>RobotTagsAdded</code></td><td>К роботу добавлены теги</td><td>Информационное</td></tr>
+  <tr><td>525</td><td><code>RobotTagsDeleted</code></td><td>У робота удалены теги</td><td>Информационное</td></tr>
+  <tr><td>526</td><td><code>RobotEraseForced</code></td><td>Принудительное стирание робота</td><td>Информационное</td></tr>
+  <tr><td>527</td><td><code>RobotStartLockTimeOuted</code></td><td>Наступил таймаут блокировки робота</td><td>Информационное</td></tr>
+  <tr><td>601</td><td><code>LicenseAdded</code></td><td>Лицензия добавлена</td><td>Информационное</td></tr>
+  <tr><td>602</td><td><code>LicenseDeleted</code></td><td>Лицензия удалена</td><td>Информационное</td></tr>
+  <tr><td>603</td><td><code>LicenseDownloaded</code></td><td>Лицензия скачана</td><td>Информационное</td></tr>
+  <tr><td>604</td><td><code>LicenseRevoked</code></td><td>Лицензия отозвана</td><td>Информационное</td></tr>
+  <tr><td>605</td><td><code>LicenseRevokeReplaced</code></td><td>Отозванная лицензия заменена</td><td>Информационное</td></tr>
+  <tr><td>606</td><td><code>LicenseRequested</code></td><td>Создан запрос на новую лицензию</td><td>Информационное</td></tr>
+  <tr><td>607</td><td><code>LicenseReplaceRequested</code></td><td>Создан запрос на замен лицензии</td><td>Информационное</td></tr>
+  <tr><td>608</td><td><code>LicenseTakeAvailableRobotOk</code></td><td>Робот занял свободную лицензию</td><td>Инцидент безопасности</td></tr>
+  <tr><td>609</td><td><code>LicenseTakeAvailableRobotError</code></td><td>Ошибка занятия лицензии роботом</td><td>Инцидент безопасности</td></tr>
+  <tr><td>610</td><td><code>LicenseRobotReleaseOk</code></td><td>Лицензия робота освобождена</td><td>Информационное</td></tr>
+  <tr><td>611</td><td><code>LicenseRobotReleaseError</code></td><td>Ошибка освобождения лицензии робота</td><td>Информационное</td></tr>
+  <tr><td>612</td><td><code>LicenseToTenantAdded</code></td><td>Лицензия выдана на тенант</td><td>Информационное</td></tr>
+  <tr><td>613</td><td><code>LicenseTakeAvailableStudioOk</code></td><td>Студия заняла свободную лицензию</td><td>Инцидент безопасности</td></tr>
+  <tr><td>614</td><td><code>LicenseTakeAvailableStudioError</code></td><td>Ошибка занятия лицензии студией</td><td>Инцидент безопасности</td></tr>
+  <tr><td>615</td><td><code>LicenseStudioTimeoutRelease</code></td><td>Лицензия студии освобождена по таймауту</td><td>Информационное</td></tr>
+  <tr><td>616</td><td><code>LicenseRobotTimeoutRelease</code></td><td>Лицензия робота освобождена по таймауту</td><td>Информационное</td></tr>
+  <tr><td>617</td><td><code>LicenseTakeAvailableAttendedRobotOk</code></td><td>Аттендед робот занял свободную лицензию</td><td>Информационное</td></tr>
+  <tr><td>618</td><td><code>LicenseTakeAvailableAttendedRobotError</code></td><td>Ошибка занятия лицензии аттендед роботом</td><td>Информационное</td></tr>
+  <tr><td>619</td><td><code>LicenseAttendedRobotReleaseOk</code></td><td>Лицензия аттендед робота освобождена</td><td>Информационное</td></tr>
+  <tr><td>620</td><td><code>LicenseAttendedRobotReleaseError</code></td><td>Ошибка освобождения лицензии аттендед робота</td><td>Информационное</td></tr>
+  <tr><td>621</td><td><code>LicenseDeactivated</code></td><td>Лицензия деактивирована</td><td>Информационное</td></tr>
+  <tr><td>622</td><td><code>LicenseActivated</code></td><td>Лицензия активирована после деактивации</td><td>Информационное</td></tr>
+  <tr><td>623</td><td><code>LicenseTakeAvailableAttendedRobotBegin</code></td><td>Аттендед робот запросил лицензию</td><td>Информационное</td></tr>
+  <tr><td>701</td><td><code>AssetCreated</code></td><td>Ресурс создан</td><td>Информационное</td></tr>
+  <tr><td>702</td><td><code>AssetChanged</code></td><td>Ресурс изменен</td><td>Информационное</td></tr>
+  <tr><td>703</td><td><code>AssetDeleted</code></td><td>Ресурс удален</td><td>Информационное</td></tr>
+  <tr><td>704</td><td><code>AssetTagsAdded</code></td><td>К ресурсу добавлены теги</td><td>Информационное</td></tr>
+  <tr><td>705</td><td><code>AssetTagsDeleted</code></td><td>У ресурса удалены теги</td><td>Информационное</td></tr>
+  <tr><td>711</td><td><code>PRAssetCreated</code></td><td>RPA-ресурс создан</td><td>Информационное</td></tr>
+  <tr><td>712</td><td><code>PRAssetChanged</code></td><td>RPA-ресурс изменен</td><td>Информационное</td></tr>
+  <tr><td>713</td><td><code>PRAssetDeleted</code></td><td>RPA-ресурс удален</td><td>Информационное</td></tr>
+  <tr><td>714</td><td><code>PRAssetMovedToGroup</code></td><td>RPA-ресурс перемещен в группу</td><td>Информационное</td></tr>
+  <tr><td>721</td><td><code>SecureStringAssetCreated</code></td><td>SecureString-ресурс создан</td><td>Инцидент безопасности</td></tr>
+  <tr><td>722</td><td><code>SecureStringAssetChanged</code></td><td>SecureString-ресурс изменен</td><td>Инцидент безопасности</td></tr>
+  <tr><td>723</td><td><code>SecureStringAssetDeleted</code></td><td>SecureString-ресурс удален</td><td>Инцидент безопасности</td></tr>
+  <tr><td>724</td><td><code>SecureStringAssetTagsAdded</code></td><td>К SecureString-ресурсу добавлены теги</td><td>Инцидент безопасности</td></tr>
+  <tr><td>725</td><td><code>SecureStringAssetTagsDeleted</code></td><td>У SecureString-ресурса удалены теги</td><td>Инцидент безопасности</td></tr>
+  <tr><td>801</td><td><code>DeployTemplateCreated</code></td><td>Шаблон развертывания создан</td><td>Информационное</td></tr>
+  <tr><td>802</td><td><code>DeployTemplateChanged</code></td><td>Шаблон развертывания изменен</td><td>Информационное</td></tr>
+  <tr><td>803</td><td><code>DeployTemplateDisabled</code></td><td>Шаблон развертывания выведен из эксплуатации</td><td>Информационное</td></tr>
+  <tr><td>1201</td><td><code>RobotDistrUploaded</code></td><td>Дистрибутив робота загружен</td><td>Информационное</td></tr>
+  <tr><td>1202</td><td><code>RobotDistrActivated</code></td><td>Дистрибутив робота активирован</td><td>Информационное</td></tr>
+  <tr><td>1203</td><td><code>RobotDistrDeleted</code></td><td>Дистрибутив робота удален</td><td>Информационное</td></tr>
+  <tr><td>1204</td><td><code>NodesDesynchronization</code></td><td>Рассинхронизация дистрибутива робота на узлах</td><td>Ошибка</td></tr>
+  <tr><td>1205</td><td><code>NodeSequentialSwitching</code></td><td>Мерцание согласования дистрибутива робота на узле</td><td>Ошибка</td></tr>
+  <tr><td>2001</td><td><code>Login</code></td><td>Пользователь авторизовался</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2002</td><td><code>LoginUserNotExist</code></td><td>Пользователь не существует</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2003</td><td><code>LoginUserLocked</code></td><td>Пользователь заблокирован</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2004</td><td><code>LoginUserUnauthorized</code></td><td>Ошибка авторизации</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2005</td><td><code>LoginUserUnauthorizedAD</code></td><td>Ошибка авторизации в AD</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2006</td><td><code>LoginUserNoRightsGroupAD</code></td><td>Группа AD не имеет привязки к роли</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2007</td><td><code>LogOut</code></td><td>Пользователь вышел из системы</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2008</td><td><code>LoginUserExpired</code></td><td>Срок действия учетной записи истек</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2009</td><td><code>LoginUserUnauthorizedOpenId</code></td><td>Ошибка авторизации OpenId</td><td>Инцидент безопасности</td></tr>
+  <tr><td>2010</td><td><code>LoginUserNoRightsRoleOpenId</code></td><td>Роль OpenId не имеет привязки к роли оркестратора</td><td>Инцидент безопасности</td></tr>
+  <tr><td>3001</td><td><code>ExchangeQueueCreated</code></td><td>Очередь обмена для роботов создана</td><td>Информационное</td></tr>
+  <tr><td>3002</td><td><code>ExchangeQueueChanged</code></td><td>Очередь обмена для роботов изменена</td><td>Информационное</td></tr>
+  <tr><td>3003</td><td><code>ExchangeQueueDeleted</code></td><td>Очередь обмена для роботов удалена</td><td>Информационное</td></tr>
+  <tr><td>3004</td><td><code>ExchangeQueuePermissionsAssigned</code></td><td>Очередь обмена для роботов - назначены права</td><td>Информационное</td></tr>
+  <tr><td>3005</td><td><code>ExchangeQueueEnqueue</code></td><td>Очередь обмена для роботов - добавление значения</td><td>Информационное</td></tr>
+  <tr><td>3006</td><td><code>ExchangeQueuePeek</code></td><td>Очередь обмена для роботов - извлечение значения</td><td>Информационное</td></tr>
+  <tr><td>3007</td><td><code>ExchangeQueueReadedByKey</code></td><td>Очередь обмена для роботов - чтение значения по ключу</td><td>Информационное</td></tr>
+  <tr><td>3008</td><td><code>ExchangeQueueRemovedByKey</code></td><td>Очередь обмена для роботов - удаление значения по ключу</td><td>Информационное</td></tr>
+  <tr><td>3009</td><td><code>ExchangeQueueChangeStatusByKey</code></td><td>Очередь обмена для роботов - изменение статуса элемента по ключу</td><td>Информационное</td></tr>
+  <tr><td>3010</td><td><code>ExchangeQueueReEnqueue</code></td><td>Очередь обмена для роботов - повторное помещение элемента в очередь</td><td>Информационное</td></tr>
+  <tr><td>3011</td><td><code>ExchangeQueueAddMetadataByKey</code></td><td>Очередь обмена для роботов - добавление метаданных к элементу по ключу</td><td>Информационное</td></tr>
+  <tr><td>3012</td><td><code>ExchangeQueueReadedItems</code></td><td>Очередь обмена для роботов - чтение элементов по фильтру</td><td>Информационное</td></tr>
+  <tr><td>3013</td><td><code>ExchangeQueueItemTagsAdded</code></td><td>Очередь обмена для роботов - добавление тегов к элементу</td><td>Информационное</td></tr>
+  <tr><td>3014</td><td><code>ExchangeQueueItemTagsDeleted</code></td><td>Очередь обмена для роботов - удаление тегов у элемента</td><td>Информационное</td></tr>
+  <tr><td>3015</td><td><code>ExchangeQueueAddTagsByKey</code></td><td>Очередь обмена для роботов - добавление тегов к элементу по ключу</td><td>Информационное</td></tr>
+  <tr><td>3016</td><td><code>ExchangeQueueEnqueueFromOrchestrator</code></td><td>Очередь обмена для роботов - добавление элемента из оркестратора</td><td>Информационное</td></tr>
+  <tr><td>3017</td><td><code>ExchangeQueueItemChangedFromOrchestrator</code></td><td>Очередь обмена для роботов - изменение элемента из оркестратора</td><td>Информационное</td></tr>
+  <tr><td>3018</td><td><code>ExchangeQueueItemDeletedFromOrchestrator</code></td><td>Очередь обмена для роботов - удаление элемента из оркестратора</td><td>Информационное</td></tr>
+  <tr><td>3019</td><td><code>ExchangeQueueItemClonedFromOrchestrator</code></td><td>Очередь обмена для роботов - клонирование элемента из оркестратора</td><td>Информационное</td></tr>
+  <tr><td>3020</td><td><code>ExchangeQueueItemRepeatedFromOrchestrator</code></td><td>Очередь обмена для роботов - повторение элемента из оркестратора</td><td>Информационное</td></tr>
+  <tr><td>3021</td><td><code>ExchangeQueueEditValueByKey</code></td><td>Очередь обмена для роботов - изменение значения элемента</td><td>Информационное</td></tr>
+  <tr><td>3022</td><td><code>ExchangeQueueReadedItemsWithLock</code></td><td>Очередь обмена для роботов - чтение элементов по фильтру с блокировкой</td><td>Информационное</td></tr>
+  <tr><td>3023</td><td><code>ExchangeQueueUnlockItems</code></td><td>Очередь обмена для роботов - снятие блокировки с элементов</td><td>Информационное</td></tr>
+  <tr><td>3024</td><td><code>ExchangeQueueReadedByKeyWithLock</code></td><td>Очередь обмена для роботов - чтение элемента по ключу с блокировкой</td><td>Информационное</td></tr>
+  <tr><td>3025</td><td><code>ExchangeQueueItemProcessingBegin</code></td><td>Очередь обмена для роботов - начало обработки элемента очереди</td><td>Информационное</td></tr>
+  <tr><td>3026</td><td><code>ExchangeQueueItemProcessingEnd</code></td><td>Очередь обмена для роботов - окончание обработки элемента очереди</td><td>Информационное</td></tr>
+  <tr><td>3030</td><td><code>ExchangeQueueItemsAutoDeleteServiceSuccess</code></td><td>Очередь обмена для роботов - автоматическая очистка элементов очереди: успешно</td><td>Информационное</td></tr>
+  <tr><td>3031</td><td><code>ExchangeQueueItemsAutoDeleteServiceError</code></td><td>Очередь обмена для роботов - автоматическая очистка элементов очереди: ошибка</td><td>Информационное</td></tr>
+  <tr><td>4001</td><td><code>RobotGroupCreated</code></td><td>Группа роботов создана</td><td>Информационное</td></tr>
+  <tr><td>4002</td><td><code>RobotGroupChanged</code></td><td>Группа роботов изменена</td><td>Информационное</td></tr>
+  <tr><td>4003</td><td><code>RobotGroupDeleted</code></td><td>Группа роботов удалена</td><td>Информационное</td></tr>
+  <tr><td>4004</td><td><code>RobotGroupAddedRobots</code></td><td>В группу роботов добавлены роботы</td><td>Информационное</td></tr>
+  <tr><td>4005</td><td><code>RobotGroupDeletedRobots</code></td><td>Из группы роботов удалены роботы</td><td>Информационное</td></tr>
+  <tr><td>5000</td><td><code>ProjectQueuePurged</code></td><td>Очередь ожидания проектов очищена</td><td>Информационное</td></tr>
+  <tr><td>5001</td><td><code>ProjectQueueItemDeleted</code></td><td>Очередь ожидания проектов - удален элемент</td><td>Информационное</td></tr>
+  <tr><td>6000</td><td><code>ScheduleCreated</code></td><td>Расписание создано</td><td>Информационное</td></tr>
+  <tr><td>6001</td><td><code>ScheduleChanged</code></td><td>Расписание изменено</td><td>Информационное</td></tr>
+  <tr><td>6002</td><td><code>ScheduleDeleted</code></td><td>Расписание удалено</td><td>Информационное</td></tr>
+  <tr><td>7001</td><td><code>AgentDeployTrackingStart</code></td><td>Разворачивание робота - Процесс запущен</td><td>Информационное</td></tr>
+  <tr><td>7010</td><td><code>AgentDeployTrackingCopyingRobotDistr</code></td><td>Разворачивание робота - Скачивание дистрибутива Робота с Оркестратора</td><td>Информационное</td></tr>
+  <tr><td>7011</td><td><code>AgentDeployTrackingSaveRobotDistr</code></td><td>Разворачивание робота - Сохранение дистрибутива Робота на машине Робота</td><td>Информационное</td></tr>
+  <tr><td>7020</td><td><code>AgentDeployTrackingKillRobotProcess</code></td><td>Разворачивание робота - Уничтожение процесса Робота, если такой есть запущенный</td><td>Информационное</td></tr>
+  <tr><td>7030</td><td><code>AgentDeployTrackingUnpackRobotDistr</code></td><td>Разворачивание робота - Распаковка дистрибутива Робота</td><td>Информационное</td></tr>
+  <tr><td>7040</td><td><code>AgentDeployTrackingImportingSSLCert</code></td><td>Разворачивание робота - Импорт ssl-сертификата из дистрибутива Робота в хранилище сертификатов ОС</td><td>Информационное</td></tr>
+  <tr><td>7050</td><td><code>AgentDeployTrackingTransforRobotConfig</code></td><td>Разворачивание робота - Трансформация конфига Робота под параметры деплоя</td><td>Информационное</td></tr>
+  <tr><td>7060</td><td><code>AgentDeployTrackingReservationUrlWithOrchPort</code></td><td>Разворачивание робота - Резервирование url+port для https-службы Робота с port, переданным Оркестратором</td><td>Информационное</td></tr>
+  <tr><td>7061</td><td><code>AgentDeployTrackingReservationUrlWithActualPort</code></td><td>Разворачивание робота - url зарезервирован для port, резервировать с первым свободным после переданного port</td><td>Корректировка</td></tr>
+  <tr><td>7070</td><td><code>AgentDeployTrackingBindingSSLCertToRobotService</code></td><td>Разворачивание робота - Привязка ssl-сертификата к службе робота</td><td>Информационное</td></tr>
+  <tr><td>8001</td><td><code>AgentStartRobotTrackingStart</code></td><td>Старт робота - Процесс запущен</td><td>Информационное</td></tr>
+  <tr><td>8010</td><td><code>AgentStartRobotTrackingDownloadProjectArch</code></td><td>Старт робота - Скачивание архива проекта с Оркестратора</td><td>Информационное</td></tr>
+  <tr><td>8011</td><td><code>AgentStartRobotTrackingSaveProjectArch</code></td><td>Старт робота - Сохранение архива проекта на машине Робота</td><td>Информационное</td></tr>
+  <tr><td>8020</td><td><code>AgentStartRobotTrackingKillRobotProcess</code></td><td>Старт робота - Уничтожение процесса Робота, если такой есть запущенный</td><td>Информационное</td></tr>
+  <tr><td>8021</td><td><code>AgentStartRobotTrackingGenerateRunScript</code></td><td>Старт робота - Генерация скрипта запуска Робота</td><td>Информационное</td></tr>
+  <tr><td>8022</td><td><code>AgentStartRobotTrackingCreateTaskToStartRobot</code></td><td>Старт робота - Создание Windows Task запуска Робота (для Windows 2016 Server)</td><td>Информационное</td></tr>
+  <tr><td>8023</td><td><code>AgentStartRobotTrackingDirectlyStartRobot</code></td><td>Старт робота - Непосредственный запуск Робота</td><td>Информационное</td></tr>
+  <tr><td>8030</td><td><code>AgentStartRobotTrackingWaitStartRobot</code></td><td>Старт робота - Ожидание старта приложения Робота</td><td>Информационное</td></tr>
+  <tr><td>8031</td><td><code>AgentStartRobotTrackingTakeAvailableRobotLicense</code></td><td>Старт робота - Робот получил свободную лицензию</td><td>Информационное</td></tr>
+  <tr><td>8040</td><td><code>AgentStartRobotWaitExecuteWorkflow</code></td><td>Старт робота - Ожидание выполнения проекта Роботом</td><td>Информационное</td></tr>
+  <tr><td>8050</td><td><code>AgentStartRobotTrackingExecuteWorkflow</code></td><td>Старт робота - Проект запущен</td><td>Информационное</td></tr>
+  <tr><td>9000</td><td><code>AssignmentCreated</code></td><td>Задание создано</td><td>Информационное</td></tr>
+  <tr><td>9001</td><td><code>AssignmentChanged</code></td><td>Задание изменено</td><td>Информационное</td></tr>
+  <tr><td>9002</td><td><code>AssignmentDeleted</code></td><td>Задание удалено</td><td>Информационное</td></tr>
+  <tr><td>9010</td><td><code>AssignmentProjectQueued</code></td><td>Проект задания поставлен в очередь выполнения</td><td>Информационное</td></tr>
+  <tr><td>9011</td><td><code>AssignmentProjectQueuedError</code></td><td>Ошибка постановки проекта задания в очередь выполнения</td><td>Ошибка</td></tr>
+  <tr><td>9012</td><td><code>AssignmentStarted</code></td><td>Задание запущено</td><td>Информационное</td></tr>
+  <tr><td>9013</td><td><code>AssignmentPaused</code></td><td>Задание остановлено</td><td>Информационное</td></tr>
+  <tr><td>9014</td><td><code>AssignmentResumed</code></td><td>Задание возобновлено</td><td>Информационное</td></tr>
+  <tr><td>9015</td><td><code>AssignmentCompleted</code></td><td>Задание выполнено</td><td>Информационное</td></tr>
+  <tr><td>9016</td><td><code>AssignmentIncreaseTriggerNativeEventBus</code></td><td>Увеличение очереди событий от триггеров</td><td>Информационное</td></tr>
+  <tr><td>9017</td><td><code>AssignmentDecreaseTriggerNativeEventBus</code></td><td>Уменьшение очереди событий от триггеров</td><td>Информационное</td></tr>
+  <tr><td>9018</td><td><code>AssignmentOverflowTriggerNativeEventBus</code></td><td>Переполнение очереди событий от триггеров</td><td>Ошибка</td></tr>
+  <tr><td>9019</td><td><code>AssignmentPausedByMassOperation</code></td><td>Задание остановлено в результате массовой операции</td><td>Информационное</td></tr>
+  <tr><td>9020</td><td><code>AssignmentResumedByMassOperation</code></td><td>Задание возобновлено в результате массовой операции</td><td>Информационное</td></tr>
+  <tr><td>9021</td><td><code>AssignmentPauseAllStarted</code></td><td>Старт остановки всех запущенных заданий</td><td>Информационное</td></tr>
+  <tr><td>9022</td><td><code>AssignmentResumeAllPausedStarted</code></td><td>Старт возобновления всех ранее остановленных заданий (в результате массовой операции)</td><td>Информационное</td></tr>
+  <tr><td>9023</td><td><code>AssignmentTagsAdded</code></td><td>К заданию добавлены теги</td><td>Информационное</td></tr>
+  <tr><td>9024</td><td><code>AssignmentTagsDeleted</code></td><td>У задания удалены теги</td><td>Информационное</td></tr>
+  <tr><td>10000</td><td><code>RpaProjectQueueProcessingTypeChanged</code></td><td>Параметры обработки очереди ожидания проектов изменены</td><td>Информационное</td></tr>
+  <tr><td>20000</td><td><code>LogsTruncate</code></td><td>Очистка логов</td><td>Инцидент безопасности</td></tr>
+  <tr><td>20001</td><td><code>LogsDumpStarted</code></td><td>Выгрузка логов запущена</td><td>Информационное</td></tr>
+  <tr><td>20002</td><td><code>LogsDumpCompleted</code></td><td>Выгрузка логов завершена</td><td>Информационное</td></tr>
+  <tr><td>30001</td><td><code>ProductionCalendarsCreated</code></td><td>Создание производственного календаря</td><td>Информационное</td></tr>
+  <tr><td>30002</td><td><code>ProductionCalendarsChanged</code></td><td>Изменение производственного календаря</td><td>Информационное</td></tr>
+  <tr><td>30003</td><td><code>ProductionCalendarsDeleted</code></td><td>Удаление производственного календаря</td><td>Информационное</td></tr>
+  <tr><td>30004</td><td><code>ProductionCalendarsItemsChanged</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>40001</td><td><code>AgentCreated</code></td><td>Агент создан</td><td>Информационное</td></tr>
+  <tr><td>40002</td><td><code>AgentChanged</code></td><td>Агент изменен</td><td>Информационное</td></tr>
+  <tr><td>40003</td><td><code>AgentDeleted</code></td><td>Агент удален</td><td>Информационное</td></tr>
+  <tr><td>40004</td><td><code>AgentTestAvailable</code></td><td>Агент доступен</td><td>Информационное</td></tr>
+  <tr><td>40005</td><td><code>AgentTestNotAvailable</code></td><td>Агент не доступен</td><td>Информационное</td></tr>
+  <tr><td>40006</td><td><code>AgentEnabledKeepRDPSession</code></td><td>RDP - EnabledKeepRDPSession</td><td>Информационное</td></tr>
+  <tr><td>40007</td><td><code>AgentDisabledKeepRDPSession</code></td><td>RDP - DisabledKeepRDPSession</td><td>Информационное</td></tr>
+  <tr><td>40008</td><td><code>AgentEnabledKeepRDPSessionError</code></td><td>RDP - EnabledKeepRDPSessionError</td><td>Информационное</td></tr>
+  <tr><td>40009</td><td><code>AgentLogOffStarted</code></td><td>RDP - LogOffStarted</td><td>Информационное</td></tr>
+  <tr><td>40010</td><td><code>AgentLogOffCompletedSuccess</code></td><td>RDP - LogOffCompletedSuccess</td><td>Информационное</td></tr>
+  <tr><td>40011</td><td><code>AgentLogOffCompletedError</code></td><td>RDP - LogOffCompletedError</td><td>Ошибка</td></tr>
+  <tr><td>40012</td><td><code>AgentMaxAttemptStartLogOff</code></td><td>RDP - MaxAttemptStartLogOff</td><td>Ошибка</td></tr>
+  <tr><td>40013</td><td><code>AgentMaxAttemptLogOff</code></td><td>RDP - MaxAttemptLogOff</td><td>Ошибка</td></tr>
+  <tr><td>40014</td><td><code>AgentSetNeedForLogOffRDPSessionUser</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>40015</td><td><code>AgentUpdateConnectionStatus</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>40016</td><td><code>AgentConnectedFlickers</code></td><td>Мерцание RDP-сессии</td><td>Ошибка</td></tr>
+  <tr><td>40017</td><td><code>AgentRdpSessionLost</code></td><td>Потеря RDP-сессии</td><td>Информационное</td></tr>
+  <tr><td>50001</td><td><code>TenantCreated</code></td><td>Тенант создан</td><td>Информационное</td></tr>
+  <tr><td>50002</td><td><code>TenantChanged</code></td><td>Тенант изменен</td><td>Информационное</td></tr>
+  <tr><td>50003</td><td><code>TenantDisabled</code></td><td>Тенант выведен из эксплуатации</td><td>Информационное</td></tr>
+  <tr><td>60001</td><td><code>TriggerScheduleFired</code></td><td>Сработал триггер расписания</td><td>Информационное</td></tr>
+  <tr><td>60002</td><td><code>TriggerEmailFired</code></td><td>Сработал триггер Email</td><td>Информационное</td></tr>
+  <tr><td>60003</td><td><code>TriggerExchangeQueueFired</code></td><td>Сработал триггер очереди обмена данными</td><td>Информационное</td></tr>
+  <tr><td>60004</td><td><code>TriggerFolderFired</code></td><td>Сработал триггер папки</td><td>Информационное</td></tr>
+  <tr><td>60005</td><td><code>TriggerProjectCompletedFired</code></td><td>Сработал триггер завершения проекта</td><td>Информационное</td></tr>
+  <tr><td>60006</td><td><code>TriggerFromRobotFired</code></td><td>Сработал триггер запуска задания из робота</td><td>Информационное</td></tr>
+  <tr><td>70001</td><td><code>IncomingEmailCreated</code></td><td>Создание Email для входящей почты</td><td>Информационное</td></tr>
+  <tr><td>70002</td><td><code>IncomingEmailChanged</code></td><td>Изменение Email для входящей почты</td><td>Информационное</td></tr>
+  <tr><td>70003</td><td><code>IncomingEmailDeleted</code></td><td>Удаление Email для входящей почты</td><td>Информационное</td></tr>
+  <tr><td>70004</td><td><code>EmailQueueItemAdded</code></td><td>Email добавлен в очередь</td><td>Информационное</td></tr>
+  <tr><td>70005</td><td><code>EmailQueueItemRemoved</code></td><td>Email удален из очереди</td><td>Информационное</td></tr>
+  <tr><td>70006</td><td><code>EmailQueueItemSended</code></td><td>Email из очереди отправлен</td><td>Информационное</td></tr>
+  <tr><td>70007</td><td><code>NotificationEmailQueueItemDeleted</code></td><td>Уведомление удалено из очереди</td><td>Информационное</td></tr>
+  <tr><td>70008</td><td><code>NotificationEmailQueuePurged</code></td><td>Очередь уведомлений очищена</td><td>Информационное</td></tr>
+  <tr><td>80001</td><td><code>FolderCreated</code></td><td>Создание личной папки</td><td>Информационное</td></tr>
+  <tr><td>80002</td><td><code>FolderChanged</code></td><td>Изменение личной папки</td><td>Информационное</td></tr>
+  <tr><td>80003</td><td><code>FolderDeleted</code></td><td>Удаление личной папки</td><td>Информационное</td></tr>
+  <tr><td>80004</td><td><code>FolderResubordination</code></td><td>Переподчинение личной папки</td><td>Информационное</td></tr>
+  <tr><td>80005</td><td><code>FolderMoveObjects</code></td><td>Перемещение объектов в личную папку</td><td>Информационное</td></tr>
+  <tr><td>80006</td><td><code>FolderMissingProject</code></td><td>Проект отсутствует в личной папке</td><td>Ошибка</td></tr>
+  <tr><td>80007</td><td><code>FolderMissingRobots</code></td><td>В личной папке отсутствуют роботы</td><td>Ошибка</td></tr>
+  <tr><td>80021</td><td><code>Folder2Created</code></td><td>Создание папки</td><td>Информационное</td></tr>
+  <tr><td>80022</td><td><code>Folder2Changed</code></td><td>Изменение папки</td><td>Информационное</td></tr>
+  <tr><td>80023</td><td><code>Folder2Deleted</code></td><td>Удаление папки</td><td>Информационное</td></tr>
+  <tr><td>80024</td><td><code>Folder2Resubordination</code></td><td>Переподчинение папки</td><td>Информационное</td></tr>
+  <tr><td>80025</td><td><code>Folder2MoveObjects</code></td><td>Перемещение объектов в папку</td><td>Информационное</td></tr>
+  <tr><td>80026</td><td><code>Folder2MissingProject</code></td><td>Проект отсутствует в папке</td><td>Информационное</td></tr>
+  <tr><td>80027</td><td><code>Folder2MissingRobots</code></td><td>В папке отсутствуют роботы</td><td>Информационное</td></tr>
+  <tr><td>80028</td><td><code>Folder2GrantOrchUserFolders</code></td><td>Оркестраторному пользователю изменены права на папки</td><td>Информационное</td></tr>
+  <tr><td>80029</td><td><code>Folder2GrantFolderUsers</code></td><td>На папку пользователям изменены права</td><td>Информационное</td></tr>
+  <tr><td>90001</td><td><code>GrantUserWorker</code></td><td>Предоставление пользователю машина робота</td><td>Информационное</td></tr>
+  <tr><td>90002</td><td><code>GrantUserWorkerCanceled</code></td><td>Предоставление пользователю машина робота отменено</td><td>Информационное</td></tr>
+  <tr><td>90003</td><td><code>GrantUserAgent</code></td><td>Предоставление пользователю агента</td><td>Информационное</td></tr>
+  <tr><td>90004</td><td><code>GrantUserAgentCanceled</code></td><td>Предоставление пользователю агента отменено</td><td>Информационное</td></tr>
+  <tr><td>90101</td><td><code>UserGrantCreated</code></td><td>Наследование объектов создано</td><td>Информационное</td></tr>
+  <tr><td>90102</td><td><code>UserGrantChanged</code></td><td>Наследование объектов изменено</td><td>Информационное</td></tr>
+  <tr><td>90103</td><td><code>UserGrantDeleted</code></td><td>Наследование объектов удалено</td><td>Информационное</td></tr>
+  <tr><td>90201</td><td><code>NuGetPackageUploaded</code></td><td>NuGet: пакет закачан в папку оркестратора</td><td>Информационное</td></tr>
+  <tr><td>90202</td><td><code>NuGetPackagePublishStarted</code></td><td>NuGet: публикация пакета запущена</td><td>Информационное</td></tr>
+  <tr><td>90203</td><td><code>NuGetPackagePublishCompletedOk</code></td><td>NuGet: публикация пакета завершена</td><td>Информационное</td></tr>
+  <tr><td>90204</td><td><code>NuGetPackagePublishCompletedError</code></td><td>NuGet: ошибка при публикация пакета</td><td>Информационное</td></tr>
+  <tr><td>90205</td><td><code>NuGetPackageRemoveStarted</code></td><td>NuGet: удаление пакета запущено</td><td>Информационное</td></tr>
+  <tr><td>90206</td><td><code>NuGetPackageRemoveCompletedOk</code></td><td>NuGet: удаление пакета завершено</td><td>Информационное</td></tr>
+  <tr><td>90207</td><td><code>NuGetPackageRemoveCompletedError</code></td><td>NuGet: ошибка при удалении пакета</td><td>Информационное</td></tr>
+  <tr><td>90300</td><td><code>RpaProjectLaunchLogsTransferSuccess</code></td><td>Перенос старых запусков в БД с логами: успешно</td><td>Информационное</td></tr>
+  <tr><td>90301</td><td><code>RpaProjectLaunchLogsTransferError</code></td><td>Перенос старых запусков в БД с логами: ошибка</td><td>Ошибка</td></tr>
+  <tr><td>90400</td><td><code>UserUISettingsChanged</code></td><td>Изменение UI настроек пользователя</td><td>Информационное</td></tr>
+  <tr><td>90500</td><td><code>NodeAdded</code></td><td>Добавился узел</td><td>Корректировка</td></tr>
+  <tr><td>90501</td><td><code>NodeLost</code></td><td>Потерян узел</td><td>Корректировка</td></tr>
+  <tr><td>90600</td><td><code>LtwFileGroupCreated</code></td><td>Группа ltw-файлов создана</td><td>Информационное</td></tr>
+  <tr><td>90601</td><td><code>LtwFileGroupChanged</code></td><td>Группа ltw-файлов изменена</td><td>Информационное</td></tr>
+  <tr><td>90602</td><td><code>LtwFileGroupDeleted</code></td><td>Группа ltw-файлов удалена</td><td>Информационное</td></tr>
+  <tr><td>90610</td><td><code>AssetGroupCreated</code></td><td>Группа ассетов создана</td><td>Информационное</td></tr>
+  <tr><td>90611</td><td><code>AssetGroupChanged</code></td><td>Группа ассетов изменена</td><td>Информационное</td></tr>
+  <tr><td>90612</td><td><code>AssetGroupDeleted</code></td><td>Группа ассетов удалена</td><td>Информационное</td></tr>
+  <tr><td>90620</td><td><code>GlobalGroupCreated</code></td><td>Глобальная группа создана</td><td>Информационное</td></tr>
+  <tr><td>90621</td><td><code>GlobalGroupChanged</code></td><td>Глобальная группа изменена</td><td>Информационное</td></tr>
+  <tr><td>90622</td><td><code>GlobalGroupDeleted</code></td><td>Глобальная группа удалена</td><td>Информационное</td></tr>
+  <tr><td>90623</td><td><code>UserGlobalGroupCreated</code></td><td>Пользователь добавлен в глобальную группу</td><td>Информационное</td></tr>
+  <tr><td>90624</td><td><code>UserGlobalGroupChanged</code></td><td>Изменены параметры првязки пользователя к глобальной группе</td><td>Информационное</td></tr>
+  <tr><td>90625</td><td><code>UserGlobalGroupDeleted</code></td><td>Пользователь исключен из глобальной группы</td><td>Информационное</td></tr>
+  <tr><td>90630</td><td><code>MainRpaProjectGroupCreated</code></td><td>Группа main-процессов создана</td><td>Информационное</td></tr>
+  <tr><td>90631</td><td><code>MainRpaProjectGroupChanged</code></td><td>Группа main-процессов изменена</td><td>Информационное</td></tr>
+  <tr><td>90632</td><td><code>MainRpaProjectGroupDeleted</code></td><td>Группа main-процессов удалена</td><td>Информационное</td></tr>
+  <tr><td>90633</td><td><code>ProcessRepositorySubscriptionCreated</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90634</td><td><code>ProcessRepositorySubscriptionDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90635</td><td><code>TagCreated</code></td><td>Тэг создан</td><td>Информационное</td></tr>
+  <tr><td>90636</td><td><code>TagChanged</code></td><td>Тэг изменен</td><td>Информационное</td></tr>
+  <tr><td>90637</td><td><code>TagDeleted</code></td><td>Тэг удален</td><td>Информационное</td></tr>
+  <tr><td>90650</td><td><code>SubscriptionCreated</code></td><td>Подписка создана</td><td>Информационное</td></tr>
+  <tr><td>90651</td><td><code>SubscriptionChanged</code></td><td>Подписка изменена</td><td>Информационное</td></tr>
+  <tr><td>90652</td><td><code>SubscriptionDeleted</code></td><td>Подписка удалена</td><td>Информационное</td></tr>
+  <tr><td>90700</td><td><code>SelectorGroupCreated</code></td><td>Группа селекторов создана</td><td>Информационное</td></tr>
+  <tr><td>90701</td><td><code>SelectorGroupChanged</code></td><td>Группа селекторов изменена</td><td>Информационное</td></tr>
+  <tr><td>90702</td><td><code>SelectorGroupDeleted</code></td><td>Группа селекторов удалена</td><td>Информационное</td></tr>
+  <tr><td>90800</td><td><code>LtwFileCreated</code></td><td>Ltw-файл создан</td><td>Информационное</td></tr>
+  <tr><td>90801</td><td><code>LtwFileChanged</code></td><td>Ltw-файл изменен</td><td>Информационное</td></tr>
+  <tr><td>90802</td><td><code>LtwFileDeleted</code></td><td>Ltw-файл удален</td><td>Информационное</td></tr>
+  <tr><td>90803</td><td><code>LtwFileMovedToGroup</code></td><td>Ltw-файл перемещен в группу</td><td>Информационное</td></tr>
+  <tr><td>90804</td><td><code>LtwFileReuploaded</code></td><td>Ltw-файл перезалит</td><td>Информационное</td></tr>
+  <tr><td>90900</td><td><code>SelectorCreated</code></td><td>Селектор создан</td><td>Информационное</td></tr>
+  <tr><td>90901</td><td><code>SelectorChanged</code></td><td>Селектор изменен</td><td>Информационное</td></tr>
+  <tr><td>90902</td><td><code>SelectorDeleted</code></td><td>Селектор удален</td><td>Информационное</td></tr>
+  <tr><td>90903</td><td><code>SelectorMovedToGroup</code></td><td>Селектор перемещен в группу</td><td>Информационное</td></tr>
+  <tr><td>90904</td><td><code>SelectorScreenFileCreated</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90905</td><td><code>SelectorScreenFileDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90910</td><td><code>MainRpaProjectCreated</code></td><td>Main-процесс создан</td><td>Информационное</td></tr>
+  <tr><td>90911</td><td><code>MainRpaProjectChanged</code></td><td>Main-процесс изменен</td><td>Информационное</td></tr>
+  <tr><td>90912</td><td><code>MainRpaProjectDeleted</code></td><td>Main-процесс удален</td><td>Информационное</td></tr>
+  <tr><td>90913</td><td><code>MainRpaProjectMovedToGroup</code></td><td>Main-процесс перемещен в группу</td><td>Информационное</td></tr>
+  <tr><td>90914</td><td><code>MainRpaProjectAddedToGlobalGroup</code></td><td>Main-процесс добавлен к глобальной группе</td><td>Информационное</td></tr>
+  <tr><td>90915</td><td><code>MainRpaProjectRemovedFromGlobalGroup</code></td><td>Main-процесс удален из глобальной группы</td><td>Информационное</td></tr>
+  <tr><td>90916</td><td><code>MainRpaProjectChangedLtwFiles</code></td><td>Main-процесс: изменены Ltw-файлы</td><td>Информационное</td></tr>
+  <tr><td>90917</td><td><code>MainRpaProjectChangeArgumentValues</code></td><td>Main-процесс: изменены аргументы</td><td>Информационное</td></tr>
+  <tr><td>90918</td><td><code>MainRpaProjectCompleted</code></td><td>Main-процесс завершен</td><td>Информационное</td></tr>
+  <tr><td>90919</td><td><code>MainRpaProjectDownloadedByUI</code></td><td>Main-процесс: загружен через UI</td><td>Информационное</td></tr>
+  <tr><td>90920</td><td><code>MainRpaProjectDownloadedByRobot</code></td><td>Main-процесс: загружен роботом</td><td>Информационное</td></tr>
+  <tr><td>90921</td><td><code>MainRpaProjectCloned</code></td><td>Main-процесс клонирован</td><td>Информационное</td></tr>
+  <tr><td>90922</td><td><code>MainRpaProjectChangeAssetValues</code></td><td>Main-процесс: изменены значения</td><td>Информационное</td></tr>
+  <tr><td>90923</td><td><code>MainRpaProjectUserCreated</code></td><td>Main-процесс: привязка пользователя</td><td>Информационное</td></tr>
+  <tr><td>90924</td><td><code>MainRpaProjectUserDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90925</td><td><code>OnlyNotifyMainRpaProjectDownloadedByRobot</code></td><td>Main-процесс-читатель: загружен роботом</td><td>Информационное</td></tr>
+  <tr><td>90926</td><td><code>OnlyNotifyMainRpaProjectDownloadedByUI</code></td><td>Main-процесс-читатель: загружен через UI</td><td>Информационное</td></tr>
+  <tr><td>90927</td><td><code>MainRpaProjectUsersCreatedFromCandidates</code></td><td>Main-процесс: привязка пользователей-кандидатов</td><td>Информационное</td></tr>
+  <tr><td>91000</td><td><code>AgentDistrUploaded</code></td><td>Закачан дистрибутив агента</td><td>Информационное</td></tr>
+  <tr><td>91001</td><td><code>AgentDistrDeleted</code></td><td>Удален дистрибутив агента</td><td>Информационное</td></tr>
+  <tr><td>91099</td><td><code>AgentUpdateStarted</code></td><td>AgentUpdate - Команда обновления запущена</td><td>Информационное</td></tr>
+  <tr><td>91100</td><td><code>AgentUpdateStartedSuccess</code></td><td>AgentUpdate OK - Начало обновления</td><td>Информационное</td></tr>
+  <tr><td>91101</td><td><code>AgentUpdateDistribDownloadedSuccess</code></td><td>AgentUpdate OK - Скачивание дистрибутива</td><td>Информационное</td></tr>
+  <tr><td>91102</td><td><code>AgentUpdateDistribSavedSuccess</code></td><td>AgentUpdate OK - Сохранение дистрибутива</td><td>Информационное</td></tr>
+  <tr><td>91103</td><td><code>AgentUpdateStartedAgentConsoleSuccess</code></td><td>AgentUpdate OK - Запуск AgentConsole в режиме обновления</td><td>Информационное</td></tr>
+  <tr><td>91104</td><td><code>AgentUpdateStopedAgentServiceSuccess</code></td><td>AgentUpdate OK - Остановка сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91105</td><td><code>AgentUpdateUpdatedAgentServiceSuccess</code></td><td>AgentUpdate OK - Обновление сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91106</td><td><code>AgentUpdateStartedAgentServiceSuccess</code></td><td>AgentUpdate OK - Запуск сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91107</td><td><code>AgentUpdateStartedError</code></td><td>AgentUpdate Error - Начало обновления</td><td>Информационное</td></tr>
+  <tr><td>91108</td><td><code>AgentUpdateDistribDownloadedError</code></td><td>AgentUpdate Error - Скачивание дистрибутива</td><td>Информационное</td></tr>
+  <tr><td>91109</td><td><code>AgentUpdateDistribSavedError</code></td><td>AgentUpdate Error - Сохранение дистрибутива</td><td>Информационное</td></tr>
+  <tr><td>91110</td><td><code>AgentUpdateStartedAgentConsoleError</code></td><td>AgentUpdate Error - Запуск AgentConsole в режиме обновления</td><td>Информационное</td></tr>
+  <tr><td>91111</td><td><code>AgentUpdateStopedAgentServiceError</code></td><td>AgentUpdate Error - Остановка сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91112</td><td><code>AgentUpdateUpdatedAgentServiceError</code></td><td>AgentUpdate Error - Обновление сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91113</td><td><code>AgentUpdateStartedAgentServiceError</code></td><td>AgentUpdate Error - Запуск сервиса агента</td><td>Информационное</td></tr>
+  <tr><td>91114</td><td><code>AgentUpdateInstallerDownloadedSuccess</code></td><td>AgentUpdate OK - Скачивание инсталлятора</td><td>Информационное</td></tr>
+  <tr><td>91115</td><td><code>AgentUpdateInstallerSavedSuccess</code></td><td>AgentUpdate OK - Сохранение инсталлятора</td><td>Информационное</td></tr>
+  <tr><td>91116</td><td><code>AgentUpdateInstallerDownloadedError</code></td><td>AgentUpdate Error - Скачивание инсталлятора</td><td>Информационное</td></tr>
+  <tr><td>91117</td><td><code>AgentUpdateInstallerSavedError</code></td><td>AgentUpdate Error - Сохранение инсталлятора</td><td>Информационное</td></tr>
+  <tr><td>91118</td><td><code>AgentUpdateStartedAgentServiceFromBackupSuccess</code></td><td>AgentUpdate Success - Запуск сервиса агента из бэкапа</td><td>Информационное</td></tr>
+  <tr><td>91119</td><td><code>AgentUpdateStartedAgentServiceFromBackupError</code></td><td>AgentUpdate Error - Запуск сервиса агента из бэкапа</td><td>Информационное</td></tr>
+  <tr><td>91200</td><td><code>PasswordPolicyEdited</code></td><td>Изменена политика паролей</td><td>Информационное</td></tr>
+  <tr><td>91201</td><td><code>PasswordPolicyApplied</code></td><td>Применена политика паролей</td><td>Информационное</td></tr>
+  <tr><td>92000</td><td><code>SecurityIncidentJournalAccessed</code></td><td>Просмотр журнала регистрации событий ИБ</td><td>Инцидент безопасности</td></tr>
+  <tr><td>92100</td><td><code>RdpUserPasswordChanged</code></td><td>Изменен пароль у RDP-пользователя</td><td>Инцидент безопасности</td></tr>
+  <tr><td>93000</td><td><code>OrgIntegrationStarted</code></td><td>OrgIntegrationStarted</td><td>Информационное</td></tr>
+  <tr><td>93001</td><td><code>OrgIntegrationDiffState</code></td><td>OrgIntegrationDiffState</td><td>Информационное</td></tr>
+  <tr><td>93002</td><td><code>OrgIntegrationSwapState</code></td><td>OrgIntegrationSwapState</td><td>Информационное</td></tr>
+  <tr><td>93003</td><td><code>OrgIntegrationProcessing</code></td><td>OrgIntegrationProcessing</td><td>Информационное</td></tr>
+  <tr><td>93004</td><td><code>OrgIntegrationCompleted</code></td><td>OrgIntegrationCompleted</td><td>Информационное</td></tr>
+  <tr><td>93005</td><td><code>OrgIntegrationAgentWorkersReset</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>94000</td><td><code>MainRpaProjectGlobalGroupComplete</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>94001</td><td><code>MainRpaProjectGlobalGroupUnComplete</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>95000</td><td><code>AgentWorkersUpdated</code></td><td>AgentWorkersUpdated</td><td>Информационное</td></tr>
+  <tr><td>95001</td><td><code>AgentWorkerSetEvent</code></td><td>AgentWorkerSetEvent</td><td>Информационное</td></tr>
+  <tr><td>96000</td><td><code>StaticProjectQueueLimiterMaxCount</code></td><td>StaticProjectQueueLimiterMaxCount</td><td>Ошибка</td></tr>
+  <tr><td>97000</td><td><code>OrgIntegrationUserCreated</code></td><td>OrgIntegrationUserCreated</td><td>Информационное</td></tr>
+  <tr><td>97001</td><td><code>OrgIntegrationUserChanged</code></td><td>OrgIntegrationUserChanged</td><td>Информационное</td></tr>
+  <tr><td>97002</td><td><code>OrgIntegrationUserDeleted</code></td><td>OrgIntegrationUserDeleted</td><td>Информационное</td></tr>
+  <tr><td>191000</td><td><code>ScopeCreated</code></td><td>Область применения создана</td><td>Информационное</td></tr>
+  <tr><td>191001</td><td><code>ScopeChanged</code></td><td>Область применения изменена</td><td>Информационное</td></tr>
+  <tr><td>191002</td><td><code>ScopeDeleted</code></td><td>Область применения удалена</td><td>Информационное</td></tr>
+  <tr><td>191003</td><td><code>DpaWorkerCreated</code></td><td>Машина DPA-робота создана</td><td>Информационное</td></tr>
+  <tr><td>191004</td><td><code>DpaWorkerChanged</code></td><td>Машина DPA-робота изменена</td><td>Информационное</td></tr>
+  <tr><td>191005</td><td><code>DpaWorkerDeleted</code></td><td>Машина DPA-робота удалена</td><td>Информационное</td></tr>
+  <tr><td>191006</td><td><code>DpaWorkerUserCreated</code></td><td>Пользователь машины DPA-робота создан</td><td>Информационное</td></tr>
+  <tr><td>191007</td><td><code>DpaWorkerUserChanged</code></td><td>Пользователь машины DPA-робота изменен</td><td>Информационное</td></tr>
+  <tr><td>191008</td><td><code>DpaWorkerUserDeleted</code></td><td>Пользователь машины DPA-робота удален</td><td>Информационное</td></tr>
+  <tr><td>191009</td><td><code>DpaWorkerCurrentConfigCreated</code></td><td>Конфигурация машины DPA-робота создана</td><td>Информационное</td></tr>
+  <tr><td>191010</td><td><code>DpaWorkerCurrentConfigChanged</code></td><td>Конфигурация машины DPA-робота измененв</td><td>Информационное</td></tr>
+  <tr><td>191011</td><td><code>DpaWorkerCurrentConfigDeleted</code></td><td>Конфигурация машины DPA-робота удалена</td><td>Информационное</td></tr>
+  <tr><td>191012</td><td><code>DpaWorkerSetEevent</code></td><td>Событие для агента машины DPA-робота установлено</td><td>Информационное</td></tr>
+</table></div>
+
+<div class="todo">
+  <p><b>Расхождение со старой документацией.</b> В «Приложении 3 — События Оркестратора» на сайте 303 события, в коде 1.26.9 — 407. Не хватает 104 событий (теги машин, роботов, ресурсов и заданий; ресурсы SecureString и PR; вход через OpenID; массовая пауза и возобновление заданий; почтовая очередь уведомлений; блоки 90xxx и 191xxx). Лишних в приложении нет. Код 40017 переименован: был <code>LostConnectTimeout</code>, стал <code>AgentRdpSessionLost</code>. Старое приложение заменить этой таблицей.</p>
+  <p><b>Нет описаний.</b> У 13 событий в коде нет русского описания (313, 314, 30004, 40014, 40015, 90633, 90634, 90904, 90905, 90924, 93005, 94000, 94001) — в UI для них, вероятно, выводится имя или пусто. Проверить на стенде и передать разработке.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Enums/OrchestratorEvent.cs</code>, <code>Orchestrator/LTools.Enums/OrchestratorEventType.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/OrchEventsController.cs</code> (<code>AllOrchestratorEvents</code>, регистрация события 92000); <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Events/OrchEventManager.cs</code> (<code>GetOrchestratorEventType</code>); <code>Orchestrator/LTools.Orchestrator.DataModel/Logs/OrchEvent.cs</code>; <code>Orchestrator/LTools.Orchestrator.LogsDal/LogsDbContext.cs</code>; <code>Orchestrator/LTools.Orchestrator.RobotLogs/Bl/LogEvents/EventBus/OrchEventDbBusService.cs</code>; <code>Orchestrator/LTools.Orchestrator.RobotLogs/Bl/LogEvents/Queries/Handlers/GetOrchEventsQueryHandler.cs</code>; <code>Orchestrator/LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>; <code>Orchestrator/LTools.Orchestrator.OrchestratorEventsPrint/Program.cs</code>; UI4: <code>src/shared/lib/translations/ru/journal.json</code>. Старая документация: сайт, «Приложение 3 — События Оркестратора»; руководство 1.25.7, раздел «Ограничение потока событий от триггеров».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

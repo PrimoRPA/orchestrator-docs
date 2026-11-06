@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/lifecycle">
+<main>
+<h1>Жизненный цикл версий и LTS</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>1.26.7 LTS</span><span>1.25.7 LTS</span></div>
+<p class="lead">Как читать номер версии Оркестратора, как часто выходят релизы и что такое LTS. Номер версии важен и для лицензии: от него зависит, можно ли обновиться по бессрочной лицензии.</p>
+
+<h2>Номер версии</h2>
+<p>Серверные службы и агент нумеруются как <code>1.ГГ.М.П</code>:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Часть</th><th>Значение</th><th>Пример для 1.26.9.0</th></tr>
+  <tr><td><code>1</code></td><td>линейка продукта</td><td>1</td></tr>
+  <tr><td><code>ГГ</code></td><td>год выпуска (20ГГ)</td><td>2026</td></tr>
+  <tr><td><code>М</code></td><td>месяц выпуска</td><td>сентябрь</td></tr>
+  <tr><td><code>П</code></td><td>номер патча внутри релиза</td><td>0</td></tr>
+</table></div>
+<p>Так номер трактует и проверка лицензии в WebApi: версия <code>1.ГГ.М</code> считается выпущенной 1-го числа месяца <code>М</code> года <code>20ГГ</code>. Кроме номера у сборки есть информационная версия с номером сборки, например <code>1.26.9.0+25383</code>.</p>
+<p>UI4 нумеруется отдельно: <code>4.ГГ.М.П</code> (с 4.26.6.0; раньше — 4.0.0…4.4.0, а UI2 — 2.x). В релиз 1.26.9 входит UI4 4.26.9.1.</p>
+
+<h2>Ветки релизов</h2>
+<p>Каждый релиз собирается из своей ветки: бэкенд — <code>releases/v1.26.9.0</code>, UI4 — <code>releases/v4.26.9.1</code>. Патчи релиза выходят с увеличением последней цифры (в Readme служб встречаются, например, 1.25.7.47 и 1.26.7.2).</p>
+
+<h2>Частота выпусков</h2>
+<p>По Readme служб в 2025 году выходили версии 1.25.1, 1.25.3, 1.25.5, 1.25.7, 1.25.9, 1.25.11 — раз в два месяца. В 2026 году после 1.26.1 и 1.26.3 релизы идут каждый месяц: 1.26.4 … 1.26.9.</p>
+
+<h2>LTS</h2>
+<p>LTS — версия с долгой поддержкой, на которую переносятся исправления в виде патчей <code>1.ГГ.М.П</code>. Действующие LTS: <b>1.25.7</b> и <b>1.26.7</b>. В Readme WebApi так же помечена предыдущая LTS — 1.24.6.0.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Версия</th><th>Статус</th><th>.NET</th></tr>
+  <tr><td>1.26.9</td><td>актуальная</td><td>.NET 10</td></tr>
+  <tr><td>1.26.7</td><td>LTS</td><td>.NET 10</td></tr>
+  <tr><td>1.25.7</td><td>LTS</td><td>.NET 8</td></tr>
+  <tr><td>1.24.6</td><td>предыдущая LTS (по Readme)</td><td>.NET 7</td></tr>
+</table></div>
+
+<h2>Версия и бессрочная лицензия</h2>
+<p>Для бессрочной лицензии Оркестратора WebApi при пересчёте лицензий сравнивает дату своей версии с датой начала лицензии:</p>
+<ul>
+  <li>в первый год (365 дней, с поправкой на високосный) действия лицензии допустима любая версия;</li>
+  <li>после этого допустимы только версии, «выпущенные» раньше, чем через год от начала лицензии.</li>
+</ul>
+<p>Пример из кода: лицензия с 01.10.2024 допускает версии до 1.25.9 включительно; на 1.25.10 и новее лицензия станет невалидной с причиной «обновление на недопустимую версию». Проверяйте это до обновления — см. <a href="../upgrade/before.html">Перед обновлением</a>.</p>
+
+<div class="todo">
+<p>Статус LTS для 1.25.7 и 1.26.7 в коде не зафиксирован: в Readme помечена только 1.24.6.0 (LTS). Подтвердить по вики продукта («Текущие LTS, ветки и порядок портирования») и указать имена LTS-веток.</p>
+<p>Сроки поддержки LTS и обычных релизов (сколько месяцев выходят патчи, когда версия снимается с поддержки) в коде и старых доках не найдены.</p>
+<p>Соответствие версий UI4 и бэкенда для LTS-линий (например, какой UI4 идёт с 1.25.7.x и 1.26.7.x) не проверено. В CHANGELOG UI4 упоминается LTS-линия UI 4.0.x.</p>
+<p>Месяц в примере (1.26.9 — сентябрь 2026) выведен из правила нумерации в <code>LicenseService</code>; дату выхода релиза сверить с релиз-ноутами.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/LicenseService.cs</code> (<code>GetPerpetualValidFromVersion</code>), <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/LicenseStateService.cs</code>, <code>Orchestrator/LTools.Enums/LicenseInvalidReason.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/LTools.Orchestrator.WebApi.csproj</code> (Version, InformationalVersion); <code>Orchestrator/*/Readme.txt</code> (список версий, «1.24.6.0 (LTS)», переходы .NET). UI4: <code>package.json</code>, <code>CHANGELOG.md</code>. Ветки выгрузки: <code>releases/v1.26.9.0</code>, <code>releases/v4.26.9.1</code>. Старые доки: сайт, «Типы лицензий» → «Срок действия лицензии».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

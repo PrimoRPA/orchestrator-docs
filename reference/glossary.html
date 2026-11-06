@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/glossary">
+<main>
+<h1>Глоссарий</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Термины интерфейса UI4 и бэкенда Оркестратора. Слева — как термин подписан в UI4 (или как называется в документации), справа — имя сущности в коде: оно встречается в API, журналах и таблицах БД.</p>
+
+<h2>Объекты Оркестратора</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Термин</th><th>Определение</th><th>В коде</th></tr>
+<tr><td>Агент</td><td>Служба на машине робота: разворачивает и запускает роботов, держит RDP-сессии, выполняет команды WebApi. Обновляется через AgentUpdater.</td><td><code>Agent</code>, <code>LTools.Orchestrator.Agent</code></td></tr>
+<tr><td>Дистрибутив агента</td><td>Загруженная в Оркестратор версия агента для обновления на машинах роботов. Раздел UI4 «Дистрибутивы агента».</td><td><code>AgentDistr</code></td></tr>
+<tr><td>Дистрибутив робота</td><td>Загруженная версия робота, из которой агент разворачивает роботов. Дистрибутив по умолчанию применяется, если версия не указана.</td><td><code>RobotDistr</code></td></tr>
+<tr><td>Задание</td><td>Единица запуска: какой проект и на каких роботах запускать, с какими переменными и ограничениями. Раздел UI4 «Задания».</td><td><code>Assignment</code></td></tr>
+<tr><td>Запуск</td><td>Один запуск RPA-проекта на роботе. Раздел UI4 «Запуски».</td><td><code>RpaProjectLaunch</code></td></tr>
+<tr><td>Клиентский робот</td><td>Робот, которого запускает пользователь на своей машине (attended). Раздел UI4 «Клиентские роботы».</td><td><code>Attended…</code></td></tr>
+<tr><td>Код операции</td><td>Идентификатор операции (запуска), которым связаны события Оркестратора и журнал робота. По нему фильтруют журналы.</td><td><code>OperationKey</code></td></tr>
+<tr><td>Машина робота</td><td>Компьютер, на котором установлен агент и работают роботы. Раздел UI4 «Машины роботов».</td><td><code>Worker</code></td></tr>
+<tr><td>Нода</td><td>Экземпляр WebApi в кластере. Ноды подтверждают наличие дистрибутивов и архивов проектов у себя.</td><td><code>Node</code>, <code>…NodeConfirm</code></td></tr>
+<tr><td>Оркестраторный робот</td><td>Робот, которым управляет Оркестратор (развёртывание и запуск по заданиям). Раздел UI4 «Оркестраторные роботы».</td><td><code>Robot</code></td></tr>
+<tr><td>Очередь обмена данными</td><td>Очередь для обмена данными между роботами; состоит из элементов со статусами, тегами и метаданными. Раздел UI4 «Очереди обмена данными».</td><td><code>ExchangeQueue</code>, <code>ExchangeQueueValue</code></td></tr>
+<tr><td>Очередь проектов</td><td>Проекты, которые ждут подходящего свободного робота. В UI4 — снимок состояния; сама очередь по умолчанию работает в RabbitMQ.</td><td><code>RpaProjectQueue</code></td></tr>
+<tr><td>Папка</td><td>Виртуальная папка для разграничения доступа к объектам. У каждого пользователя есть «Моя папка»; общие папки — отдельная реализация. Разделы UI4 «Папки», «Общие папки».</td><td><code>Folder</code>, <code>Folder2</code></td></tr>
+<tr><td>Подписка</td><td>Подписка на почтовые уведомления по выбранным событиям и объектам (робот, проект, задание, машина). Раздел UI4 «Подписки».</td><td><code>Subscription</code></td></tr>
+<tr><td>Производственный календарь</td><td>Рабочие и выходные дни для расписаний. Можно вести несколько календарей на год.</td><td><code>ProductionCalendar</code>, <code>ProductionCalendar2</code></td></tr>
+<tr><td>Расписание</td><td>Расписание запусков, к которому привязываются задания. Раздел UI4 «Расписания».</td><td><code>Schedule</code></td></tr>
+<tr><td>Ресурс (ассет)</td><td>Глобальная переменная, которую роботы читают во время работы, в том числе учётные данные. Раздел UI4 «Ресурсы».</td><td><code>Asset</code></td></tr>
+<tr><td>Робот</td><td>Экземпляр робота, развёрнутый на машине. Выполняет RPA-проекты.</td><td><code>Robot</code></td></tr>
+<tr><td>Группа роботов</td><td>Произвольная группа роботов, например для выбора роботов в задании.</td><td><code>RobotGroup</code></td></tr>
+<tr><td>RPA-проект</td><td>Проект из Студии, загруженный в Оркестратор. У проекта есть технические версии v0…vN и версия разработчика.</td><td><code>RpaProjectArchive</code>, <code>RpaProject</code></td></tr>
+<tr><td>Стратегия очереди проектов</td><td>Способ обработки очереди проектов для тенанта. Раздел UI4 «Стратегия очереди проектов».</td><td><code>RpaProjectQueueProcessingType</code></td></tr>
+<tr><td>Тенант</td><td>Изолированная область данных и пользователей в одном Оркестраторе. Тенант выбирается при входе (заголовок <code>tenantId</code>). Есть тенант по умолчанию, его можно отключить.</td><td><code>Tenant</code></td></tr>
+<tr><td>Триггер</td><td>Условие запуска задания. Типы в UI4: «Запуск по расписанию», «Запуск при получении Email», «Запуск при изменении папки», «Запуск при завершении проекта Роботом», «Запуск из другого робота», «Запуск при наличии новых элементов в очереди обмена данными», «Остановка по таймауту».</td><td><code>Trigger</code>, <code>TriggerType</code></td></tr>
+<tr><td>Шаблон развертывания</td><td>Набор параметров запуска робота (журналирование, число потоков, приоритеты, отладка), который назначается роботам. Раздел UI4 «Шаблоны развертывания».</td><td><code>DeployTemplate</code></td></tr>
+</table></div>
+
+<h2>Состояния робота</h2>
+<div class="tbl-wrap"><table>
+<tr><th>В UI4</th><th>Значение</th><th>В коде</th></tr>
+<tr><td>Ожидает</td><td>Робот свободен.</td><td><code>Idle</code></td></tr>
+<tr><td>Стартует</td><td>Идёт запуск робота.</td><td><code>Starts</code></td></tr>
+<tr><td>Выполняет проект</td><td>Робот выполняет проект.</td><td><code>Running</code></td></tr>
+<tr><td>Завершается работа</td><td>Проект завершён, робот заканчивает работу.</td><td><code>Completed</code></td></tr>
+<tr><td>Недоступен</td><td>Робот не присылал состояние дольше <code>Robot:RunStatusTimeout</code> секунд.</td><td><code>Unavailable</code></td></tr>
+<tr><td>Коллизия</td><td>—</td><td><code>Collision</code></td></tr>
+</table></div>
+<p>Состояния развёртывания робота в UI4: «Не развернут», «Развертывание», «Развернут», «Запуск», «Не запущен», «Выполнение», «Ошибка».</p>
+<div class="todo"><p>Смысл состояния «Коллизия» в коде и подписях UI4 не раскрыт — уточнить у разработчиков. Также уточнить назначение раздела «Предоставление пользователям» (в правах UI4 он отнесён к папкам: «UserGrants - Папки - Наследование»).</p></div>
+
+<h2>Администрирование и безопасность</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Термин</th><th>Определение</th><th>В коде</th></tr>
+<tr><td>Роли пользователей</td><td>Набор разрешений вида «просмотр, создание, редактирование, удаление» по объектам. Роль можно связать с группами AD и ролями Keycloak.</td><td><code>Role</code>, <code>RoleAd</code>, <code>RoleRealm</code></td></tr>
+<tr><td>Предоставление пользователям</td><td>Раздел UI4; в API — <code>/api/UserGrants</code>, список пар «пользователь — тенант». Назначение раздела в коде не описано.</td><td><code>UserGrants</code></td></tr>
+<tr><td>Политики паролей</td><td>Требования к паролям локальных пользователей. Действуют, если в конфиге WebApi нет секции <code>Security:Password</code>.</td><td><code>PasswordPolicy</code></td></tr>
+<tr><td>Ч-Б список Студий</td><td>Чёрный и белый списки IP-адресов, с которых разрешено или запрещено запускать Студию.</td><td><code>BlackWhiteIpStudioRule</code></td></tr>
+<tr><td>Квота на лицензии робота</td><td>Ограничение числа лицензий робота для пользователя.</td><td><code>UserRobotQuota</code></td></tr>
+<tr><td>Способ входа</td><td>Оркестратор (локальные учётные записи), LDAP, Negotiate (Kerberos SSO), Keycloak — задаётся <code>Auth:Type</code>.</td><td><code>AuthType</code></td></tr>
+<tr><td>Контроль целостности конфигурации</td><td>Оркестратор хранит хэш конфига и фиксирует изменения с прошлого запуска.</td><td><code>ConfigHash</code>, <code>ConfigService</code></td></tr>
+</table></div>
+
+<h2>Журналы и уведомления</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Термин</th><th>Определение</th><th>В коде</th></tr>
+<tr><td>События оркестратора</td><td>Журнал событий Оркестратора (вход, запуск, изменения объектов и т. п.). Раздел UI4 «События оркестратора».</td><td><code>OrchEvent</code></td></tr>
+<tr><td>Журнал робота</td><td>Сообщения, которые пишет робот при выполнении проекта. Принимает и хранит служба RobotLogs.</td><td><code>Log</code>, <code>RobotLogMessage</code>, <code>AttendedRobotLogMessage</code></td></tr>
+<tr><td>Секция журнала</td><td>Часть таблицы журналов (секционирование). Секции можно выгружать в дамп.</td><td><code>LogsDump</code>, <code>LogsSectionsQueries</code></td></tr>
+<tr><td>Уведомления</td><td>Письма о событиях, которые отправляет служба Notifications. Раздел UI4 «Уведомления» показывает очередь писем.</td><td><code>NotificationEmailQueue</code></td></tr>
+<tr><td>SLA</td><td>Пороги, при которых States формирует события: недоступность агента дольше N секунд, рост очереди проектов.</td><td><code>SLA</code>, <code>StatesSlaConfig</code></td></tr>
+</table></div>
+
+<h2>RDP и машины</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Термин</th><th>Определение</th><th>В коде</th></tr>
+<tr><td>RDP2</td><td>Служба, которая поддерживает RDP-сессии роботов открытыми и транслирует рабочий стол в UI.</td><td><code>LTools.Orchestrator.RDP2</code></td></tr>
+<tr><td>Машины RDP2</td><td>Фильтры, какие машины обслуживает какой экземпляр RDP2.</td><td><code>Rdp2AddressFilter</code></td></tr>
+<tr><td>Мерцающие RDP-сессии</td><td>Сессии, которые часто переключаются между «подключена» и «отключена». Порог задают параметры <code>RDP:MaxConnectedFlickersCount</code> и <code>RDP:ConnectedFlickersInterval</code>.</td><td><code>ConnectedFlickers</code></td></tr>
+<tr><td>Блокировка робота агентом</td><td>Агент помечает робота занятым на время старта, чтобы два запуска не попали на одного робота.</td><td><code>RobotStart:UseAgentLock</code></td></tr>
+<tr><td>Интервал «я жив»</td><td>Как часто робот сообщает Оркестратору своё состояние, мс.</td><td><code>AliveInterval</code>, KeepAlive</td></tr>
+</table></div>
+
+<h2>DPA</h2>
+<p>DPA — подсистема Оркестратора для роботов на машинах пользователей под Linux, с DPA-агентом. В UI4 разделы «DPA» и «Репозиторий».</p>
+<div class="tbl-wrap"><table>
+<tr><th>В UI4</th><th>Определение</th><th>В коде</th></tr>
+<tr><td>Процессы</td><td>Ltw-файлы процессов: код триггера и входные аргументы.</td><td><code>LtwFile</code></td></tr>
+<tr><td>Селекторы</td><td>Селекторы элементов управления с изображениями.</td><td><code>Selector</code></td></tr>
+<tr><td>Значения</td><td>Значения аргументов и ассетов Ltw-файлов для групп DPA.</td><td><code>LtwFileArgumentGlobalGroupValue</code>, <code>LtwFileAssetGlobalGroupValue</code></td></tr>
+<tr><td>Шаблоны DPA</td><td>Шаблоны (Ltw-файлы), из которых собираются триггеры DPA.</td><td><code>LtwFile</code></td></tr>
+<tr><td>Триггеры</td><td>Контейнер шаблонов, который выполняется на машинах пользователей.</td><td><code>MainRpaProject</code></td></tr>
+<tr><td>Группы DPA</td><td>Метка, которая задаёт значения входных аргументов триггера и круг пользователей.</td><td><code>GlobalGroup</code></td></tr>
+<tr><td>Области</td><td>Область применимости вхождения пользователя в группу.</td><td><code>Scope</code></td></tr>
+<tr><td>Оргструктура</td><td>Пользователи, загружаемые интеграцией из внешней системы.</td><td><code>OrgIntegrationUser</code></td></tr>
+<tr><td>Журнал триггеров</td><td>События выполнения триггеров DPA.</td><td>—</td></tr>
+<tr><td>DPA-агент</td><td>Агент на машине пользователя Linux; поставляется deb-пакетами.</td><td><code>LTools.Orchestrator.DpaAgent</code></td></tr>
+</table></div>
+
+<h2>Инфраструктура</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Термин</th><th>Определение</th></tr>
+<tr><td>WebApi</td><td>Основная служба Оркестратора. Подробнее — <a href="components.html">«Компоненты и службы»</a>.</td></tr>
+<tr><td>RobotLogs, States, Notifications, Analytic, Licenses, Queues, MachineInfo, LogEventsWebhook</td><td>Вспомогательные службы, см. <a href="components.html">«Компоненты и службы»</a>.</td></tr>
+<tr><td>NuGet2</td><td>Встроенный NuGet-сервер (на основе BaGet). Раздел UI4 «NuGet».</td></tr>
+<tr><td>Хранилище секретов</td><td>Vault или отдельная БД, где службы берут пароли вместо конфига (<code>Secrets:External</code>).</td></tr>
+<tr><td>Окружение (ProdWin, ProdLinux)</td><td>Значение <code>ASPNETCORE_ENVIRONMENT</code>, по которому служба выбирает файл <code>appsettings.{окружение}.json</code>.</td></tr>
+</table></div>
+
+<div class="src">Источники: подписи UI4 — <code>src/shared/lib/translations/ru/common.json</code> (меню), <code>robots.json</code> (состояния), <code>jobs.json</code> (типы триггеров), <code>clientRobots.json</code>, <code>projects.json</code>, <code>machines.json</code>, <code>queues.json</code>; <code>src/shared/lib/i18n-resources.ts</code>. Бэкенд — комментарии к сущностям <code>Orchestrator/LTools.Orchestrator.DataModel/</code> и DbSet-ам контекстов (<code>LTools.Orchestrator.Dal</code>, <code>ProcessRepositoryDal</code>, <code>LogsDal</code>, <code>IdentityDal</code>), <code>Orchestrator/LTools.Enums/TriggerType.cs</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/Options/*.cs</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

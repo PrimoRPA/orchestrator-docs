@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="upgrade/migrate">
+<main>
+<h1>Перенос на другой сервер или СУБД</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="todo"><p>Нужен ли раздел — уточнить у поддержки: бывают ли такие переносы у клиентов.</p></div>
+<p class="lead">Что перенести, чтобы Оркестратор заработал на новом месте, и что будет с лицензиями. Главный риск переезда — лицензии: они привязаны к оборудованию.</p>
+
+<h2>К чему привязана лицензия</h2>
+<p>Запрос на лицензию и сама лицензия содержат параметры оборудования: имя, CPU и диск. Откуда WebApi их берёт, зависит от конфигурации:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Настройка WebApi</th><th>Источник параметров</th><th>Что считается «оборудованием»</th></tr>
+  <tr><td>задан <code>License:MachineInfoUrl</code></td><td>служба MachineInfo по этому адресу</td><td>Windows: учётная запись, под которой работает MachineInfo; <code>ProcessorId</code> процессора; серийный номер тома <code>C:</code>. Linux: <code>hostname</code>; серийный номер процессора из <code>cpuid</code>; серийный номер диска <code>Devices:HDD</code> (<code>lsblk</code>).</td></tr>
+  <tr><td>задан <code>License:MachineInfoUrls</code></td><td>несколько служб MachineInfo (кластер); порядок адресов важен</td><td>то же, для каждого узла</td></tr>
+  <tr><td>не задано ни то, ни другое</td><td>сервер СУБД — через функции в БД лицензий</td><td>CPU, диск и имя сервера СУБД</td></tr>
+</table></div>
+<p>Если в MachineInfo задан <code>CustomerBinding:Key</code>, служба не читает оборудование, а вычисляет все три значения из этого ключа и <code>PRIMOSALT</code>. Такая привязка переживает смену сервера, если ключ и <code>PRIMOSALT</code> те же. Поставочный docker-compose использует именно её.</p>
+<div class="warn"><p>Смена сервера MachineInfo (или сервера СУБД при привязке к нему), его имени, процессора, диска или учётной записи службы делает лицензии невалидными. Планируйте замену лицензий заранее.</p></div>
+<div class="note"><p>WebApi хранит в БД <code>ltools</code> время последней проверки лицензий. Если часы нового сервера отстают от этого времени, все лицензии будут невалидны, пока время не догонит сохранённое. Перед запуском на новом месте сверьте часы.</p></div>
+
+<h2>Замена лицензий</h2>
+<ol class="steps">
+  <li>На старом сервере: Настройки → Лицензии, выберите лицензию → «Скачать». Отправьте файл вендору с запросом на отзыв. <span class="check">файл лицензии у вендора</span></li>
+  <li>Получите от вендора файл отзыва и загрузите его кнопкой «Добавить отзыв лицензии». <span class="check">лицензия помечена «ОТОЗВАНА»</span></li>
+  <li>На новом месте сформируйте «Запрос на лицензию», укажите в нём отозванную лицензию, сохраните запрос в файл и отправьте вендору. <span class="check">запрос отправлен</span></li>
+  <li>Установите полученный <code>.license</code> кнопкой «Добавить лицензию». <span class="check">в колонке «Состояние» лицензия валидна</span></li>
+</ol>
+<p>Раздел «Лицензии» доступен, даже когда валидных лицензий нет. Запросы надо формировать на том Оркестраторе, где лицензия будет работать.</p>
+
+<h2>Перенос на другой сервер, та же СУБД</h2>
+<ol class="steps">
+  <li>Установите на новом сервере ту же версию Оркестратора, что и на старом. Обновление и переезд лучше не совмещать. <span class="check">версии совпадают</span></li>
+  <li>Остановите службы на старом сервере, сделайте дампы всех БД (список — в <a href="before.html">Перед обновлением</a>) и восстановите их на новом сервере СУБД. <span class="check">БД восстановлены, имена совпадают с конфигом</span></li>
+  <li>Перенесите конфиги служб, каталоги файловых хранилищ (или тома Docker), сертификаты. Задайте те же значения <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code>. <span class="check">зашифрованные пароли в конфигах расшифровываются — службы подключаются к БД и RabbitMQ</span></li>
+  <li>Поменяйте адреса на новые: в WebApi — <code>RobotDeployment:OrchBaseUrl</code>, <code>RobotDeployment:RobotLogsBaseUrl</code>, <code>RobotLogs:BaseUrl</code>, <code>NuGet:NuGetBaseUrl</code>, <code>License:MachineInfoUrl</code>; в других службах — <code>Orchestrator:BaseUrl</code>; в Nginx — адреса upstream. <span class="check">UI4 открывается по новому адресу</span></li>
+  <li>На каждой машине робота поменяйте <code>Orchestrator:BaseUrl</code> в конфиге агента и перезапустите агент. <span class="check">машины роботов в UI4 доступны</span></li>
+  <li>Проверьте лицензии и при необходимости замените их (выше). <span class="check">тестовый робот получил лицензию и выполнил проект</span></li>
+</ol>
+
+<h2>Смена СУБД (PostgreSQL ↔ MS SQL Server)</h2>
+<p>СУБД выбирается параметром <code>DBVendor</code> (<code>Postgres</code> или <code>MSSQL</code>). Для каждой СУБД свой набор миграций, а формат подключения разный: для PostgreSQL — <code>DbConnection:Items:*</code> (или <code>ConnectionStrings</code>), для MS SQL — только <code>ConnectionStrings:DefaultConnection</code>, <code>IdentityConnection</code>, <code>LicenseConnection</code>, <code>ProcessRepositoryConnection</code>, <code>LogsConnection</code>, <code>AnalyticConnection</code>, <code>LicensesConnection</code>.</p>
+<p>Инструмента переноса данных между СУБД в коде нет. При пустых БД новая СУБД заполнится схемой при старте служб, но данные (роботы, проекты, задания, журналы, пользователи) придётся переносить сторонними средствами.</p>
+<div class="warn"><p>При привязке лицензий к серверу СУБД (не задан <code>License:MachineInfoUrl</code>) смена СУБД меняет и привязку лицензий.</p></div>
+
+<div class="todo">
+<p>Поддерживаемый способ переноса данных PostgreSQL ↔ MS SQL Server (и поддерживается ли он вообще) — уточнить у продукта.</p>
+<p>Нужно ли переразвёртывать роботов после смены адреса Оркестратора. По коду агент при развёртывании правит в конфиге робота только порт и сертификат, а адрес Оркестратора передаётся при запуске (<code>RobotDeployment:OrchBaseUrl</code>) — проверить на стенде.</p>
+<p>Привязка к «учётной записи службы MachineInfo» на Windows взята из кода (<code>WindowsIdentity.GetCurrent()</code>). Старые доки говорят про учётные записи WebApi и MachineInfo — уточнить, влияет ли учётка WebApi.</p>
+<p>Перенос RabbitMQ (очереди, виртуальный хост <code>RabbitMQ:VirtualHost</code>) и Redis при переезде не описан.</p>
+<p>Переезд Docker-установки целиком (перенос томов между хостами) — проверить и дописать пример команд.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>ConfigureBlModules</code>, <code>GetConnectionStrings</code>), <code>Orchestrator/LTools.Orchestrator.WebApi/Options/License.cs</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/ExtWeb/ExtWebMachineInfoService.cs</code>, <code>Bl/Licensing/LicenseStateService.cs</code> (проверка системного времени),<code>Bl/Licensing/Postgres/ServerDbMachineInfoService.cs</code>, <code>Bl/Licensing/MSSQL/ServerDbMachineInfoService.cs</code>; <code>Orchestrator/LTools.Orchestrator.License.Migrations.Postgres/Linux|Windows/*.sql</code>, <code>Orchestrator/LTools.Orchestrator.License.Migrations.MSSQL/get_cpu_hdd_host.txt</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/</code> (<code>Startup.cs</code>, <code>BL/CustomerBinding.cs</code>, <code>BL/WindowsMachineInfoService.cs</code>, <code>BL/LinuxMachineInfoService.cs</code>); <code>Orchestrator/LTools.Shared/Config/ConfigSecrets.cs</code>, <code>Cryptography2.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Orchestrator.cs</code>, <code>.../Bl/ProcessingPipelines/DeployRobotPipeline.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code>. UI4: <code>src/shared/lib/translations/ru/licenses.json</code>. Старые доки: сайт, «Замена лицензии (UI4)».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/license">
+<main>
+<h1>Нет валидной лицензии или робот не получает лицензию</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Здесь две разные проблемы. Лицензия Оркестратора привязана к оборудованию сервера и проверяется каждые 15 секунд. Лицензии роботов выдаются роботу на время запуска. Определите, какая у вас.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>UI4 и API отвечают «Отсутствует валидная лицензия на оркестратор.» (HTTP 402). В журнале WebApi — «Метод API недоступен - отсутствует валидная лицензия на оркестратор.»</li>
+  <li>Лицензия стала недействительной после замены процессора, переноса ВМ или обновления Оркестратора.</li>
+  <li>Робот не стартует или падает с «Отсутствуют свободные лицензии.» (HTTP 409).</li>
+</ul>
+
+<h2>Лицензия Оркестратора</h2>
+<h3>Вероятные причины</h3>
+<ul>
+  <li>Изменился отпечаток оборудования. Сравниваются три значения: идентификатор процессора, серийный номер диска и имя (на Windows — учётная запись службы MachineInfo, на Linux — имя хоста).</li>
+  <li>Служба MachineInfo недоступна или часы на её сервере и сервере WebApi расходятся.</li>
+  <li>Истёк срок лицензии.</li>
+  <li>Обновление на версию, которую бессрочная лицензия уже не покрывает.</li>
+  <li>Системное время на сервере переведено назад.</li>
+</ul>
+<h3>Что проверить</h3>
+<ol class="steps">
+  <li>Откройте <b>Лицензии</b>. Посмотрите <b>Состояние</b>, <b>Дата истечения</b>. <span class="check">Есть лицензия Оркестратора в состоянии VALID</span></li>
+  <li>В журнале WebApi найдите причину: «CpuID не совпадают: …», «HddID не совпадают…», «UserName не совпадают…», «Подписи не совпадают», «Ошибка при проверке лицензии LicenseID=…». <span class="check">Понятно, какое значение не совпало</span></li>
+  <li>Если задан <code>License:MachineInfoUrl</code> или <code>License:MachineInfoUrls</code>, проверьте, что MachineInfo отвечает с сервера WebApi и часы на обоих серверах совпадают. Ошибки: «Таймаут … при обращении к MachineInfo…», «Сервис параметров оборудования для лицензий скомпрометирован». <span class="check">Таких строк нет</span></li>
+  <li>Если в журнале «Проверка системного времени скомпрометирована или системное время переведено назад.», все лицензии считаются недействительными. Исправьте время на сервере.</li>
+</ol>
+<div class="todo"><p>Скриншот: экран «Лицензии», колонки «Состояние», «Дата истечения», кнопка «Запрос на замену лицензии».</p></div>
+<h3>Как исправить</h3>
+<p>Если изменилось оборудование, сформируйте <b>Запрос на замену лицензии</b> и отправьте его поставщику. После загрузки новой лицензии нажмите <b>Активировать</b>.</p>
+<p>Если источник отпечатка — MachineInfo (<code>License:MachineInfoUrl</code>), запрос проходит за <code>License:Timeout</code> (по умолчанию 4 с). Для нескольких узлов WebApi адреса MachineInfo перечисляются в <code>License:MachineInfoUrls</code>, порядок важен. Лицензия действительна, если совпал хотя бы один узел. Запрос на лицензию не создаётся, если недоступен любой узел: «Не все узлы кластера доступны. Создание запроса на лицензию не возможно.»</p>
+<div class="warn"><p>Бессрочная лицензия Оркестратора в первый год с даты начала действует для любой версии. Позже — только для версий, выпущенных в течение года с даты начала. Дату версии код считает по номеру: <code>1.26.9</code> → 1 сентября 2026. Поэтому лицензия может «слететь» сразу после обновления. Перед обновлением сверьте лицензию, см. <a href="../upgrade/before.html">Перед обновлением: лицензия и бэкап</a>.</p></div>
+
+<h2>Робот не получает лицензию</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Ответ или запись</th><th>Что значит</th></tr>
+  <tr><td>409 «Отсутствуют свободные лицензии.»</td><td>Все лицензии роботов заняты</td></tr>
+  <tr><td>409 «Превышена квота на лицензии.»</td><td>Исчерпана квота пользователя робота</td></tr>
+  <tr><td>402 «Уже запущено максимальное количество роботов в рамках лицензии …»</td><td>Число одновременно работающих роботов достигло лимита лицензии</td></tr>
+  <tr><td>500, в журнале «Не удалось проверить наличие свободных лицензий Робота.»</td><td>Внутренняя ошибка, смотрите исключение рядом</td></tr>
+</table></div>
+<ol class="steps">
+  <li>Проверьте, не держат ли лицензии роботы, которые уже не работают. Лицензия освобождается при остановке робота или если он не присылает keepalive дольше <code>RobotStart:IntervalForReleaseInSeconds</code> (в классе 300 с, в Dockerfile 120 с). <span class="check">Число занятых лицензий совпадает с числом работающих роботов</span></li>
+  <li>После добавления лицензии подождите: общее число лицензий кэшируется на <code>Cache:License:DurationInMinutes</code> (5 мин). <span class="check">Новые лицензии учитываются, проекты уходят из очереди</span></li>
+</ol>
+<p>Освобождение по таймауту отмечается событием «Лицензия робота освобождена по таймауту». За истечением срока следит служба States: уведомление «Срок действия лицензии истекает» за <code>LicenseExpired:DaysStartBefore</code> (15) дней.</p>
+
+<div class="todo"><p>Если робот с ключом не найден, по коду вместо 404 «Робот не найден.» вероятен ответ 500: после проверки на пустой объект код обращается к его полю. Передать разработке.</p></div>
+<div class="todo"><p>Без <code>License:MachineInfoUrl</code> на PostgreSQL отпечаток берётся функциями БД, и для диска жёстко задан <code>/dev/sda</code>. Уточнить у разработки, как быть с другими именами дисков.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/{LicenseChecker,LicenseStateService,LicenseService,RobotTimeoutReleaseLicensesService}.cs</code>, <code>Bl/Licensing/ExtWeb/ExtWebMachineInfoService.cs</code>, <code>Bl/Licensing/Postgres/ServerDbMachineInfoService.cs</code>, <code>Controllers/LicensesController.cs</code>, <code>Bl/Licensing/LicenseInternalFilterAttribute.cs</code>, <code>Options/{License,Cache,RobotStart}.cs</code>, <code>Bl/Robots/RobotService.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.MachineInfo/BL/{WindowsMachineInfoService,LinuxMachineInfoService}.cs</code>; <code>LTools.Orchestrator.States/Options/LicenseExpired.cs</code>; <code>LTools.Enums/OrchestratorEvent.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/licenses.json</code>, <code>src/shared/lib/fetch.ts</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

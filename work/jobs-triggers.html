@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="work/jobs-triggers">
+<main>
+<h1>Задания и триггеры</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>UI4</span></div>
+<p class="lead">Задание связывает RPA-проект с условиями запуска. Условия задаются триггерами: расписание, письмо, папка, очередь, завершение другого проекта.</p>
+
+<h2>Где это в меню</h2>
+<ul>
+  <li><b>Задания → Все задания</b> — право <code>Assignments.View</code>; запуск и остановка — <code>Assignments.Run</code>.</li>
+  <li><b>Задания → Расписания</b> — <code>Schedule.View</code>.</li>
+  <li><b>Задания → Производственный календарь</b> — только в режиме нескольких календарей (<code>ProductionCalendar:Multiple</code>). Иначе календарь — в <b>Настройки → Система</b>.</li>
+</ul>
+
+<h2>Создать задание</h2>
+<ol class="steps">
+  <li><b>Все задания → Добавить задание</b>. Заполните <b>Наименование</b> и <b>RPA-проект</b>. Проект у сохранённого задания не меняется — для другого проекта создайте новое задание.</li>
+  <li>Настройте запуск: <b>Одновременно работающие роботы</b> (от 2 до 5000) и <b>Уникальный запуск</b>, <b>Разрешить наложение</b>, <b>Значения аргументов</b> («Из версии проекта» или «Из задания»), <b>Автоматически применять активную версию проекта</b>.</li>
+  <li>Раскройте <b>Запуск по триггеру → Добавить триггер</b>, выберите <b>Тип триггера</b> и заполните его поля.</li>
+  <li><b>Сохранить</b>, затем <b>Запустить</b>. <span class="check"><b>Состояние задачи</b> — «Выполняется»</span></li>
+</ol>
+<div class="note"><p>Редактировать можно только остановленное задание. Посмотреть параметры без остановки — действие <b>Просмотр</b>.</p></div>
+
+<h2>Типы триггеров</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Подпись в UI4</th><th>Значение enum <code>TriggerType</code></th><th>Основные поля</th></tr>
+  <tr><td>Запуск по расписанию</td><td><code>Schedule = 0</code></td><td>Готовое расписание или новое; Cron-строка Quartz</td></tr>
+  <tr><td>Запуск при получении Email</td><td><code>Email = 1</code></td><td>Email IMAP или Exchange, От, Тема, папка, интервал опроса 1–600 с, запись письма в ресурс</td></tr>
+  <tr><td>Запуск при изменении очереди обмена данными</td><td><code>ExchangeQueue = 2</code></td><td>Очередь обмена данными</td></tr>
+  <tr><td>Запуск при изменении папки</td><td><code>Folder = 3</code></td><td>На машине робота или Сетевая папка, Путь к папке, Шаблон фильтра папки, Тип изменения</td></tr>
+  <tr><td>Запуск при завершении проекта Роботом</td><td><code>ProjectCompleted = 4</code></td><td>RPA-проект, Завершился без ошибки / с ошибкой</td></tr>
+  <tr><td>Запуск из другого робота</td><td><code>FromRobot = 6</code></td><td>—</td></tr>
+  <tr><td>Запуск при наличии новых элементов в очереди обмена данными</td><td><code>ExchangeQueueNewItems = 7</code></td><td>Очередь, Количество новых элементов, Режим расписания (Cron или Интервал, мин), Теги</td></tr>
+  <tr><td>Остановка по таймауту</td><td><code>LaunchTimeOut = 8</code></td><td>Таймаут (мин) от момента запуска робота; Способ остановки: «Попросить остановиться» или «Принудительно (немедленно)»</td></tr>
+</table></div>
+<p>Значение <code>LoadTestScopeCompleted = 5</code> («Завершение области нагрузочного теста») в списке UI4 не предлагается.</p>
+<p>Для триггера по письму у тенанта должен быть настроен почтовый ящик: <b>Настройки → Система → Email входящей почты</b>.</p>
+
+<h2>Расписания и календарь</h2>
+<p>Cron-строка — формат Quartz, пример из формы: <code>0 0 12 * * ?</code>. Оркестратор проверяет её при сохранении. В расписании можно отметить <b>Согласовано с производственным календарем (24 x 5)</b> или <b>Суббота и воскресенье – рабочие дни (24 x 7)</b>. Отдельного «календарного» триггера нет: календарь привязывается к расписанию.</p>
+
+<h2>Состояния задания</h2>
+<p>Колонка показывает состояние задания, а не робота: «Новое», «Выполняется», «Выполнено», «На паузе», «Ошибка» (enum <code>AssignmentStatus</code>). Флаг <b>Продолжить после ошибки</b> решает, остановится ли задание после ошибки.</p>
+<p>Массовые действия: <b>Остановить все</b> и <b>Запустить все остановленные</b>. Для них нужны отдельные права <code>Assignments.StopAllRunning</code> и <code>Assignments.StartAllPaused</code>.</p>
+
+<div class="todo"><p>UI4 предлагает тип «Запуск при изменении очереди обмена данными» (<code>ExchangeQueue = 2</code>), а в бэкенде он помечен «Не используется больше». Уточнить у разработки: убрать из списка или описать, что он делает.</p></div>
+
+<div class="src">Источники: <code>ui4: src/features/tasks/components/TaskForm.hook.ts</code>, <code>src/features/tasks/form/TaskForm.tsx</code>, <code>TaskTriggerForm.tsx</code>, <code>TaskTriggerTypeForm.tsx</code>, <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/shared/lib/translations/ru/jobs.json</code>; <code>backend: Orchestrator/LTools.Enums/TriggerType.cs</code>, <code>AssignmentStatus.cs</code>, <code>LTools.Orchestrator.DataModel/Trigger.cs</code>, <code>Schedule.cs</code>, <code>LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>, <code>LTools.Orchestrator.WebApi/Options/ProductionCalendar.cs</code>; старые статьи <code>orchestrator-user-ui4/tasks/*</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

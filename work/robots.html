@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="work/robots">
+<main>
+<h1>Роботы и машины</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>UI4</span></div>
+<p class="lead">Как добавить машину робота, пользователя сессии и робота, развернуть робота и понять его состояние.</p>
+
+<h2>Где это в меню</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Экран</th><th>Путь в UI4</th><th>Право на просмотр</th></tr>
+  <tr><td>Роботы</td><td><b>Роботы → Все роботы</b></td><td><code>Robots.View</code></td></tr>
+  <tr><td>Шаблоны развертывания</td><td><b>Роботы → Шаблоны развертывания</b></td><td><code>DeployTemplates.View</code></td></tr>
+  <tr><td>Группы роботов</td><td><b>Роботы → Группы роботов</b></td><td><code>RobotGroups.View</code></td></tr>
+  <tr><td>Машины и их пользователи</td><td><b>Настройки → Система → Машины роботов</b></td><td><code>Workers.View</code></td></tr>
+  <tr><td>Машины RDP2</td><td><b>Настройки → Система → Машины RDP2</b></td><td><code>RdpSessions.View</code></td></tr>
+  <tr><td>Дистрибутивы робота и агента</td><td><b>Настройки → Система → Дистрибутивы робота</b>, <b>Дистрибутивы агента</b></td><td><code>RobotDistrs.View</code>, <code>AgentDistrs.View</code></td></tr>
+</table></div>
+<p>Вкладки дистрибутивов видны только в тенанте по умолчанию.</p>
+
+<h2>Добавить робота</h2>
+<ol class="steps">
+  <li>Загрузите дистрибутив: <b>Дистрибутивы робота → Добавить дистрибутив Робота</b>. Отметьте <b>По умолчанию</b> — он применяется при развертывании, если версия не указана. <span class="check">В списке есть дистрибутив с нужной <b>ОС</b> и <b>Разрядностью</b></span></li>
+  <li>Добавьте машину: <b>Машины роботов → Добавить машину</b>, укажите <b>Наименование</b> и <b>IP/DNS</b> — по этому адресу Оркестратор обращается к агенту. <span class="check">В колонке <b>Доступна</b> — «Да», видна <b>Версия агента</b></span></li>
+  <li>Добавьте пользователя сессии: в строке машины <b>Дополнительные действия → Пользователи</b>. Для Windows — <b>Добавить RDP-пользователя</b>, для Linux — <b>Добавить пользователя графического сеанса</b>.</li>
+  <li>Откройте <b>Роботы → Все роботы → Добавить робота</b>. Заполните <b>Наименование робота</b>, <b>Машина</b>, пользователя (поле называется <b>RDP-пользователь</b> или <b>Пользователь графического интерфейса</b> в зависимости от ОС машины), при необходимости <b>Шаблон развертывания</b>.</li>
+  <li>Нажмите <b>Развернуть</b> (или <b>Развернуть c параметрами</b>, чтобы задать <b>Разрядность</b>, <b>Порт</b>, <b>Язык</b>, <b>Версия ядра</b>). <span class="check"><b>Статус развертывания</b> — «Развернут», <b>Состояние робота</b> — «Ожидает»</span></li>
+</ol>
+<div class="note"><p>Поле <b>Пользователь оркестратора</b>: если пусто, робот входит в Оркестратор под встроенной учётной записью <code>robot</code>.</p></div>
+<p>Если «Добавить робота» недоступно с подсказкой «Нет доступных дистрибутивов» — загрузите дистрибутив (шаг 1).</p>
+
+<h2>Состояния робота</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>В UI4</th><th>Что значит</th></tr>
+  <tr><td>Ожидает</td><td>Робот развернут и свободен (<code>RunStatus.Idle</code>).</td></tr>
+  <tr><td>Выполняет проект</td><td>Идёт проект (<code>RunStatus.Running</code>).</td></tr>
+  <tr><td>Стартует / Завершается работа</td><td>Промежуточные состояния старта и остановки.</td></tr>
+  <tr><td>Недоступен</td><td>Робот не присылал состояние дольше <code>Robot:RunStatusTimeout</code> (в классе опций — 30 с).</td></tr>
+</table></div>
+<p><b>Статус развертывания</b>: «Не развернут», «Развертывание», «Развернут», «Ошибка» (enum <code>DeploymentStatus</code>: Empty, Processing, Done, Error). Ход развертывания — в колонке <b>Состояние</b>: скачивание дистрибутива, распаковка, импорт ssl-сертификата, трансформация конфига, привязка сертификата.</p>
+
+<h2>Действия с машиной</h2>
+<ul>
+  <li><b>Выключить</b> — машина исключается из опроса состояния, предупреждения о её недоступности не пишутся в лог.</li>
+  <li><b>Пауза</b> — начнётся, когда на машине не останется работающих оркестраторных роботов.</li>
+  <li><b>Работающие роботы (макс)</b> — ограничение одновременно работающих роботов на машине.</li>
+  <li><b>Обновить выбранные</b> — обновление агента из загруженного дистрибутива; ход виден по этапам («Скачивание AgentUpdater», «Остановка сервиса агента» …).</li>
+  <li><b>Перезагрузить</b> — все запущенные процессы роботов будут прерваны.</li>
+</ul>
+
+<div class="todo"><p>Колонка «Некорректная конфигурация» у машины в 1.26.9 фактически не появляется: агент перестал сравнивать адрес Оркестратора и не отдаёт заголовок <code>Correct: False</code> (сравнение закомментировано). Проверить на стенде и, если подтвердится, убрать упоминание из старых статей.</p></div>
+<div class="todo"><p>Значение <code>Robot:RunStatusTimeout</code>: в классе — 30, в Dockerfile — 11. Уточнить, что ставит инсталлятор Windows/Linux.</p></div>
+
+<div class="src">Источники: <code>ui4: src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/features/setting/components/tabs.tsx</code>, <code>src/features/robots/form/RobotForm.tsx</code>, <code>DeployForm.tsx</code>, <code>src/features/setting/machines/machines-table/ui/TableCol.tsx</code>, <code>src/shared/lib/translations/ru/{robots,machines,robotdistrs,common}.json</code>; <code>backend: Orchestrator/LTools.Enums/{RunStatus,DeploymentStatus,DeployTrackingStage,AgentUpdateStage}.cs</code>, <code>LTools.Orchestrator.WebApi/Options/Robot.cs</code>, <code>LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>, <code>LTools.Orchestrator.Agent/Controllers/WorkerController.cs</code>; старые статьи <code>orchestrator-admin-ui4/robots/*</code>, <code>orchestrator-user-ui4/deploy-robot.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

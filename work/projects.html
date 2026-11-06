@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="work/projects">
+<main>
+<h1>RPA-проекты</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>UI4</span></div>
+<p class="lead">Загрузка проектов, версии, активная версия и публикация из Студии.</p>
+
+<h2>Где это в меню</h2>
+<p><b>RPA-проекты</b>: вкладки <b>Все RPA-проекты</b>, <b>Запуски</b>, <b>Очередь проектов</b>. Все три требуют права <code>RpaProjects.View</code>. Загрузка — <code>RpaProjects.Create</code>, изменение — <code>RpaProjects.Edit</code>, предрелизные версии — отдельная группа прав <code>PreReleaseVersion.*</code>.</p>
+
+<h2>Загрузить проект или версию</h2>
+<ol class="steps">
+  <li>Новый проект: <b>Все RPA-проекты → Добавить RPA-проект</b>. Новая версия существующего: <b>Добавить версию</b> в строке проекта.</li>
+  <li>Выберите архив в поле <b>Архив (zip)</b>. Оркестратор читает zip: процессы — файлы <code>*.ltw</code>, метаданные (имя, описание, версия, признак предрелиза, теги) — из первого <code>*.ltp</code>. <span class="check">Заполнились <b>Главный процесс</b>, <b>Версия проекта</b>, <b>Предрелиз (RC)</b></span></li>
+  <li>Если нужно, отметьте <b>Сделать активной версией</b> и нажмите <b>Сохранить</b>. <span class="check">Версия появилась в <b>Связанные версии</b></span></li>
+</ol>
+<p>Ошибка «Не верный уровень вложенности при упаковке архива» значит, что файлы проекта лежат в архиве не на том уровне. Пересоберите архив в Студии.</p>
+
+<h2>Как устроены версии</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Поле в UI4</th><th>Откуда берётся</th></tr>
+  <tr><td><b>Версия (внутренняя)</b> (v0 … vN)</td><td>Назначает Оркестратор: максимум среди неотключённых версий + 1. Первая — 0, либо 1 при <code>RpaProject:NumerateProjectVersionsFromOne</code>.</td></tr>
+  <tr><td><b>Версия проекта</b></td><td>Строка из файла <code>.ltp</code>, формат задают разработчики.</td></tr>
+  <tr><td><b>Предрелиз (RC)</b></td><td>Из <code>.ltp</code>. Менять признак после загрузки можно, пока <code>RpaProject:AllowOverridePreRelease</code> = <code>true</code> (по умолчанию); иначе — ошибка 409.</td></tr>
+  <tr><td><b>Активная версия</b></td><td>Одна на проект. Переключается действием <b>Назначить активной версией</b>.</td></tr>
+  <tr><td><b>Источник публикации</b></td><td>Теги <code>orch</code>, <code>studio</code>, <code>git</code>.</td></tr>
+</table></div>
+<p>При смене активной версии задания и триггеры с флагом <b>Автоматически применять активную версию проекта</b> переходят на неё сами. Ограничения аргументов копируются из активной версии в новую.</p>
+
+<h2>Публикация из Студии</h2>
+<p>Студия публикует проект через те же методы API, что и форма загрузки. Если источник не передан, Оркестратор ставит <code>studio</code>, когда у пользователя есть роль Studio, иначе <code>orch</code>. Отдельного метода публикации из Git в API 1.26.9 нет — есть только значение источника <code>git</code>.</p>
+
+<h2>Параметры проекта</h2>
+<p>Кроме имени и описания в форме есть: <b>Приоритет</b>, <b>Конфигурация запуска</b> (Стандартная / Специальная), <b>Версии дистрибутива робота</b>, <b>Ограничение числа запусков</b>, <b>Без повторов в очереди</b>, <b>Не очищать папку</b>, <b>Запуск с повышенными правами</b>, <b>Закрыть RDP-сессию</b>, <b>Освободить сессию принудительно</b>, <b>Задержка освобождения RDP-сессии (мсек)</b>. Аргументы и их ограничения — в разделе <b>Аргументы</b>.</p>
+
+<h2>Где хранятся архивы</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RpaProjectArchiveUpload:StoreType</code></td><td>Хранилище архивов: <code>LocalDb</code>, <code>S3</code>, <code>FileSystem</code> (устарело)</td><td><code>LocalDb</code></td></tr>
+</table></div>
+<p>Ограничения размера в самом Оркестраторе нет. Ограничивает nginx: <code>client_max_body_size 700m</code> в блоке server.</p>
+
+<div class="note"><p>Старая настройка <code>RpaProjectArchiveUpload:DbStore</code> с 1.26.9 не читается — используйте <code>StoreType</code>. Комментарий в коде говорит «с 1.26.8.0», но ветка 1.26.8.0 её ещё читает. Подробнее — <a href="../upgrade/config-changes.html">Изменения в конфигах между LTS</a>.</p></div>
+<div class="todo"><p>Автоочистки старых версий проектов в коде нет. Если в старых доках она описана — уточнить у разработки.</p></div>
+
+<div class="src">Источники: <code>ui4: src/features/projects/form/ProjectForm.tsx</code>, <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/shared/lib/translations/ru/projects.json</code>; <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Controllers/RpaProjectsController.cs</code>, <code>Options/RpaProject.cs</code>, <code>Options/RpaProjectArchiveUpload.cs</code>, <code>LTools.Enums/PublishSource.cs</code>, <code>LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>, <code>nginx/nginx.linux.conf</code>; старая статья <code>orchestrator-user-ui4/add-rpa-project.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

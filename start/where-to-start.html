@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="start/where-to-start">
+<main>
+<h1>Кому какой раздел</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Найдите свою роль и задачу — ниже страницы в том порядке, в котором их стоит читать. Как Оркестратор устроен внутри, рассказано на следующей странице: <a href="architecture.html">Как устроен Оркестратор</a>.</p>
+
+<div class="tbl-wrap"><table>
+  <tr><th>Кто вы</th><th>Что делаете</th><th>Куда идти</th></tr>
+  <tr><td>Руководитель проекта, архитектор</td><td>Решаете, что и на чём ставить, считаете ресурсы</td><td><a href="#plan">Планирую внедрение</a></td></tr>
+  <tr><td>Системный администратор</td><td>Ставите Оркестратор с нуля</td><td><a href="#install">Ставлю с нуля</a></td></tr>
+  <tr><td>Системный администратор</td><td>Обновляете действующую установку</td><td><a href="#upgrade">Обновляю</a></td></tr>
+  <tr><td>Специалист ИБ, сетевой инженер</td><td>Открываете порты, выдаёте учётки, проверяете защиту</td><td><a href="#security">Отвечаю за сеть и безопасность</a></td></tr>
+  <tr><td>Администратор RPA</td><td>Настраиваете вход, роботов, очереди, оповещения</td><td><a href="#configure">Настраиваю</a></td></tr>
+  <tr><td>Разработчик или оператор RPA</td><td>Публикуете проекты, запускаете роботов, смотрите журналы</td><td><a href="#work">Работаю в интерфейсе</a></td></tr>
+  <tr><td>Поддержка, сопровождение</td><td>Следите за здоровьем системы, разбираете сбои</td><td><a href="#operate">Сопровождаю</a></td></tr>
+</table></div>
+
+<h2 id="plan">Планирую внедрение</h2>
+<ol class="steps">
+  <li>Разберитесь, из чего состоит Оркестратор: <a href="architecture.html">Как устроен Оркестратор</a>, <a href="../reference/concepts.html">Основные понятия</a>. <span class="check">понятно, какие службы и БД нужны</span></li>
+  <li>Выберите версию и проверьте, с чем она работает: <a href="../reference/lifecycle.html">Жизненный цикл версий и LTS</a>, <a href="../reference/compatibility.html">Совместимость продуктов и платформ</a>. <span class="check">выбрана версия Оркестратора, Студии и робота</span></li>
+  <li>Выберите вариант развертывания и оцените ресурсы: <a href="../deploy/planning-options.html">Выбор варианта развертывания</a>, <a href="../deploy/hardware.html">Требования к железу</a>. <span class="check">понятно, сколько серверов и машин роботов нужно</span></li>
+</ol>
+<div class="warn"><p>Цифры на странице «Требования к железу» — минимум для старта. Под реальный проект запросите оценку у Primo RPA до закупки оборудования.</p></div>
+
+<h2 id="install">Ставлю с нуля</h2>
+<ol class="steps">
+  <li>Спланируйте установку: <a href="../deploy/planning.html">Планирование установки</a> — вариант, железо, порты, учётные записи. <span class="check">вы знаете, где будут WebApi, БД, RabbitMQ и машины роботов</span></li>
+  <li>Подготовьте всё по списку: <a href="../deploy/checklist.html">Что подготовить до начала</a>. <span class="check">дистрибутивы, СУБД и учётные записи готовы</span></li>
+  <li>Установите серверную часть по странице своей ОС: <a href="../deploy/install.html#docker">Docker</a>, <a href="../deploy/install.html#astra">Astra Linux</a>, <a href="../deploy/install.html#redos">РЕД ОС</a>, <a href="../deploy/install.html#ubuntu">Ubuntu</a> или <a href="../deploy/install.html#windows">Windows Server</a>. На Linux службы ставятся без root — см. <a href="../deploy/rootless.html">Службы Linux без root</a>. <span class="check">службы запущены, UI4 открывается</span></li>
+  <li>Подключите машины роботов: <a href="../deploy/agent.html">Машины роботов и агент</a>. <span class="check">машина в списке «Машины роботов» доступна</span></li>
+  <li>Выполните <a href="../deploy/first-run.html">первый запуск</a> и <a href="../deploy/verify.html">проверку</a>. <span class="check">тестовый RPA-проект выполнился на роботе</span></li>
+</ol>
+
+<h2 id="upgrade">Обновляю</h2>
+<ol class="steps">
+  <li>Проверьте лицензию и сделайте резервные копии: <a href="../upgrade/before.html">Перед обновлением: лицензия и бэкап</a>. <span class="check">лицензия будет действовать на новой версии, копии БД и конфигов сделаны</span></li>
+  <li>Проверьте, что Студии и роботы будут работать с новой версией: <a href="../reference/compatibility.html">Совместимость продуктов и платформ</a>. <span class="check">целевая версия выбрана</span></li>
+  <li>Посмотрите, что поменялось в конфигах: <a href="../upgrade/config-changes.html">Изменения в конфигах между LTS</a>. <span class="check">список правок конфигов готов</span></li>
+  <li>Обновите по шагам своей платформы: <a href="../upgrade/order.html">Порядок обновления: Windows, Linux, Docker</a>. <span class="check">все службы и агенты на новой версии</span></li>
+</ol>
+<p>Переезжаете на другой сервер или другую СУБД — см. <a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a>.</p>
+
+<h2 id="security">Отвечаю за сеть и безопасность</h2>
+<ul>
+  <li>Какие порты открыть и между чем: <a href="../deploy/network.html">Порты и сетевой трафик</a>, полный список — <a href="../reference/ports.html">Порты</a>.</li>
+  <li>Под какими учётками работают службы и какие права им нужны: <a href="../deploy/service-accounts.html">Учётные записи и права служб</a>, <a href="../deploy/rootless.html">Службы Linux без root</a>.</li>
+  <li>Шифрование паролей, ключи, сертификаты, Vault: <a href="../configure/security.html">Безопасность</a>.</li>
+  <li>Вход через AD, SSO, Keycloak: <a href="../configure/access.html">Вход и доступ</a>.</li>
+</ul>
+
+<h2 id="configure">Настраиваю</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Задача</th><th>Страница</th></tr>
+  <tr><td>Вход через AD, Keycloak, права и роли</td><td><a href="../configure/access.html">Вход и доступ</a></td></tr>
+  <tr><td>Шифрование паролей, секреты, Vault, сертификаты</td><td><a href="../configure/security.html">Безопасность</a></td></tr>
+  <tr><td>RDP-сессии и запуск роботов</td><td><a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a></td></tr>
+  <tr><td>Стратегия и параметры очереди проектов</td><td><a href="../configure/project-queue.html">Очередь проектов</a></td></tr>
+  <tr><td>Почта, уведомления, подписки</td><td><a href="../configure/notifications.html">Почта и оповещения</a></td></tr>
+  <tr><td>Файлы, S3 (MinIO, Ceph)</td><td><a href="../configure/storage.html">Хранилища</a></td></tr>
+  <tr><td>Вебхуки, ArcSight, CyberArk и другие системы</td><td><a href="../configure/integrations.html">Интеграции</a></td></tr>
+  <tr><td>Несколько узлов, Redis, кластер</td><td><a href="../configure/scaling.html">Масштабирование и отказоустойчивость</a></td></tr>
+</table></div>
+
+<h2 id="work">Работаю в интерфейсе</h2>
+<p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>. Дальше — по разделам меню UI4: <a href="../work/robots.html">Роботы и машины</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">Задания и триггеры</a>, <a href="../work/queues.html">Очереди</a>, <a href="../work/logs.html">Журналы</a>, <a href="../work/dashboards.html">Дашборды и аналитика</a>, <a href="../work/administration.html">Администрирование</a>.</p>
+<p>Привыкли к старому интерфейсу — откройте <a href="../work/ui2-to-ui4.html">Где это теперь: UI2 → UI4</a>.</p>
+
+<h2 id="operate">Сопровождаю</h2>
+<ul>
+  <li>Здоровье системы: <a href="../operate/monitoring.html">Мониторинг и метрики</a>, <a href="../operate/service-logs.html">Журналы служб</a>, <a href="../operate/events.html">События и их коды</a>.</li>
+  <li>Регулярные работы: <a href="../operate/db-maintenance.html">Обслуживание БД</a>, <a href="../operate/backup.html">Резервное копирование и восстановление</a>.</li>
+</ul>
+
+<h3>Что-то сломалось</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Симптом</th><th>Страница</th></tr>
+  <tr><td>Задание не стартует по расписанию или триггеру</td><td><a href="../troubleshoot/job-not-started.html">Задание не запускается по расписанию или триггеру</a></td></tr>
+  <tr><td>Не срабатывает триггер по почте</td><td><a href="../troubleshoot/email-trigger.html">Не срабатывает триггер по почте</a></td></tr>
+  <tr><td>Проект висит в очереди</td><td><a href="../troubleshoot/project-queue.html">Проект висит в очереди и не уходит на робота</a></td></tr>
+  <tr><td>Запуск завис на 50 % или 75 %</td><td><a href="../troubleshoot/robot-not-starting.html">Робот не запускается: запуск завис на 50 % или 75 %</a></td></tr>
+  <tr><td>Робот останавливается сам или не останавливается</td><td><a href="../troubleshoot/robot-stops.html">Робот останавливается сам или не останавливается по кнопке</a></td></tr>
+  <tr><td>Нет RDP-сессии у робота</td><td><a href="../troubleshoot/rdp.html">Сессия робота не поднимается или не видна в консоли</a></td></tr>
+  <tr><td>Пустой журнал робота</td><td><a href="../troubleshoot/logs-empty.html">Журнал робота пустой или не открывается</a></td></tr>
+  <tr><td>Проблемы с лицензией</td><td><a href="../troubleshoot/license.html">Нет валидной лицензии или робот не получает лицензию</a></td></tr>
+  <tr><td>Не открывается веб-интерфейс</td><td><a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></td></tr>
+  <tr><td>Всё медленно</td><td><a href="../troubleshoot/slow.html">Оркестратор и БД работают медленно</a></td></tr>
+  <tr><td>Не пускает через AD или Keycloak</td><td><a href="../troubleshoot/login.html">Не получается войти через AD, SSO или Keycloak</a></td></tr>
+  <tr><td>Пользователь не видит папки или разделы</td><td><a href="../troubleshoot/access.html">Пользователь не видит папки, проекты или разделы</a></td></tr>
+</table></div>
+
+<h2>Ищу конкретный параметр, порт или файл</h2>
+<p>Сразу в <a href="../reference/index.html">Справочник</a>: <a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/components.html">Компоненты и службы</a>, <a href="../reference/ports.html">Порты</a>, <a href="../reference/delivery.html">Комплект поставки</a>, <a href="../reference/glossary.html">Глоссарий</a>.</p>
+
+<div class="src">Источники: структура разделов — <code>draft/assets/nav.js</code>; названия меню UI4 — UI4: <code>src/shared/config/menuConfig.ts</code>, <code>src/shared/lib/translations/ru/common.json</code>, <code>src/shared/lib/translations/ru/machines.json</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

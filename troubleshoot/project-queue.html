@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/project-queue">
+<main>
+<h1>Проект висит в очереди и не уходит на робота</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Задания и ручные запуски ставят проект в очередь проектов. WebApi берёт проект из очереди и ищет подходящего робота. Если робота нет, проект ждёт и снова проверяется. Причину ожидания WebApi пишет в журнал.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>На экране <b>Очередь проектов</b> проект стоит долго, хотя роботы свободны.</li>
+  <li>Роботы массово перестали брать проекты на одном или нескольких агентах.</li>
+  <li>В журнале WebApi: «… подходит для выполнения проекта …, но заблокирован Агентом.»</li>
+</ul>
+
+<h2>Каким должен быть робот</h2>
+<p>Проект уйдёт на робота, только если одновременно:</p>
+<ul>
+  <li>робот не отключён и развернут;</li>
+  <li>робот не выполняет проект (статус «Недоступен» — обычное состояние робота Оркестратора между запусками);</li>
+  <li>робот не заблокирован Оркестратором или агентом и не в процессе принудительной остановки;</li>
+  <li>платформа и версия дистрибутива подходят проекту;</li>
+  <li>машина прошла проверку связи, не превышено число одновременно работающих роботов на ней, у агента нет ошибки учётных данных;</li>
+  <li>робот в нужной папке (если включены папки);</li>
+  <li>Windows: сессия пользователя робота не завершается.</li>
+</ul>
+
+<h2>Что проверить</h2>
+<ol class="steps">
+  <li>Найдите в журнале WebApi строку по проекту. <span class="check">Известна причина ожидания</span></li>
+  <li>Сверьте причину с таблицей ниже.</li>
+  <li>Посмотрите список роботов: нет ли пометки «Заблокирован», какой <b>Статус развертывания</b>, <b>Доступна</b> ли машина. <span class="check">Есть хотя бы один робот, подходящий по всем условиям</span></li>
+</ol>
+<div class="tbl-wrap"><table>
+  <tr><th>Сообщение в журнале WebApi</th><th>Что делать</th></tr>
+  <tr><td>«… не запущен - отсутствуют свободные лицензии.»</td><td>Все лицензии роботов заняты. См. <a href="license.html">Нет лицензии</a></td></tr>
+  <tr><td>«… не запущен - отсутствуют свободные роботы или достигнуто максимальное количество работающих роботов на машине.»</td><td>Все подходящие роботы заняты, отключены или не подходят по условиям выше</td></tr>
+  <tr><td>«… машина робота (…) перегружена (CPU: …%, RAM: …%).»</td><td>Машина дольше <code>ProjectQueue:WorkerPerformanceHighDuration</code> (60 с) в зоне высокой нагрузки, по умолчанию CPU выше 95 %. Разгрузите машину или задайте 0, чтобы не учитывать нагрузку</td></tr>
+  <tr><td>«Робот … подходит для выполнения проекта …, но заблокирован Агентом.»</td><td>На агенте остался файл блокировки, см. ниже</td></tr>
+  <tr><td>«Проект с Id=… исключен из очереди ожидания - превышена максимальная длина очереди.»</td><td>Очередь длиннее <code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code> (1000). Уберите лишние запуски</td></tr>
+</table></div>
+<div class="todo"><p>Скриншот: экран «Очередь проектов» и значок блокировки робота в списке роботов, кнопка «Разблокировать».</p></div>
+
+<h2>Как исправить</h2>
+<h3>Робот заблокирован агентом</h3>
+<p>На время запуска агент создаёт файл блокировки <code>&lt;каталог данных агента&gt;/RobotLocks/&lt;ключ робота&gt;</code> (имя каталога — <code>Robot:LocksDir</code>). Робот удаляет его сам при завершении. Если процесс робота упал или ещё не закрылся, блокировка остаётся. WebApi снимает её через <code>RobotStart:TimeOutInMinutesForUnlock</code> (в классе 5 мин, в Dockerfile 2 мин).</p>
+<ol class="steps">
+  <li>Убедитесь, что процесс робота на машине завершён.</li>
+  <li>Нажмите <b>Разблокировать</b> у робота. Если машина недоступна, придёт «Ошибка ручной разблокировки робота. Возможно, машина робота не доступна.» — восстановите связь с агентом. <span class="check">Пометки «Заблокирован» нет, проект ушёл из очереди</span></li>
+</ol>
+
+<h3>Проект нужно убрать из очереди</h3>
+<p>На экране <b>Очередь проектов</b> выберите проект и <b>Удалить</b>. Появится «Проект исключен из очереди выполнения».</p>
+
+<h3>Повторы в очереди</h3>
+<p>Флаг проекта <b>Без повторов в очереди</b>: если проект уже стоит в очереди, второй раз он не добавится. Флаг задаётся у RPA-проекта, а не у задания.</p>
+<p>При публикации новой версии флаг берётся из публикации, а не из активной версии. Чтобы новая версия наследовала флаг активной, задайте в WebApi <code>RpaProject:NoDuplicateDeferredQueueFromParentVersion=true</code> (по умолчанию <code>false</code>) и перезапустите WebApi. <span class="check">После публикации новой версии флаг сохранился</span></p>
+<div class="todo"><p>Ограничение по нагрузке использует только CPU (<code>ProjectQueue:WorkerPerformanceHighCPUOnly=true</code>), хотя в сообщении выводится и RAM. Проверить на стенде.</p></div>
+
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Bl/ProjectQueue/EventBus/BaseTenantProjectEventBusService.cs</code>, <code>Bl/ProjectQueue/BaseReadProjectQueueService.cs</code>, <code>Bl/ProjectQueue/Commands/Handlers/RpaProjectEnqueueCommandHandler.cs</code>, <code>Options/{ProjectQueue,RobotStart,RpaProject}.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>LTools.Orchestrator.Agent/Options/Robot.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/features/project-queues/ui/ProjectQueues.tsx</code>, <code>src/shared/lib/translations/ru/{projectQueues,projects,robots,common}.json</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

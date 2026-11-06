@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/agent">
+<main>
+<h1>Машины роботов и агент</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
+<p class="lead">На каждую машину, где будут работать роботы, ставится агент Оркестратора. Через него WebApi разворачивает и запускает роботов. После установки машину регистрируют в UI4.</p>
+
+<h2>Как агент связан с Оркестратором</h2>
+<ul>
+  <li>Агент слушает <code>5002</code> по HTTPS; к нему обращается WebApi (<code>Tenants:Agent:Port</code>, <code>Tenants:Agent:Https</code>).</li>
+  <li>Адрес Оркестратора агент узнаёт из заголовка <code>orchestrator-url</code> в запросах WebApi (значение <code>RobotDeployment:OrchBaseUrl</code>). Задавать <code>Orchestrator:BaseUrl</code> в конфиге агента не обязательно.</li>
+  <li>Пока WebApi ни разу не обратился к агенту, <code>/health/readiness</code> агента отвечает <code>Unhealthy</code> — это нормально до регистрации машины.</li>
+</ul>
+
+<h2>Установка агента</h2>
+<p>Вкладка с вашей ОС откроется сама: страница определяет систему по браузеру. Если ставите агент на другую машину — переключите вкладку.</p>
+<div class="tabs" data-key="agent-os" data-detect="1">
+<section class="tab" id="windows" data-title="Windows" data-os="windows">
+<p>Что нужно: архив <code>Agent-&lt;версия&gt;.zip</code>, PowerShell от имени администратора.</p>
+<ol class="steps">
+  <li>Откройте порт агента:
+<pre><code>New-NetFirewallRule -Name "Primo Agent (5002)" -DisplayName "Primo Agent (5002)" -Profile "Private, Domain, Public" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5002</code></pre>
+    <span class="check">правило <code>Primo Agent (5002)</code> есть в брандмауэре</span></li>
+  <li>Задайте окружение:
+<pre><code>[System.Environment]::SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "ProdWin", [System.EnvironmentVariableTarget]::Machine)</code></pre></li>
+  <li>Распакуйте архив в <code>C:\Primo\Agent</code> и при необходимости поправьте <code>appsettings.ProdWin.json</code>. Каталог роботов по умолчанию — <code>C:\LTools</code> (<code>DeployRobot:RobotsPath</code>).</li>
+  <li>Зарегистрируйте и запустите службу:
+<pre><code>New-Service -Name "Primo.Orchestrator.Agent" -BinaryPathName "C:\Primo\Agent\Primo.Orchestrator.Agent.exe" -DisplayName "Primo.Orchestrator.Agent" -StartupType Automatic
+Start-Service "Primo.Orchestrator.Agent"</code></pre>
+    <span class="check"><code>Get-Service Primo.Orchestrator.Agent</code> — <code>Running</code>; <code>https://localhost:5002/api/Version</code> возвращает версию агента</span></li>
+</ol>
+<p>Роботов агент запускает заданиями Планировщика заданий Windows от имени пользователя робота.</p>
+</section>
+<section class="tab" id="linux" data-title="Linux" data-os="linux">
+<p>Что нужно: архив <code>Agent-linux-&lt;версия&gt;.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), права root на подготовку.</p>
+<ol class="steps">
+  <li>Создайте группу и пользователя агента (имена по умолчанию; другие — укажите в <code>Agent:GroupName</code> и <code>Agent:UserName</code>):
+<pre><code>sudo groupadd primo-rpa
+sudo useradd -g primo-rpa -m -s /bin/bash agent</code></pre>
+    <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
+  <li>Установите <code>expect</code> (<code>/usr/bin/expect</code>) — без него роботы не запустятся.</li>
+  <li>Распакуйте архив в <code>/opt/Primo/Agent</code>, отдайте каталог агенту, сделайте исполняемыми <code>Primo.Orchestrator.Agent</code>, <code>LTools.Orchestrator.Agent.Runner</code>, <code>launch-as-user.expect</code>.</li>
+  <li>Дайте агенту права sudo без пароля в <code>/etc/sudoers.d/</code>:
+<pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
+agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
+    <span class="check"><code>sudo -l -U agent</code> показывает обе команды</span></li>
+  <li>Включите linger: <code>sudo loginctl enable-linger agent</code>.</li>
+  <li>В <code>appsettings.ProdLinux.json</code> агента задайте: <code>Agent:DataPath</code> (каталог данных агента), <code>DeployRobot:RobotsPath</code> (каталог роботов — значение по умолчанию <code>C:\LTools</code> для Linux не подходит), <code>AgentCommands:Session</code> (команда запуска графического сеанса). Если не задана, агент подставляет её сам по <code>/etc/os-release</code>: Astra Linux — <code>/usr/bin/fly-wm --execOnly {}</code> (на Astra 1.8 дополнительно через <code>dbus-launch</code>), РЕД ОС — <code>/usr/bin/mate-session</code>, CentOS — <code>/usr/bin/gnome-session</code>. Для Ubuntu и других дистрибутивов задайте её вручную.</li>
+  <li>Откройте порт <code>5002/tcp</code> на файерволе машины.</li>
+  <li>Установите юнит: системный <code>Primo.Orchestrator.Agent.service</code> (работает от <code>User=agent</code>) в <code>/etc/systemd/system/</code> или пользовательский <code>Primo.Orchestrator.Agent.user.service</code> в <code>~agent/.config/systemd/user/</code>; затем <code>daemon-reload</code> и <code>enable --now</code>. <span class="check">служба <code>active (running)</code>, в журнале нет предупреждений «the launch of robots is impossible»</span></li>
+</ol>
+<p>При старте агент сам проверяет: доступен ли sudo, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале.</p>
+</section>
+</div>
+
+<h2>Регистрация машины в Оркестраторе</h2>
+<ol class="steps">
+  <li>В UI4 откройте <b>Настройки → Система → Машины роботов</b> и нажмите <b>Добавить машину</b>.</li>
+  <li>Заполните <b>Наименование</b> и <b>IP/DNS</b>; при необходимости — <b>Работающие роботы (макс)</b>. Для Linux-машины включите <b>Linux</b> — после сохранения это поле не меняется. Для Windows можно включить <b>Удерживать RDP-сессию в консоли</b> и указать <b>RDP-пользователь</b> и <b>Пароль</b>.</li>
+  <li>Сохраните. <span class="check">в колонке <b>Доступна</b> появилась дата проверки доступности, в колонке <b>Версия агента</b> — версия</span></li>
+</ol>
+
+<h2>Обновление агента</h2>
+<p>Загрузите новый дистрибутив в <b>Настройки → Система → Дистрибутивы агента</b> (<b>Добавить дистрибутив Агента</b>), затем на странице <b>Машины роботов</b> выберите машины и нажмите <b>Обновить выбранные</b>. Утилита обновления AgentUpdater для Windows и Linux вшита в архив WebApi.</p>
+
+<div class="todo"><p>Скрипт <code>PrimoWorker.ps1</code> (команды шагов для Windows взяты из него) лежит в проекте агента, но не копируется в архив агента — уточнить, поставляется ли он отдельно. Проекта <code>AgentInstaller</code> (установщик с авторегистрацией из старых доков) в ветке 1.26.9 нет, в <code>azure/build.ps1</code> он не собирается.</p></div>
+<div class="todo"><p>Команды сеанса по умолчанию взяты из кода агента (<code>StartLinuxRobotPipeline.cs</code>); какую команду ставить на Ubuntu — уточнить у разработки. Список пакетов для графических сеансов (Xvfb/Xvnc и др.) — по путям в <code>LinuxToolsPaths</code>, подтвердить.</p></div>
+<div class="todo"><p>Расхождение со старыми доками: в инструкции для Agent 1.26.7 в sudoers были также <code>systemd-run … --unit=primo-robot-*</code> и <code>systemctl stop primo-robot-*.service</code>. В коде 1.26.9 таких вызовов нет; есть <code>systemd-run</code> без <code>--unit</code> и <code>reboot</code>. С 1.26.8 роботы запускаются через <code>su</code> вместо <code>sudo</code>.</p></div>
+<div class="todo"><p>Где лежит HTTPS-сертификат агента для порта 5002 (<code>Kestrel:EndPoints:ExternalHttps:Certificate</code>, в архиве есть <code>cert1.pfx</code>) и как его заменить — описать после проверки.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>, <code>Primo.Orchestrator.Agent.service</code>, <code>Primo.Orchestrator.Agent.user.service</code>, <code>LTools.Orchestrator.Agent.csproj</code>, <code>Readme.txt</code>, <code>ApplicationHostedService.cs</code>, <code>Options/Agent.cs</code>, <code>Options/DeployRobot.cs</code>, <code>Options/Orchestrator.cs</code>, <code>Bl/Runners/LinuxScriptRunner.cs</code>, <code>Bl/OrchestratorSession/*</code>, <code>Bl/HealthCheck/HealthCheckService.cs</code>, <code>Controllers/VersionController.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent.Common/LinuxCommand.cs</code>, <code>LinuxToolsPaths.cs</code>, <code>Options/AgentCommands.cs</code>; <code>Orchestrator/LTools.Orchestrator.AgentUpdater/Readme.txt</code>; <code>azure/build.ps1</code>; <code>k8s/agent/install.sh</code>; UI4: <code>src/shared/lib/translations/ru/machines.json</code>, <code>agentdistrs.json</code>, <code>common.json</code>, <code>src/features/setting/form/MachineForm.tsx</code>, <code>src/shared/config/menuConfig.ts</code>; старый сайт, <code>machines-setup/</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

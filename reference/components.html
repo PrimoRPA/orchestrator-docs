@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/components">
+<main>
+<h1>Компоненты и службы</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Из каких служб состоит Оркестратор 1.26.9: проект в решении, имя службы или контейнера, назначение и зависимости. Порты сведены отдельно — на странице <a href="ports.html">«Порты»</a>.</p>
+
+<h2>Серверные службы</h2>
+<p>Все службы — приложения ASP.NET Core на .NET 10, собираются как самостоятельные (self-contained) для <code>win-x64</code> и <code>linux-x64</code>. Исполняемый файл называется <code>Primo.Orchestrator.&lt;Служба&gt;</code>.</p>
+<div class="tbl-wrap"><table>
+<tr><th>Служба</th><th>Проект</th><th>Назначение</th><th>Зависит от</th></tr>
+<tr><td>WebApi</td><td><code>LTools.Orchestrator.WebApi</code></td><td>Основная служба: API для UI, Студии, роботов и агентов; роботы, проекты, триггеры, очереди, пользователи, лицензии. При старте выполняет миграции своих БД.</td><td>СУБД (БД Оркестратора, Identity, License, ProcessRepository); RabbitMQ; MachineInfo; RobotLogs; агенты на машинах роботов; по настройке — Redis, MinIO/Ceph, NuGet2, Vault, AD, Keycloak, CyberArk, почтовый сервер (триггеры по почте)</td></tr>
+<tr><td>RobotLogs</td><td><code>LTools.Orchestrator.RobotLogs</code></td><td>Приём журналов, статусов и скриншотов роботов, запросы к журналам. Выполняет миграции БД журналов.</td><td>БД журналов; RabbitMQ; WebApi; по настройке — MinIO/Ceph для скриншотов</td></tr>
+<tr><td>States</td><td><code>LTools.Orchestrator.States</code></td><td>Обработка событий: SLA, недоступность агента, рост очереди проектов, окончание срока учётных записей и лицензий; формирует события для уведомлений.</td><td>RabbitMQ; WebApi</td></tr>
+<tr><td>Notifications</td><td><code>LTools.Orchestrator.Notifications</code></td><td>Отправка почтовых уведомлений из очередей RabbitMQ.</td><td>RabbitMQ; SMTP-сервер</td></tr>
+<tr><td>Analytic</td><td><code>LTools.Orchestrator.Analytic</code></td><td>Аналитическая БД: обновление материализованных представлений по расписанию, выгрузки интеграции. Выполняет миграции аналитической БД.</td><td>Аналитическая БД; RabbitMQ; WebApi</td></tr>
+<tr><td>Licenses</td><td><code>LTools.Orchestrator.Licenses</code></td><td>Обработка запросов роботов на лицензии.</td><td>БД Оркестратора (контекст <code>ApplicationDbContext</code>, миграции не выполняет); RabbitMQ; WebApi</td></tr>
+<tr><td>Queues</td><td><code>LTools.Orchestrator.Queues</code></td><td>Служебные очереди RabbitMQ: уведомления роботам, удаление неиспользуемых очередей.</td><td>RabbitMQ; WebApi</td></tr>
+<tr><td>MachineInfo</td><td><code>LTools.Orchestrator.MachineInfo</code></td><td>Отдаёт сведения о сервере для лицензирования. WebApi обращается к ней по <code>License:MachineInfoUrl</code>.</td><td>—</td></tr>
+<tr><td>LogEventsWebhook</td><td><code>LTools.Orchestrator.LogEventsWebhook</code></td><td>Пересылает события Оркестратора во внешнюю систему по HTTP (<code>HttpEndPoint:Url</code>).</td><td>RabbitMQ; внешняя HTTP-система</td></tr>
+<tr><td>RDP2</td><td><code>LTools.Orchestrator.RDP2</code></td><td>Поддержка RDP-сессий роботов и трансляция рабочего стола в UI (через nginx: <code>/rdpstream/</code>, <code>/rdpsessions/</code>).</td><td>WebApi; машины роботов (RDP)</td></tr>
+<tr><td>NuGet2</td><td><code>BaGet/src/BaGet</code> (исполняемый файл <code>BaGet</code>)</td><td>NuGet-сервер для пакетов проектов и активностей. Доступен через nginx по пути <code>/nuget/</code>.</td><td>PostgreSQL (своя БД); файловая система или MinIO</td></tr>
+<tr><td>ArcSight</td><td><code>LTools.Orchestrator.ArcSight</code></td><td>Принимает события (<code>api/OrchEvents</code>) и пишет их в файлы в формате CEF для ArcSight.</td><td>Папка обмена с ArcSight</td></tr>
+<tr><td>UI</td><td>отдельный репозиторий UI4 (архив <code>Primo-RPA-Orchestrator-UI-*.zip</code>)</td><td>Веб-интерфейс. Отдаётся nginx, который же проксирует API к службам.</td><td>nginx; WebApi, RobotLogs, Queues, Licenses, NuGet2, RDP2</td></tr>
+</table></div>
+
+<h2>На машинах роботов</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Компонент</th><th>Проект</th><th>Назначение</th><th>Зависит от</th></tr>
+<tr><td>Агент</td><td><code>LTools.Orchestrator.Agent</code></td><td>Развёртывание и запуск роботов, RDP-пользователи, триггеры по папке, сбор производительности, скриншоты, обновление.</td><td>WebApi; RobotLogs</td></tr>
+<tr><td>Agent.Runner</td><td><code>LTools.Orchestrator.Agent.Runner</code></td><td>Только Linux: вспомогательный процесс агента для запуска робота в графическом сеансе. Входит в архив агента для Linux.</td><td>Агент</td></tr>
+<tr><td>AgentUpdater</td><td><code>LTools.Orchestrator.AgentUpdater</code></td><td>Обновление агента. Архивы <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> кладутся внутрь архивов WebApi.</td><td>Агент</td></tr>
+<tr><td>DpaAgent</td><td><code>LTools.Orchestrator.DpaAgent</code></td><td>Агент DPA для Linux. Поставляется deb-пакетами <code>primo-rpa-orchestrator-dpa-agent</code> и <code>primo-rpa-orchestrator-dpa-common</code>.</td><td>WebApi</td></tr>
+</table></div>
+
+<h2>Внешние компоненты</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Компонент</th><th>Кто использует</th><th>Примечание</th></tr>
+<tr><td>PostgreSQL или MS SQL Server</td><td>WebApi, RobotLogs, Analytic, Licenses, NuGet2</td><td>Выбор СУБД — ключ <code>DBVendor</code>. В Docker-образах — PostgreSQL 14 (<code>postgres:14</code>). NuGet2 работает с PostgreSQL. Список баз — на странице <a href="db-schema.html">«Структура БД»</a>.</td></tr>
+<tr><td>RabbitMQ</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook</td><td>В Docker — образ <code>rabbitmq:3-management</code>.</td></tr>
+<tr><td>nginx</td><td>UI, все обращения извне</td><td>Единая HTTPS-точка входа. Конфиги: <code>nginx/nginx.win.conf</code>, <code>nginx.linux.conf</code>, <code>nginx.docker.conf</code>.</td></tr>
+<tr><td>MinIO или Ceph (S3)</td><td>WebApi (<code>FileStore</code>), RobotLogs (<code>ScreenFileUpload</code>), NuGet2</td><td>Необязательно; по умолчанию файлы хранятся в файловой системе.</td></tr>
+<tr><td>Redis</td><td>WebApi</td><td>Необязательно, ключ <code>UseRedis</code>.</td></tr>
+<tr><td>HashiCorp Vault</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook, агент</td><td>Необязательно, <code>Secrets:External</code> = <code>Vault</code>.</td></tr>
+<tr><td>MQTT-брокер</td><td>WebApi, RDP2</td><td>Не нужен. Необязательный режим версий 1.26.8–1.26.11; в ветке следующей версии MQTT из кода убран.</td></tr>
+<tr><td>Grafana</td><td>UI (отчёты)</td><td>Необязательно; nginx проксирует <code>/grafana/</code>.</td></tr>
+<tr><td>MCP-сервер (<code>PrimoRpa.McpServer.Api</code>)</td><td>внешние ИИ-клиенты</td><td>Отдельный продукт, не из этого репозитория. В Docker-шаблоне для Ubuntu — контейнер <code>mcp</code>, обращается к WebApi; nginx проксирует <code>/mcp</code>.</td></tr>
+</table></div>
+
+<h2>Имена служб и контейнеров</h2>
+
+<h3>Linux (systemd)</h3>
+<p>Файлы юнитов лежат в проектах служб: <code>Primo.Orchestrator.&lt;Служба&gt;.service</code> (системный) и <code>Primo.Orchestrator.&lt;Служба&gt;.user.service</code> (пользовательский).</p>
+<div class="tbl-wrap"><table>
+<tr><th>Юнит</th><th>Папка (WorkingDirectory)</th><th>Пользователь</th></tr>
+<tr><td><code>Primo.Orchestrator.WebApi</code>, <code>.RobotLogs</code>, <code>.States</code>, <code>.Notifications</code>, <code>.Analytic</code>, <code>.Licenses</code>, <code>.Queues</code>, <code>.MachineInfo</code>, <code>.LogEventsWebhook</code>, <code>.RDP2</code>, <code>.ArcSight</code></td><td><code>/opt/Primo/&lt;Служба&gt;</code></td><td><code>root</code></td></tr>
+<tr><td><code>Primo.Orchestrator.NuGet</code></td><td><code>/opt/Primo/NuGet2</code></td><td><code>root</code></td></tr>
+<tr><td><code>Primo.Orchestrator.Nginx</code></td><td><code>/opt/Primo/nginx</code></td><td><code>root</code></td></tr>
+<tr><td><code>Primo.Orchestrator.Agent</code></td><td><code>/opt/Primo/Agent</code></td><td><code>agent</code>; скрипт <code>k8s/agent/install.sh</code> ставит агент как пользовательский юнит</td></tr>
+<tr><td><code>Primo.Orchestrator.DpaAgent</code> (пользовательский)</td><td><code>/opt/primo-rpa/dpa-agent</code></td><td>—</td></tr>
+</table></div>
+<p>Во всех юнитах задано <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code>; служба запускается с ключом <code>--console</code>.</p>
+
+<h3>Windows</h3>
+<p>Службы на Windows работают как службы Windows (<code>ServiceBase</code>). Скрипт <code>PrimoWorker.ps1</code> регистрирует агент как службу <code>Primo.Orchestrator.Agent</code> (папка <code>C:\Primo\Agent</code>) и открывает в брандмауэре порт 5002.</p>
+<div class="todo"><p>Имена служб Windows для серверных компонентов (WebApi, RobotLogs и др.) в коде не заданы — их задаёт администратор при установке. Сверить с инструкциями по установке.</p></div>
+
+<h3>Docker</h3>
+<p>Образы собираются скриптом <code>azure/docker.ps1</code> на двух базах: Ubuntu 24.04 и Astra Linux (<code>astra/ubi18</code>). Имена образов и сервисов в шаблоне <code>docker-compose.yml.template</code>:</p>
+<div class="tbl-wrap"><table>
+<tr><th>Образ</th><th>Сервис в compose</th><th>Служба</th></tr>
+<tr><td><code>web-api</code></td><td><code>web-api</code></td><td>WebApi</td></tr>
+<tr><td><code>robot-logs</code></td><td><code>robot-logs</code></td><td>RobotLogs</td></tr>
+<tr><td><code>states</code></td><td><code>states</code></td><td>States</td></tr>
+<tr><td><code>notifications</code></td><td><code>notifications</code></td><td>Notifications</td></tr>
+<tr><td><code>analytic</code></td><td><code>analytic</code></td><td>Analytic</td></tr>
+<tr><td><code>licenses</code></td><td><code>licenses</code></td><td>Licenses</td></tr>
+<tr><td><code>queues</code></td><td><code>queues</code></td><td>Queues</td></tr>
+<tr><td><code>machine-info</code></td><td><code>machine-info</code></td><td>MachineInfo</td></tr>
+<tr><td><code>log-events-webhook</code></td><td><code>log-events-webhook</code></td><td>LogEventsWebhook</td></tr>
+<tr><td><code>nuget2</code></td><td><code>nuget</code></td><td>NuGet2</td></tr>
+<tr><td><code>ui</code></td><td><code>ui</code></td><td>UI + nginx</td></tr>
+<tr><td><code>mcp</code> (только Ubuntu)</td><td><code>mcp</code></td><td>MCP-сервер</td></tr>
+<tr><td><code>postgres:14</code></td><td><code>0postgres-db</code></td><td>PostgreSQL</td></tr>
+<tr><td><code>rabbitmq:3-management</code></td><td><code>0rabbitmq</code></td><td>RabbitMQ</td></tr>
+</table></div>
+<p>RDP2 в compose не входит: в <code>nginx.docker.conf</code> адрес RDP2 указывается вручную, служба работает вне Docker. Helm-чарты (<code>k8s/helm</code>) есть для webapi, robotlogs, licenses, queues, machineinfo, nuget2 и ui.</p>
+<div class="todo"><p>Старая статья «Компоненты системы» не упоминает службы Licenses и Queues: в 1.26.9 они есть в сборке, в Docker-образах и в маршрутах nginx. Там же указан PostgreSQL 13, а Docker-шаблоны 1.26.9 используют <code>postgres:14</code> — поддерживаемые версии СУБД сверить с требованиями.</p>
+<p>Для States, Notifications, Analytic и LogEventsWebhook Helm-чартов в <code>k8s/helm</code> нет — уточнить, как они разворачиваются в Kubernetes.</p></div>
+
+<h2>Служебные утилиты</h2>
+<div class="tbl-wrap"><table>
+<tr><th>Утилита</th><th>Проект</th><th>Назначение</th></tr>
+<tr><td>PasswordEncryptor</td><td><code>LTools.Orchestrator.PasswordEncryptor</code></td><td>Шифрование паролей для конфигов служб. Входит в поставку для Windows и Linux.</td></tr>
+<tr><td>RsaPasswordEncryptor</td><td><code>LTools.Orchestrator.RsaPasswordEncryptor</code></td><td>Шифрование паролей RSA (<code>ConfigPasswordEncryptor:Algorithm</code> = <code>RSA</code>).</td></tr>
+<tr><td>ComplectDescriber</td><td><code>LTools.Orchestrator.ComplectDescriber</code></td><td>Внутренняя: формирует описание комплекта поставки в документ Word.</td></tr>
+</table></div>
+<p>Остальные проекты решения — библиотеки (<code>LTools.Shared</code>, <code>LTools.Enums</code>, <code>*Dal</code>, <code>*.Migrations.*</code>, <code>LTools.Orchestrator.Storages</code>, <code>.Monitoring</code>, <code>.Mqtt</code>), тесты и стенды разработчиков (<code>RobotMock*</code>, <code>*Test*</code>, <code>CyberArk.ApiMock</code>).</p>
+
+<div class="src">Источники: <code>Orchestrator.Backend.sln</code>; <code>Directory.Build.props</code>; <code>azure/build.ps1</code>, <code>azure/docker.ps1</code>, <code>azure/build-publish-dpa.ps1</code>; <code>docker/ubuntu/*</code>, <code>docker/astra/*</code> (Dockerfile и <code>docker-compose.yml.template</code>); <code>k8s/helm/*</code>; <code>nginx/*.conf</code>, <code>nginx/Primo.Orchestrator.Nginx.service</code>; <code>Orchestrator/LTools.Orchestrator.*/Primo.Orchestrator.*.service</code>, <code>BaGet/src/BaGet/Primo.Orchestrator.NuGet.service</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (регистрация DbContext, RabbitMQ); <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>; <code>k8s/agent/install.sh</code>; <code>Orchestrator/LTools.Orchestrator.ArcSight/Controllers/OrchEventsController.cs</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

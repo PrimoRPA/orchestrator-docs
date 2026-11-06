@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="configure/robots-rdp">
+<main>
+<h1>Запуск роботов и RDP-сессии</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Параметры WebApi и агента, от которых зависят запуск робота, поддержка RDP-сессии перед стартом, освобождение и разлогинивание сессий, статус «Не доступен», блокировка робота агентом и трансляция сессии через службу RDP2.</p>
+
+<div class="note"><p>Ниже в колонке «По умолчанию» — значение из кода. В Docker-образе WebApi многие из этих параметров переопределены; где разница существенна, она указана.</p></div>
+
+<h2>Поддержка RDP-сессии перед запуском: <code>RobotStart</code></h2>
+<p>Если роботу нужна RDP-сессия, Оркестратор перед стартом просит её открыть и повторяет попытки по уровням. Уровни идут по порядку: исчерпаны попытки уровня — переход к следующему.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RobotStart:AttemptsKeepRDPSessionLevels[]</code></td><td>Массив уровней. В каждом: <code>AttempCount</code> — попыток на уровне, <code>AttempExpirationInSeconds</code> — пауза между попытками, с. Задержка следующего уровня должна быть больше предыдущей</td><td>массив не задан; у элемента <code>3</code> и <code>5</code>. В Docker-образе три уровня: 3×3 с, 3×5 с, 3×10 с</td></tr>
+  <tr><td><code>RobotStart:WaitUserProfileLoaded</code></td><td>Ждать загрузки профиля RDP-пользователя</td><td><code>false</code></td></tr>
+  <tr><td><code>RobotStart:ReEnqueueNoRdpOrProfile</code></td><td>Если сессию так и не подняли или профиль не загрузился — вернуть запуск в очередь проектов</td><td><code>false</code></td></tr>
+  <tr><td><code>RobotStart:IntervalForReleaseInSeconds</code></td><td>Если робот не ответил за это время, считается, что он не запустился, и лицензия освобождается</td><td><code>300</code> (в Docker <code>120</code>)</td></tr>
+  <tr><td><code>RobotStart:DisableReleaseRdpSessionTimeOut</code></td><td>Не отключать RDP-сессию при освобождении лицензии по таймауту</td><td><code>false</code></td></tr>
+  <tr><td><code>RobotStart:TimeOutInMinutesForUnlock</code></td><td>Через сколько минут с робота снимается блокировка</td><td><code>5</code> (в Docker <code>2</code>)</td></tr>
+  <tr><td><code>RobotStart:AgentHttpClientTimeoutInSec</code></td><td>Таймаут части запросов WebApi к агенту, с</td><td><code>10</code></td></tr>
+</table></div>
+<div class="warn"><p><code>AttemptsKeepRDPSessionLevels</code> в коде не имеет значения по умолчанию, а код обращается к нему без проверки. Если массив не задан, запуск роботов с RDP-сессией завершится ошибкой.</p></div>
+
+<h2>Освобождение и разлогинивание сессий: <code>RDP</code></h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RDP:SessionsReleaseDelay</code></td><td>Задержка отключения сессии, мс: сессия может сразу понадобиться другому роботу. Только при <code>ExclusiveSessionsRelease=false</code></td><td><code>0</code> (в Docker <code>5000</code>)</td></tr>
+  <tr><td><code>RDP:ExclusiveSessionsRelease</code></td><td>Робот отключает сессию, не дожидаясь других роботов в ней</td><td><code>false</code></td></tr>
+  <tr><td><code>RDP:SessionsReleaseThreadSleep</code></td><td>Период потока отключения сессий, мс</td><td><code>1000</code></td></tr>
+  <tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>Разлогинивать отключённых RDP-пользователей</td><td>в классе <code>true</code>, но служба включается только при явном <code>true</code> (в Docker <code>True</code>)</td></tr>
+  <tr><td><code>RDP:LogOffDisconnectedRDPUsersService</code></td><td>Алгоритм разлогинивания: <code>0</code> — прежний, <code>1</code> — новый</td><td>в классе <code>1</code>, при старте без ключа — <code>0</code> (в Docker <code>0</code>)</td></tr>
+  <tr><td><code>RDP:LogOffDisconnectedRDPUsersAsync</code></td><td>Асинхронное разлогинивание (для алгоритма <code>0</code>)</td><td><code>false</code></td></tr>
+  <tr><td><code>RDP:LogOffDisconnectedRDPUsersThreadSleep</code></td><td>Период потока разлогинивания, мс</td><td><code>1000</code></td></tr>
+  <tr><td><code>RDP:MaxAttemptStartLogOff</code> / <code>MaxAttemptLogOff</code></td><td>Попыток отправить команду разлогина агенту / выполнить разлогин. После исчерпания сессия остаётся отключённой</td><td><code>10</code> / <code>10</code></td></tr>
+  <tr><td><code>RDP:LogOffTimeOutInMinute</code></td><td>Через сколько минут повторить команду разлогина, если прошлая не завершилась</td><td><code>2</code> (в Docker <code>5</code>)</td></tr>
+  <tr><td><code>RDP:LostConnectTimeout</code></td><td>Через сколько секунд без обновления состояния соединение считается потерянным</td><td><code>5</code> (в Docker <code>10</code>)</td></tr>
+  <tr><td><code>RDP:RDPSessionsReleaseService</code></td><td>Алгоритм освобождения сессий: <code>0</code> — прежний, <code>1</code> — новый</td><td><code>0</code></td></tr>
+  <tr><td><code>RDP:MaxConnectedFlickersCount</code></td><td>Сколько переключений подряд дают признак «мерцания» сессии (виджет «Мерцающие RDP-сессии» на главной)</td><td><code>3</code></td></tr>
+  <tr><td><code>RDP:ConnectedFlickersInterval</code></td><td>Интервал переключения, который считается кандидатом на мерцание, мс</td><td><code>10000</code> (в Docker <code>6000</code>)</td></tr>
+  <tr><td><code>RDP:ResetConnectedFlickersIntervalFactor</code></td><td>Множитель интервала: если за <code>интервал × множитель</code> переключений не было, признак сбрасывается</td><td><code>3</code></td></tr>
+</table></div>
+<p>Если RDP-лицензий впритык, а роботы в одной сессии не стартуют сразу друг за другом, ставьте <code>SessionsReleaseDelay=0</code>. Если стартуют подряд — <code>ExclusiveSessionsRelease=true</code>.</p>
+
+<h2>Статус «Не доступен» и блокировка робота агентом</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Robot:RunStatusTimeout</code></td><td>Через сколько секунд без обновления статуса робот получает статус «Не доступен»</td><td><code>30</code> (в Docker <code>11</code>)</td></tr>
+  <tr><td><code>RobotStart:UseAgentLock</code></td><td>Перед запуском просить агента заблокировать робота файлом блокировки. Блокировка отклоняется, если файл остался или процесс робота жив</td><td><code>true</code></td></tr>
+  <tr><td><code>Robot:VersionForAgentLock</code></td><td>Версия робота, с которой работает блокировка агентом</td><td><code>1.1.30.2</code></td></tr>
+  <tr><td><code>Robot:VersionForAgentCollectRobotStatus</code></td><td>Версия робота, с которой статусы собирает агент</td><td><code>1.1.30.2</code></td></tr>
+  <tr><td><code>Robot:CollectRobotStatusService</code></td><td>Алгоритм сбора статусов роботов: <code>0</code> — прежний, <code>1</code> — новый</td><td><code>0</code> (в Docker <code>1</code>)</td></tr>
+</table></div>
+<p>На стороне агента файлы блокировки лежат в папке <code>&lt;Agent:DataPath&gt;/&lt;Robot:LocksDir&gt;</code> (по умолчанию подпапка <code>RobotLocks</code>). Агент создаёт её и очищает при старте. RDP-пользователям роботов нужны полные права на эту папку.</p>
+
+<h2>Агент: что ещё влияет на запуск</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр (конфиг агента)</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Agent:DataPath</code></td><td>Папка данных агента: блокировки, дистрибутивы робота, архивы скриншотов</td><td>—</td></tr>
+  <tr><td><code>Agent:ProjectZipEncoding</code></td><td>Кодировка имён файлов в архиве проекта</td><td>пусто</td></tr>
+  <tr><td><code>Orchestrator:BaseUrl</code></td><td>Адрес Оркестратора для агента. Пусто — берётся из заголовка запросов Оркестратора</td><td>пусто</td></tr>
+  <tr><td><code>StartRobot:UseHighestTaskRunLevel</code></td><td>Флаг «Run with highest privileges» в задании планировщика Windows</td><td><code>true</code></td></tr>
+  <tr><td><code>StartRobot:WindowsTaskMaxRetry</code></td><td>Попыток запустить задание планировщика при ошибке</td><td><code>10</code></td></tr>
+</table></div>
+<p>Порт, по которому WebApi обращается к агенту, задаётся в <code>Tenants:Agent:Port</code> (по умолчанию <code>5002</code>), см. <a href="access.html">Вход и доступ</a>.</p>
+
+<h2>Трансляция RDP-сессии: служба RDP2</h2>
+<p>WebApi отдаёт браузеру адрес трансляции из своих параметров, а служба RDP2 держит сессии машин, которые ей назначены.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Где</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RDP:RdpBaseUrl</code></td><td>WebApi</td><td>Внешний адрес (точка nginx) единственной службы RDP2. Для случая без <code>AddressFilter</code></td><td>—</td></tr>
+  <tr><td><code>RDP:RdpBaseUrls</code></td><td>WebApi</td><td>Словарь «внутренний IP сервера RDP2 → внешний адрес» для нескольких служб RDP2 с <code>AddressFilter</code></td><td>—</td></tr>
+  <tr><td><code>Orchestrator:BaseUrl</code></td><td>RDP2</td><td>Адрес WebApi</td><td>—</td></tr>
+  <tr><td><code>AddressFilter</code></td><td>RDP2</td><td>Какие машины обслуживает этот экземпляр. Наборы машин у экземпляров не должны пересекаться</td><td>пусто — все</td></tr>
+  <tr><td><code>Host</code></td><td>RDP2</td><td>Внутренний IP сервера RDP2. Не задан — WebApi определит его по запросу, что не всегда верно</td><td>пусто</td></tr>
+  <tr><td><code>EnabledOrigins</code></td><td>RDP2</td><td>Внешний адрес Оркестратора для CORS. Без него браузер не покажет трансляцию</td><td>—</td></tr>
+  <tr><td><code>MaxSessionsLimit</code>, <code>RdpClientConnectionUpdateInterval</code></td><td>RDP2</td><td>Лимит сессий и интервал обновления подключения</td><td><code>0</code></td></tr>
+  <tr><td><code>UsersListInclude</code>, <code>UsersListExclude</code>, <code>OnlyEvenOddUsersIds</code></td><td>RDP2</td><td>Фильтры пользователей, сессии которых обслуживает экземпляр</td><td>пусто</td></tr>
+  <tr><td><code>Mqtt:Url</code>, <code>Username</code>, <code>Password</code></td><td>WebApi и RDP2</td><td>Если <code>Mqtt:Url</code> задан, WebApi и RDP2 обмениваются сообщениями через MQTT; иначе RDP2 работает с WebApi по REST. Задавать не нужно: необязательный режим версий 1.26.8–1.26.11; в ветке следующей версии MQTT из кода убран.</td><td>пусто → REST</td></tr>
+</table></div>
+<p>Машины, обслуживаемые экземплярами RDP2, видны в UI4: <b>Настройки → Система → Машины RDP2</b>.</p>
+
+<h2>Пример (WebApi)</h2>
+<pre><code>"RobotStart": {
+  "AttemptsKeepRDPSessionLevels": [
+    { "AttempCount": 3, "AttempExpirationInSeconds": 3 },
+    { "AttempCount": 3, "AttempExpirationInSeconds": 5 },
+    { "AttempCount": 3, "AttempExpirationInSeconds": 10 }
+  ],
+  "WaitUserProfileLoaded": false,
+  "UseAgentLock": true
+},
+"RDP": {
+  "SessionsReleaseDelay": 0,
+  "ExclusiveSessionsRelease": false,
+  "EnabledLogOffDisconnectedRDPUsers": true,
+  "RdpBaseUrl": "https://orch.example.local:44392/rdpstream"
+},
+"Robot": { "RunStatusTimeout": 30 }</code></pre>
+
+<h2>Как проверить</h2>
+<ol class="steps">
+  <li>Запустите робота, которому нужна RDP-сессия. <span class="check">Сессия открылась, робот перешёл в «Выполняется». В журнале «События оркестратора» нет ошибок открытия сессии.</span></li>
+  <li>Остановите агент на машине и подождите <code>Robot:RunStatusTimeout</code>. <span class="check">Роботы машины в статусе «Не доступен».</span></li>
+  <li>Откройте трансляцию сессии робота. <span class="check">Картинка идёт; если нет — проверьте <code>RdpBaseUrl</code>, <code>EnabledOrigins</code> RDP2 и проксирование <code>/rdpstream/</code> в nginx (с 1.26.9 там включена поддержка WebSocket).</span></li>
+</ol>
+
+<div class="todo"><p><code>Agent:ProjectZipEncoding</code>: в коде 1.26.9 агент сам определяет кодировку архива (UTF-8 или cp866) и берёт значение из конфига, только если автоопределение упало. Старое руководство описывает параметр как основной способ починить кириллицу — сверить поведение.</p>
+<p>Эффективные значения по умолчанию расходятся с классом опций: <code>EnabledLogOffDisconnectedRDPUsers</code> и <code>LogOffDisconnectedRDPUsersService</code> при отсутствии ключа читаются в <code>Startup</code> как <code>false</code> и <code>0</code>. Подтвердить с разработкой, что это намеренно.</p>
+<p>Старое руководство говорит про <code>Robot</code>: «остальные параметры менять запрещено без согласования с вендором». Перечень «запрещённых» параметров в коде не обозначен.</p>
+<p>Значения <code>MaxSessionsLimit</code> и <code>RdpClientConnectionUpdateInterval</code> равные <code>0</code> — как RDP2 их трактует (без лимита / значение по умолчанию), не проверено.</p></div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/RobotStart.cs</code>, <code>Options/RDP.cs</code>, <code>Options/Robot.cs</code>, <code>Options/Tenants.cs</code>, <code>Options/Mqtt.cs</code>; <code>WebApi/Startup.cs</code> (регистрация служб RDP); <code>Bl/Robots/CommandBus/StartRobotCommandBusService.cs</code>, <code>StartRobotCommandDeferredHub.cs</code>; <code>Bl/Robots/CollectRobotStatusService.cs</code>; <code>LTools.Orchestrator.Agent/Options/Agent.cs</code>, <code>Robot.cs</code>, <code>Orchestrator.cs</code>, <code>StartRobot.cs</code>; <code>Agent/ApplicationHostedService.cs</code>; <code>Agent/Bl/ProcessingPipelines/StartRobotPipelineBase.cs</code>; <code>LTools.Orchestrator.RDP2/Startup.cs</code>, <code>Bl/Services/RdpSessionService.cs</code>; <code>LTools.Orchestrator.Mqtt/Client/MqttBusClient.cs</code>; <code>WebApi/Readme.txt</code> (1.26.9); <code>docker/astra/web-api.Dockerfile</code>; UI4: <code>translations/ru/rdp2.json</code>, <code>home.json</code>, <code>projectQueues.json</code>. Руководство 1.25.7: «Внешняя поддержка RDP-сессий», «Блокировка робота агентом», «Таймаут… Не доступен», «Открытие/отключение/разлогинивание RDP-сессий», «Настройка трансляции RDP-сессии», «Мерцающие RDP-сессии», «Проблемы с кодировкой…».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/network">
+<main>
+<h1>Порты и сетевой трафик</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Какие порты слушают службы Оркестратора, агент и робот, и кто к кому обращается. По этой таблице открывайте порты на файерволах.</p>
+
+<h2>Порты служб Оркестратора</h2>
+<p>Порты — значения из поставки по умолчанию. Для установки на Windows и Linux они совпадают (одинаковые <code>upstream</code> в <code>nginx.win.conf</code> и <code>nginx.linux.conf</code>).</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
+  <tr><td>nginx (UI и прокси)</td><td><code>44392</code></td><td>HTTPS</td><td>Браузеры пользователей, роботы, агенты — единая внешняя точка входа</td></tr>
+  <tr><td>WebApi</td><td><code>5001</code></td><td>HTTP</td><td>nginx (<code>/api/</code>, <code>/events/</code> — WebSocket); службы RobotLogs, Queues, Licenses, States, Analytic, MCP</td></tr>
+  <tr><td>Queues</td><td><code>5088</code></td><td>HTTP</td><td>nginx (<code>/queues/</code>, <code>/api/robotnotificationevents</code>)</td></tr>
+  <tr><td>Licenses</td><td><code>5089</code></td><td>HTTP</td><td>nginx (<code>/licenses/</code>, <code>/api/robotlicenseresponses</code>)</td></tr>
+  <tr><td>RobotLogs</td><td><code>56748</code></td><td>HTTP</td><td>nginx (<code>/logs/</code>, POST/PUT на <code>/api/robotlogs</code>); WebApi</td></tr>
+  <tr><td>Analytic</td><td><code>56749</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
+  <tr><td>States</td><td><code>56750</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
+  <tr><td>Notifications</td><td><code>56751</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
+  <tr><td>LogEventsWebhook</td><td><code>56770</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
+  <tr><td>MachineInfo</td><td><code>5051</code></td><td>HTTP</td><td>WebApi (<code>License:MachineInfoUrl</code>)</td></tr>
+  <tr><td>NuGet2</td><td><code>8081</code></td><td>HTTP</td><td>nginx (<code>/nuget/</code>)</td></tr>
+  <tr><td>RDP2</td><td><code>5102</code></td><td>HTTPS, WebSocket</td><td>nginx (<code>/rdpstream/</code>, <code>/rdpsessions/</code>)</td></tr>
+  <tr><td>MCP Server</td><td><code>5080</code></td><td>HTTP</td><td>nginx (<code>/mcp</code>)</td></tr>
+  <tr><td>Метрики Prometheus (каждая служба)</td><td><code>10052</code></td><td>HTTP</td><td>Ваш Prometheus. Параметр <code>Monitoring:Port</code></td></tr>
+</table></div>
+<p>Службы без маршрута в nginx (Analytic, States, Notifications, LogEventsWebhook) получают работу через RabbitMQ; их HTTP-порт нужен только для <code>/health</code>.</p>
+
+<h2>Агент и робот</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Кто слушает</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
+  <tr><td>Агент на машине робота</td><td><code>5002</code></td><td>HTTPS</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code> (по умолчанию <code>5002</code>) и <code>Tenants:Agent:Https</code> (<code>true</code>)</td></tr>
+  <tr><td>Робот</td><td>порт робота</td><td>HTTPS</td><td>WebApi обращается напрямую: <code>https://&lt;IP машины&gt;:&lt;порт робота&gt;/LTools.Robot/RobotService/api/…</code></td></tr>
+</table></div>
+<p>В обратную сторону агент и роботы ходят только на внешний адрес Оркестратора (nginx, <code>44392</code>). Этот адрес WebApi передаёт им из <code>RobotDeployment:OrchBaseUrl</code> и <code>RobotDeployment:RobotLogsBaseUrl</code>; агент получает его в заголовке <code>orchestrator-url</code>, если в его конфиге не задан <code>Orchestrator:BaseUrl</code>.</p>
+
+<h2>Инфраструктура</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Сервис</th><th>Порт</th><th>Кто обращается</th></tr>
+  <tr><td>PostgreSQL</td><td><code>5432</code></td><td>WebApi, RobotLogs, Analytic, Licenses, NuGet2</td></tr>
+  <tr><td>RabbitMQ (AMQP)</td><td><code>5672</code></td><td>Все службы Оркестратора (<code>RabbitMQ:Port</code>)</td></tr>
+  <tr><td>RabbitMQ (веб-консоль)</td><td><code>15672</code></td><td>Администратор</td></tr>
+  <tr><td>SMTP</td><td><code>Email:FromSmtpPort</code> (в образе — <code>465</code>)</td><td>Notifications</td></tr>
+</table></div>
+
+<h2>Docker</h2>
+<p>В <code>docker-compose.yml</code> на хост опубликованы только: <code>44392</code> (UI), <code>8081</code> (NuGet2), <code>5432</code> (PostgreSQL), <code>15672</code> (консоль RabbitMQ). Остальные службы общаются внутри сети compose по именам (<code>web-api:5001</code> и т. д.).</p>
+<div class="warn"><p>Если PostgreSQL и консоль RabbitMQ не должны быть видны из сети — уберите их из <code>ports</code> в compose или закройте файерволом.</p></div>
+
+<div class="todo"><p>Диапазон портов роботов в коде не найден: порт робота хранится в карточке робота и приходит от агента при развертывании. Старые доки называли диапазон 8000–9000 — подтвердить.</p></div>
+<div class="todo"><p>Привязка Kestrel служб на Windows/Linux задаётся в <code>appsettings.*.json</code>, которых нет в выгрузке. Порты в таблице взяты из <code>Kestrel__EndPoints__*__Url</code> в Dockerfile и из <code>upstream</code> в конфигах nginx — сверить с <code>appsettings.ProdLinux.json</code>/<code>ProdWin.json</code> поставки. В Dockerfile <code>EXPOSE 8080 10052</code> не совпадает с фактическим портом Kestrel (<code>5001</code>, <code>56748</code>…) — на работу не влияет, но может путать.</p></div>
+<div class="todo"><p>Старая таблица портов упоминала 3389 для RDP2, 389/636 (LDAP/LDAPS). В коде nginx RDP2 доступен на 5102; порты LDAP и RDP до машин роботов описать на странице интеграций/RDP после проверки.</p></div>
+
+<div class="src">Источники: <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/nginx.docker.conf</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>Kestrel__EndPoints__*__Url</code>, <code>Monitoring__Port</code>, <code>RabbitMQ__Port</code>, <code>Email__FromSmtpPort</code>); <code>docker/ubuntu/docker-compose.yml.template</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Tenants.cs</code> (<code>AgentSettings</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Robots/RobotClient.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Agent/AgentClient.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Orchestrator.cs</code>; <code>Orchestrator/LTools.Orchestrator.Monitoring/Options/Monitoring.cs</code>; старый сайт, <code>orchestrator-sys-admin/ports.md</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

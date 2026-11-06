@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="operate/monitoring">
+<main>
+<h1>Мониторинг и метрики</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Каждая служба Оркестратора умеет отдавать метрики в Prometheus или Zabbix. Здесь — как включить сбор, какой адрес указать в системе мониторинга и какие метрики есть.</p>
+
+<h2>Как это устроено</h2>
+<p>Служба сама ничего не отправляет. Она открывает отдельный порт и ждёт, когда к ней обратится Prometheus (HTTP, путь <code>/metrics</code>) или сервер Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
+<p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента и DPA-агента на машинах роботов.</p>
+
+<h2>Параметры</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>Monitoring:Provider</code></td><td><code>Prometheus</code>, <code>Zabbix</code> или пустая строка (выключено). Другое значение — ошибка в журнале службы, мониторинг выключен.</td><td><code>""</code></td></tr>
+  <tr><td><code>Monitoring:Port</code></td><td>Порт, на котором служба отвечает системе мониторинга. Значение вне 0–65535 — ошибка, мониторинг выключен.</td><td><code>10052</code></td></tr>
+  <tr><td><code>Monitoring:DotNetMonitoringEnabled</code></td><td>Метрики процесса .NET: память, сборки мусора, потоки, CPU.</td><td><code>false</code></td></tr>
+  <tr><td><code>Monitoring:KestrelMonitoringEnabled</code></td><td>Метрики встроенного веб-сервера Kestrel: подключения, очереди, TLS.</td><td><code>false</code></td></tr>
+  <tr><td><code>Monitoring:NpgsqlMonitoringEnabled</code></td><td>Метрики подключений к PostgreSQL, с меткой <code>DbName</code>. Для служб, которые не ходят в БД (RDP2, MachineInfo), включать незачем.</td><td><code>false</code></td></tr>
+  <tr><td><code>Monitoring:IdleDurationMillis</code></td><td>Только WebApi: как часто (мс) пересчитывать метрики <code>primo_orch_*</code>, которые считаются запросами к БД. Между пересчётами отдаются прежние значения. Меньше 1000 не бывает.</td><td><code>2000</code></td></tr>
+</table></div>
+
+<p>Пример фрагмента <code>appsettings.json</code> любой службы:</p>
+<pre><code>"Monitoring": {
+  "Provider": "Prometheus",
+  "Port": 10052,
+  "DotNetMonitoringEnabled": true,
+  "KestrelMonitoringEnabled": true,
+  "NpgsqlMonitoringEnabled": true,
+  "IdleDurationMillis": 10000
+}</code></pre>
+<p>В Docker-образах из <code>k8s/*.Dockerfile</code> мониторинг уже включён переменными окружения: <code>Monitoring__Provider=Prometheus</code>, <code>Monitoring__Port=10052</code>, порт 10052 объявлен в <code>EXPOSE</code>.</p>
+<div class="warn"><p>Если несколько служб стоят на одном сервере, задайте каждой свой <code>Monitoring:Port</code> — по умолчанию у всех 10052, и вторая служба не сможет открыть порт.</p></div>
+
+<h2>Подключение Prometheus</h2>
+<ol class="steps">
+  <li>Включите <code>Provider: "Prometheus"</code> и перезапустите службу. <span class="check">в журнале службы нет сообщения <code>Monitoring service is disabled</code></span></li>
+  <li>Откройте в браузере <code>http://&lt;хост службы&gt;:&lt;Monitoring:Port&gt;/metrics</code>. <span class="check">видны строки <code># HELP</code> и <code>primo_…</code></span></li>
+  <li>Добавьте задание в <code>scrape_configs</code> Prometheus — по одному <code>job_name</code> на службу.</li>
+</ol>
+<p>Пример конфига Prometheus лежит в поставке исходников: <code>prometheus/prometheus.yml</code>. Он рассчитан на локальный стенд (порты 9900–9960 на <code>host.docker.internal</code>) — в своей установке подставьте реальные хосты и порты.</p>
+
+<h2>Подключение Zabbix</h2>
+<p>При <code>Provider: "Zabbix"</code> служба работает как пассивный агент Zabbix на порту <code>Monitoring:Port</code>. На сервере Zabbix заведите узел с интерфейсом агента на этот адрес и порт.</p>
+<ul>
+  <li>Ключ элемента данных — имя метрики, например <code>primo_rl_queue_length</code>.</li>
+  <li>Для метрики с меткой значение метки пишется в квадратных скобках: <code>db_client_connections_usage[ltoolslogs]</code>. Метка без скобок — значение без метки.</li>
+  <li>Ключ <code>agent.ping</code> всегда возвращает <code>1</code> — удобно для проверки доступности.</li>
+  <li>Неизвестный ключ возвращает <code>ZBX_NOTSUPPORTED</code>.</li>
+</ul>
+<div class="warn"><p>Значение метки в ключе Zabbix должно состоять из латинских букв, цифр и <code>_</code> и не начинаться с цифры. Метрики WebApi размечены именем тенанта (<code>TenantName</code>): для тенанта с кириллицей, пробелом или дефисом в имени ключ не пройдёт проверку, Zabbix получит <code>ZBX_NOTSUPPORTED</code>.</p></div>
+
+<h2>Метрики служб</h2>
+<p>У каждой метрики в коде есть описание на русском (строка <code># HELP</code>). Ниже — сводка; полный текст виден в ответе <code>/metrics</code>.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Служба</th><th>Префикс</th><th>Что показывает</th></tr>
+  <tr><td>WebApi</td><td><code>primo_orch_</code></td><td>Срез по тенантам (метка <code>TenantName</code>, у тенанта по умолчанию метки нет): роботы (всего, развёрнутые, выполняющие), машины, проекты и версии, ассеты, шаблоны, задания по статусам, лицензии Студии и робота (всего и занятые по редакциям Enterprise/Standard/Desktop, для оркестраторных и аттендед-роботов). Счётчик <code>primo_orch_failed_uploads</code> — неудачные выгрузки в аналитику (метка <code>TableName</code>).</td></tr>
+  <tr><td>RobotLogs</td><td><code>primo_rl_</code></td><td>Принятые сообщения журналов роботов, аттендед-роботов и Оркестратора; запросы скриншотов; потерянные сообщения; длина буфера записи в БД (<code>primo_rl_queue_length</code>).</td></tr>
+  <tr><td>States</td><td><code>primo_states_</code></td><td>Опубликованные и неудачные события состояний.</td></tr>
+  <tr><td>Queues</td><td><code>primo_queues_</code></td><td>Полученные, обработанные и ошибочные события уведомления роботов.</td></tr>
+  <tr><td>Notifications</td><td><code>primo_ntf_</code></td><td>Отправленные и неотправленные письма, сформированные HTML-шаблоны и вложения XLSX.</td></tr>
+  <tr><td>Licenses</td><td><code>primo_licenses_</code></td><td>Запросы и ответы по выдаче лицензий.</td></tr>
+  <tr><td>Analytic</td><td><code>primo_analytic_</code></td><td>Полученные и сохранённые события, обновления материализованных представлений, неудачные выгрузки во внешние системы (метка <code>TableName</code>).</td></tr>
+  <tr><td>LogEventsWebhook</td><td><code>primo_lew_</code></td><td>Успешные и неудачные авторизации во внешней системе и отправки событий.</td></tr>
+  <tr><td>ArcSight</td><td><code>primo_arcsight_</code></td><td>Преобразованные и записанные в файл события.</td></tr>
+  <tr><td>MachineInfo</td><td><code>primo_mi_</code></td><td>Число обращений к API сведений о машине.</td></tr>
+  <tr><td>RDP2</td><td><code>primo_rdp2_</code></td><td>Активные RDP-сессии, подключения и отключения, трансляции, зрители, сеансы с управлением.</td></tr>
+  <tr><td>Агент</td><td><code>primo_ag_</code></td><td>Роботы, запущенные на машине; успешные и неудачные запуски.</td></tr>
+  <tr><td>DPA-агент</td><td><code>primo_queues_</code></td><td>Полученные, обработанные и ошибочные события DPA-агента.</td></tr>
+</table></div>
+<p>Общие метрики (если включены): <code>dotnet_*</code> и <code>process_*</code>, <code>kestrel_*</code>, <code>db_client_*</code>.</p>
+<div class="note"><p>Метрики <code>primo_orch_*</code> считаются запросами к БД при каждом обращении Prometheus или Zabbix, но не чаще, чем раз в <code>IdleDurationMillis</code>. При частом опросе увеличьте этот параметр.</p></div>
+
+<h2>Grafana</h2>
+<p>Для показа отчётов Grafana внутри Оркестратора в конфиге WebApi есть секция <code>Grafana:ReportItems</code> — список разделов (<code>Name</code>) с отчётами (<code>Name</code>, <code>Url</code>, <code>Description</code>). В UI4 отчёты открываются в разделе «Аналитика» → «Grafana». В шаблонах nginx Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>. Примеры дашбордов и представлений для аналитической БД лежат в <code>LTools.Orchestrator.Analytic/Grafana/</code>.</p>
+
+<div class="todo">
+  <p><b>Zabbix-шаблон.</b> Готового шаблона Zabbix (XML/YAML) в выгрузке нет — только описания метрик в коде. Уточнить, поставляется ли шаблон отдельно.</p>
+  <p><b>Префикс DPA-агента.</b> DPA-агент публикует метрики с тем же префиксом, что Queues (<code>primo_queues_*</code>), а часть его метрик в описании помечена «не заполняется». Похоже на копирование кода — сверить с разработкой.</p>
+  <p><b>Имя метрики лицензий Студии.</b> <code>primo_orch_free_studio_licenses</code> по коду — общее число лицензий Студии, а не свободных (так и написано в описании).</p>
+  <p><b>/metrics на основном порту.</b> В модуле мониторинга есть контроллер <code>Metrics</code>. Отвечает ли он на основном порту службы (не на <code>Monitoring:Port</code>) — проверить на стенде.</p>
+  <p><b>Syslog.</b> Отправки журналов или метрик в syslog в коде не найдено. Службы на Linux пишут в journald через <code>SyslogIdentifier</code> в unit-файлах — см. <a href="service-logs.html">Журналы служб</a>.</p>
+  <p><b>Подпись меню Grafana в UI4</b> («Аналитика» → «Grafana» / «Отчёты в Grafana») — сверить на стенде.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.Monitoring/</code> (<code>Options/Monitoring.cs</code>, <code>MonitoringService.cs</code>, <code>Nabbix/ItemRegistry.cs</code>, <code>DotNetMonitoring.cs</code>, <code>KestrelMonitoring.cs</code>, <code>NpgsqlMonitoring.cs</code>, <code>MetricsController.cs</code>); <code>Orchestrator/*/Bl/Monitoring/*MonitoringItems.cs</code> (WebApi, RobotLogs, States, Queues, Notifications, Licenses, Analytic, LogEventsWebhook, ArcSight, RDP2, Agent, DpaAgent), <code>LTools.Orchestrator.MachineInfo/BL/MonitoringItems.cs</code>; <code>Startup.cs</code> служб (секция <code>Monitoring</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Grafana.cs</code>; <code>prometheus/prometheus.yml</code>; <code>k8s/*.Dockerfile</code>; <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>; UI4: <code>src/shared/lib/translations/ru/common.json</code>, <code>ru/journal.json</code>. Старая документация: сайт, «Мониторинг служб» (<code>orchestrator-sys-admin/fine-tuning/monitoring.mdx</code>).</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

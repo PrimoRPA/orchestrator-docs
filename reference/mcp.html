@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="reference/mcp">
+<main>
+<h1>MCP Server</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Docker</span></div>
+<p class="lead">MCP Server — отдельная служба, через которую внешние ИИ-клиенты работают с Оркестратором по протоколу MCP. В поставке 1.26.9 она есть только в Docker-шаблоне для Ubuntu и доступна через nginx по пути <code>/mcp</code>.</p>
+
+<h2>Что это за служба</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что</th><th>Значение</th></tr>
+  <tr><td>Исполняемый файл</td><td><code>PrimoRpa.McpServer.Api</code></td></tr>
+  <tr><td>Откуда код</td><td>Не из решения <code>Orchestrator.Backend.sln</code>: скрипт сборки бэкенда её не собирает. Образ строится из готового архива <code>mcp-linux-&lt;версия&gt;.zip</code>, который конвейер забирает из Nexus вместе с архивами остальных служб.</td></tr>
+  <tr><td>Docker-образ</td><td><code>docker/ubuntu/mcp.Dockerfile</code>, база <code>ubuntu:24.04</code>; сервис <code>mcp</code> в <code>docker/ubuntu/docker-compose.yml.template</code></td></tr>
+  <tr><td>Astra Linux</td><td>Dockerfile нет, образ не собирается: конвейер пропускает его с сообщением «No mcp.Dockerfile for …».</td></tr>
+  <tr><td>Порт</td><td><code>5080</code> (HTTP) внутри сети compose, на хост не публикуется</td></tr>
+  <tr><td>Внешний адрес</td><td><code>https://&lt;сервер&gt;:44392/mcp</code> — через nginx</td></tr>
+  <tr><td>Проверка здоровья</td><td><code>/mcp/health</code>; отвечает <code>503</code>, пока Оркестратор недоступен</td></tr>
+  <tr><td>Пользователь в контейнере</td><td><code>orch-user</code>, UID/GID <code>1001</code> (без root)</td></tr>
+  <tr><td>Зависимость</td><td>Стартует после того, как <code>web-api</code> стал здоровым; к Оркестратору обращается по <code>http://web-api:5001/</code></td></tr>
+</table></div>
+<p>MCP Server работает от имени учётной записи Оркестратора, заданной в его настройках. Внешние клиенты подключаются к нему по API-ключу из списка <code>Mcp:ApiKeys</code>.</p>
+
+<h2>Параметры</h2>
+<p>Настройки задаются переменными окружения. Файл <code>appsettings.ProdLinux.json</code> из архива в образ не попадает и заменяется пустым.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр (переменная окружения)</th><th>Назначение</th><th>По умолчанию в образе</th></tr>
+  <tr><td><code>Orchestrator__BaseUrl</code></td><td>Адрес WebApi, к которому обращается MCP Server.</td><td><code>http://web-api:5001/</code></td></tr>
+  <tr><td><code>Orchestrator__UserName</code></td><td>Учётная запись Оркестратора, от имени которой работает служба.</td><td><code>admin</code></td></tr>
+  <tr><td><code>Orchestrator__Password</code></td><td>Пароль этой учётной записи.</td><td>пусто</td></tr>
+  <tr><td><code>Orchestrator__IgnoreSslErrors</code></td><td>Игнорировать ошибки SSL при обращении к Оркестратору.</td><td><code>false</code></td></tr>
+  <tr><td><code>Mcp__ApiKeys__0</code></td><td>API-ключ для внешних клиентов. Ключей может быть несколько: <code>Mcp__ApiKeys__1</code> и т. д.</td><td>пусто</td></tr>
+  <tr><td><code>Kestrel__EndPoints__InternalHttp__Url</code></td><td>Адрес, который слушает служба.</td><td><code>http://*:5080</code></td></tr>
+  <tr><td><code>ASPNETCORE_ENVIRONMENT</code></td><td>Окружение.</td><td><code>ProdLinux</code></td></tr>
+</table></div>
+<p>В compose-шаблоне значения для службы берутся из <code>x-secrets</code>: <code>mcp-orch-user</code>, <code>mcp-orch-pass</code>, <code>mcp-api-key</code>. Там же задаётся <code>TZ</code>.</p>
+
+<h2>nginx</h2>
+<p>Блок для MCP Server уже есть во всех трёх конфигах nginx (<code>nginx.docker.conf</code>, <code>nginx.linux.conf</code>, <code>nginx.win.conf</code>):</p>
+<pre><code>upstream mcp { server mcp:5080; }        # в Docker; на Windows и Linux — 127.0.0.1:5080
+
+location /mcp {
+  proxy_pass http://mcp;      # без URI: путь передаётся как есть
+  proxy_buffering off;        # ответ на tools/call идёт потоком SSE
+  proxy_read_timeout 180s;    # больше таймаута диспетчера MCP Server (120 с)
+}</code></pre>
+<p>Все пути службы начинаются с <code>/mcp</code>. Если меняете конфиг, не включайте буферизацию и не уменьшайте <code>proxy_read_timeout</code> ниже 120 секунд.</p>
+
+<h2>Как включить (Docker, Ubuntu)</h2>
+<ol class="steps">
+  <li>В <code>x-secrets</code> compose-файла задайте <code>mcp-orch-user</code> и <code>mcp-orch-pass</code> — учётную запись Оркестратора для службы. <span class="check">в файле нет значений из примера</span></li>
+  <li>Задайте <code>mcp-api-key</code> — ключ, который вы выдадите ИИ-клиентам. <span class="check">ключ не совпадает с паролями из <code>x-secrets</code></span></li>
+  <li>Проверьте, что у сервиса <code>mcp</code> указан образ, а не заготовка <code>image: &lt;mcp&gt;</code>. <span class="check">в строке <code>image:</code> есть реестр и тег</span></li>
+  <li>Запустите службу:
+<pre><code>docker compose up -d mcp</code></pre>
+    <span class="check"><code>docker compose ps</code> показывает <code>mcp</code> в состоянии <code>healthy</code></span></li>
+  <li>Проверьте доступ через nginx: откройте <code>https://&lt;сервер&gt;:44392/mcp/health</code>. <span class="check">ответ <code>200</code>; <code>503</code> значит, что MCP Server не может достучаться до Оркестратора — проверьте учётную запись и <code>Orchestrator__BaseUrl</code></span></li>
+</ol>
+<div class="warn"><p>В шаблоне служба работает от имени <code>admin</code>. Все действия ИИ-клиентов в Оркестраторе выполняются с правами этой учётной записи.</p></div>
+
+<div class="todo">
+<p>Из какого репозитория собирается <code>PrimoRpa.McpServer.Api</code> и с какой версии Оркестратора служба входит в поставку — в коде бэкенда не найдено, уточнить у разработки.</p>
+<p>Список инструментов (tools), которые MCP Server даёт клиентам, и какие методы WebApi он вызывает — в коде Оркестратора нет, уточнить у разработки.</p>
+<p>Как клиент передаёт API-ключ (имя заголовка) и какой транспорт MCP поддерживается — в коде не найдено. Из конфига nginx видно только, что ответ на <code>tools/call</code> идёт потоком SSE.</p>
+<p>Какие права нужны учётной записи <code>Orchestrator__UserName</code>, можно ли использовать отдельную роль вместо <code>admin</code> — уточнить у разработки.</p>
+<p>Установка на Windows и Linux без Docker: в nginx уже есть <code>upstream mcp</code> на <code>127.0.0.1:5080</code>, но инсталлятора, службы Windows или systemd-юнита для MCP Server в коде нет. Уточнить, поддерживается ли такой вариант.</p>
+<p>Параметр таймаута диспетчера (в комментарии nginx — <code>dispatcher.timeoutSeconds</code>, 120 с) задаётся в самой службе; имя ключа конфигурации уточнить.</p>
+<p>Если сервис <code>mcp</code> убрать из compose, nginx с <code>nginx.docker.conf</code> ссылается на несуществующий хост <code>mcp</code> — проверить на стенде, стартует ли nginx.</p>
+</div>
+
+<div class="src">Источники: <code>docker/ubuntu/mcp.Dockerfile</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (<code>x-secrets</code>, сервис <code>mcp</code>); <code>azure/docker.ps1</code>; <code>azure-pipelines-backend.yml</code> (шаг «fetch zips from Nexus»); <code>azure/build.ps1</code>; <code>Orchestrator.Backend.sln</code>; <code>nginx/nginx.docker.conf</code>, <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="upgrade/order">
+<main>
+<h1>Порядок обновления: Windows, Linux, Docker</h1>
+<div class="applies">Применимо: <span>1.25.7 LTS → 1.26.7 LTS → 1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Что обновлять сначала и почему, затем пошагово: серверные службы на Windows, Linux и в Docker, агенты из UI4, роботы. Перед началом выполните <a href="before.html">Перед обновлением</a>.</p>
+
+<h2>Общий порядок</h2>
+<p>В таблице — только то, что подтверждено кодом. Остальное отмечено в блоке «уточнить» ниже.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Шаг</th><th>Почему здесь</th><th>Где это в коде</th></tr>
+  <tr><td>1. Лицензия и резервные копии</td><td>Миграции БД при старте необратимы; бессрочная лицензия Оркестратора может не подойти к новой версии.</td><td><code>WebApi/Startup.cs</code> (<code>UpdateDatabase</code>), <code>Bl/Licensing/LicenseService.cs</code></td></tr>
+  <tr><td>2. Серверные службы</td><td>WebApi при старте накатывает миграции четырёх своих БД, остальные службы — своих. В compose WebApi ждёт здоровых PostgreSQL, RabbitMQ и MachineInfo, остальные службы ждут WebApi.</td><td><code>WebApi/Startup.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (<code>depends_on</code>)</td></tr>
+  <tr><td>3. Агенты</td><td>Утилиту обновления агента (AgentUpdater) агент скачивает с WebApi, а WebApi отдаёт файл из своего каталога. Утилита входит в архив WebApi, поэтому новая версия появится только после обновления сервера.</td><td><code>WebApi/Controllers/AgentDistrsController.cs</code> (<code>Updater/{windows}/download</code>); <code>azure/build.ps1</code></td></tr>
+  <tr><td>4. Роботы</td><td>Дистрибутив робота загружается на обновлённый сервер и разворачивается агентом.</td><td><code>RobotDistrsController.cs</code></td></tr>
+  <tr><td>5. Студии</td><td>По своему графику. <code>StudioVersionChecker:MinimumStudioVersion</code> только отсекает старые Студии — это настройка, а не гарантия совместимости.</td><td><code>WebApi/Options/StudioVersionChecker.cs</code></td></tr>
+</table></div>
+
+<h3>Порядок запуска серверных служб</h3>
+<ol>
+  <li>СУБД и RabbitMQ.</li>
+  <li>MachineInfo — если задан <code>License:MachineInfoUrl</code>, без неё WebApi считает лицензии невалидными.</li>
+  <li>WebApi. Дождитесь, пока <code>/health</code> ответит <code>Healthy</code>: до этого идут миграции.</li>
+  <li>RobotLogs, Analytic, Notifications, States, LogEventsWebhook, Queues, Licenses.</li>
+  <li>UI (nginx). NuGet2 зависит только от СУБД.</li>
+</ol>
+<p>Так порядок задан в поставочном compose; на Windows и Linux соблюдайте его вручную.</p>
+
+<div class="warn"><p>Если у вас последний патч LTS (1.26.7.x или 1.25.7.x), сначала прочитайте предупреждение о миграциях в разделе «Совместимость» на странице <a href="before.html">Перед обновлением</a>.</p></div>
+
+<h2>Что в поставке</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Платформа</th><th>Архив службы</th><th>Конфиг</th></tr>
+  <tr><td>Windows</td><td><code>&lt;Служба&gt;-&lt;версия&gt;.zip</code>, например <code>WebApi-1.26.9.0.zip</code></td><td><code>appsettings.ProdWin.json</code></td></tr>
+  <tr><td>Linux</td><td><code>&lt;Служба&gt;-linux-&lt;версия&gt;.zip</code>, внутри юниты <code>*.user.service</code> (без root) и <code>*.service</code> (от root)</td><td><code>appsettings.ProdLinux.json</code></td></tr>
+  <tr><td>Docker</td><td>образы <code>&lt;служба&gt;:&lt;версия&gt;-ubuntu</code> и шаблон <code>docker-compose.yml</code></td><td>переменные окружения в compose</td></tr>
+</table></div>
+<p>Службы собраны self-contained: .NET на сервер ставить не нужно. В архивы WebApi вложены <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> — не удаляйте их.</p>
+<p>Общее правило для всех платформ: не копируйте старый конфиг поверх нового. Переносите в новый файл свои значения и сверяйтесь с <a href="config-changes.html">изменениями в конфигах между LTS</a>.</p>
+
+<h2>Windows</h2>
+<ol class="steps">
+  <li>Остановите службы Оркестратора:
+<pre><code>Get-Service "Primo.Orchestrator.*" | Stop-Service</code></pre>
+    <span class="check"><code>Get-Service "Primo.Orchestrator.*"</code> — все <code>Stopped</code></span></li>
+  <li>Переименуйте каталог каждой службы, например <code>C:\Primo\WebApi</code> → <code>C:\Primo\WebApi-old</code>. <span class="check">старые файлы сохранены рядом</span></li>
+  <li>Распакуйте новые архивы в прежние пути. <span class="check">в каталоге службы есть <code>Version.txt</code> с новой версией</span></li>
+  <li>Перенесите свои значения из <code>*-old\appsettings.ProdWin.json</code> в новый файл. <span class="check">в новом конфиге ваши подключения к БД, RabbitMQ, адреса и пароли</span></li>
+  <li>Запустите MachineInfo, затем WebApi:
+<pre><code>Start-Service "Primo.Orchestrator.MachineInfo"
+Start-Service "Primo.Orchestrator.WebApi"</code></pre>
+    <span class="check"><code>http://localhost:5001/health</code> отвечает <code>Healthy</code>, в журнале WebApi нет ошибок миграций</span></li>
+  <li>Запустите остальные службы, затем nginx. <span class="check">UI4 открывается, вход работает</span></li>
+</ol>
+<p>Переменная <code>ASPNETCORE_ENVIRONMENT=ProdWin</code> задаётся на уровне машины при установке и обновлением не меняется. Без неё WebApi не стартует: «Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.»</p>
+
+<h2>Linux: службы без root</h2>
+<p>Целевая схема: службы работают под <code>orch-user</code> через пользовательские юниты в <code>~/.config/systemd/user/</code>, как на страницах установки. Все команды — под <code>orch-user</code>, без <code>sudo</code>.</p>
+<ol class="steps">
+  <li>Откройте оболочку пользователя служб:
+<pre><code>sudo su - orch-user
+export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
+    <span class="check"><code>systemctl --user status</code> отвечает без ошибки подключения к шине</span></li>
+  <li>Остановите службы:
+<pre><code>for s in Nginx LogEventsWebhook Licenses Queues States Notifications Analytic RobotLogs NuGet WebApi MachineInfo; do
+  systemctl --user stop Primo.Orchestrator.$s
+done</code></pre>
+    <span class="check"><code>systemctl --user list-units 'Primo.Orchestrator.*'</code> — нет <code>active</code></span></li>
+  <li>Сохраните старые каталоги и распакуйте новые:
+<pre><code>cd ~/dist
+for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook; do
+  mv /opt/Primo/$s /opt/Primo/$s-old
+  unzip -q "$s"-linux-*.zip -d /opt/Primo/$s
+  chmod +x /opt/Primo/$s/Primo.Orchestrator.$s
+done
+mv /opt/Primo/NuGet2 /opt/Primo/NuGet2-old
+unzip -q NuGet2-linux-*.zip -d /opt/Primo/NuGet2
+chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
+    <span class="check">в каждом каталоге есть <code>Version.txt</code> с новой версией</span></li>
+  <li>Перенесите свои значения из <code>/opt/Primo/&lt;Служба&gt;-old/appsettings.ProdLinux.json</code> в новые файлы. <span class="check">новые конфиги содержат ваши значения</span></li>
+  <li>Сравните установленные юниты с новыми (<code>diff ~/.config/systemd/user/Primo.Orchestrator.WebApi.service /opt/Primo/WebApi/Primo.Orchestrator.WebApi.user.service</code>). Если юнит изменился, скопируйте новый, верните в него свои строки <code>Environment=</code> (например, <code>PRIMOSALT</code>) и выполните <code>systemctl --user daemon-reload</code>. <span class="check">в юнитах сохранены ваши переменные</span></li>
+  <li>Запустите MachineInfo и WebApi:
+<pre><code>systemctl --user start Primo.Orchestrator.MachineInfo
+systemctl --user start Primo.Orchestrator.WebApi
+curl http://localhost:5001/health</code></pre>
+    <span class="check">ответ <code>Healthy</code>; <code>journalctl --user -u Primo.Orchestrator.WebApi</code> без ошибок миграций</span></li>
+  <li>Запустите остальные службы и nginx; если вы обновляете UI4, замените содержимое <code>/opt/Primo/nginx/www</code> файлами нового дистрибутива UI (<code>index.html</code> в корне). <span class="check">UI4 открывается</span></li>
+</ol>
+
+<h3>Альтернатива: службы от root</h3>
+<p>Те же шаги, но через <code>sudo</code>: <code>sudo systemctl stop|start Primo.Orchestrator.&lt;Служба&gt;</code>, юниты без <code>.user</code> лежат в <code>/etc/systemd/system/</code>, журнал — <code>journalctl -u Primo.Orchestrator.&lt;Служба&gt;</code>. Как перейти на схему без root — <a href="../deploy/rootless.html">Службы Linux без root</a>.</p>
+
+<h2>Docker</h2>
+<p>Данные хранятся в именованных томах, поэтому пересоздание контейнеров их не трогает.</p>
+<ol class="steps">
+  <li>Сделайте копии томов и дампы БД (см. <a href="before.html">Перед обновлением</a>). <span class="check">копии вне Docker-хоста</span></li>
+  <li>Возьмите новый <code>docker-compose.yml</code> из поставки и перенесите в него свои значения: блоки <code>x-globals</code>, <code>x-secrets</code>, <code>primo-machine-key</code>. Ключ <code>primo-machine-key</code> должен остаться прежним, иначе лицензии станут невалидными. <span class="check">у всех служб Оркестратора в теге новая версия, ключ совпадает со старым</span></li>
+  <li>Скачайте образы: <code>docker compose pull</code> (в закрытом контуре — загрузите их из архива). <span class="check"><code>docker images</code> показывает новые теги</span></li>
+  <li>Пересоздайте контейнеры: <code>docker compose up -d</code>. <span class="check"><code>docker compose ps</code> — все службы <code>healthy</code></span></li>
+  <li>Удалите старые образы: <code>docker image prune</code>. <span class="check">место на диске освободилось</span></li>
+</ol>
+<div class="warn"><p>Переход с compose 1.25.7: в нём был MinIO, и WebApi с NuGet2 хранили файлы там (<code>FileStore__Type=1</code>, <code>Storage__Type=Minio</code>). С 1.26.7 MinIO в compose нет, файлы хранятся в томах <code>webapidata</code> и <code>nugetdata</code>. Дистрибутивы агента и робота и NuGet-пакеты из MinIO сами не переедут. Либо оставьте MinIO и задайте старые значения явно, либо загрузите файлы заново. Не удаляйте том <code>miniodata</code> до проверки.</p></div>
+<div class="warn"><p>RDP2 в Docker-поставку не входит. Обновите его отдельно по шагам для Windows или Linux.</p></div>
+
+<h2>Агенты из UI4</h2>
+<p>Нужно право «Обновление агента» (<code>AgentDistrs.AgentUpdate</code>). Загружаемый дистрибутив должен быть не ниже 1.24.8.0, платформа — совпадать с машиной.</p>
+<ol class="steps">
+  <li>Настройки → Система → Дистрибутивы агента → «Добавить дистрибутив Агента». Загрузите zip агента нужной ОС. <span class="check">дистрибутив в списке, «Наличие в хранилище» подтверждено</span></li>
+  <li>Настройки → Система → Машины роботов. Отметьте машины и нажмите «Обновить выбранные». <span class="check">открылась панель «Обновление агента на машинах роботов»</span></li>
+  <li>Для каждой машины выберите дистрибутив или включите «Последняя версия». Нажмите «Обновить». <span class="check">в колонке «Последнее обновление» — «Обновление запущено» с датой</span></li>
+  <li>Следите за этапами: «Скачивание AgentUpdater», «Скачивание дистрибутива агента», «Остановка сервиса агента», «Обновление сервиса агента», «Запуск сервиса агента». В журнал событий пишутся записи <code>AgentUpdate OK - …</code>. <span class="check">«Версия агента» — новая</span></li>
+</ol>
+<div class="todo"><p>Скриншот: Настройки → Система → Машины роботов, панель «Обновление агента на машинах роботов», выделить выбор дистрибутива и кнопку «Обновить».</p></div>
+<p>Что происходит на машине: AgentUpdater останавливает службу агента (Windows — <code>Primo.Orchestrator.Agent</code>, Linux — <code>systemctl --user stop Primo.Orchestrator.Agent</code>), копирует каталог агента без <code>Logs</code> в <code>&lt;Agent:DataPath&gt;/AgentRecovery</code>, распаковывает новый дистрибутив и запускает службу. При ошибке он возвращает файлы из копии.</p>
+<p>Из старого конфига агента переносятся только эти ключи:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Секция</th><th>Ключи</th></tr>
+  <tr><td><code>Orchestrator</code></td><td><code>BaseUrl</code>, <code>TenantId</code></td></tr>
+  <tr><td><code>Agent</code></td><td><code>DataPath</code>, <code>ProjectZipEncoding</code></td></tr>
+  <tr><td><code>DeployRobot</code></td><td><code>RobotsPath</code></td></tr>
+  <tr><td><code>Kestrel:EndPoints</code></td><td><code>InternalHttp</code>, <code>ExternalHttps</code></td></tr>
+  <tr><td><code>Performance</code></td><td><code>Enabled</code>, <code>DiskName</code></td></tr>
+  <tr><td><code>Serilog</code> (файловый приёмник)</td><td><code>path</code>, <code>retainedFileCountLimit</code>, <code>rollingInterval</code></td></tr>
+  <tr><td><code>ConfigPasswordEncryptor</code></td><td><code>Algorithm</code></td></tr>
+  <tr><td><code>AgentCommands</code> (только Linux)</td><td><code>At</code>, <code>Reboot</code>, <code>Xvfb</code>, <code>Session</code></td></tr>
+  <tr><td><code>appsettings.Runner.json</code> (только Linux)</td><td>настройки <code>Serilog</code> (файловый приёмник)</td></tr>
+</table></div>
+<div class="warn"><p>Остальное берётся из нового дистрибутива. Если вы меняли <code>SchedulerTaskSettings</code>, <code>Agent:UserName</code>, <code>Agent:GroupName</code>, <code>Agent:DownloadScreenFile</code> или настройки Vault, после обновления перенесите их вручную.</p></div>
+<div class="warn"><p>При запуске обновления у всех роботов машины сбрасываются блокировки и трекинги развёртывания и запуска. Обновляйте машины, на которых роботы сейчас не работают.</p></div>
+
+<h2>Роботы</h2>
+<ol class="steps">
+  <li>Настройки → Система → Дистрибутивы робота → «Добавить дистрибутив Робота»; загрузите архивы из поставки. <span class="check">дистрибутивы в списке</span></li>
+  <li>Отметьте нужный дистрибутив «Сделать основным». <span class="check">в колонке «Основной» — новый дистрибутив</span></li>
+  <li>Роботы → Все роботы → «Переразвернуть роботов». <span class="check">статус развёртывания — успешно</span></li>
+</ol>
+<div class="todo"><p>Скриншот: Настройки → Система → Дистрибутивы робота, выделить «Сделать основным».</p></div>
+
+<div class="todo">
+<p>Порядок «роботы после агентов» и «Студии после сервера» в коде не обоснован: проверок версии робота или Студии относительно сервера не найдено (кроме настройки <code>StudioVersionChecker</code>). Можно ли работать на смешанных версиях (старый агент с новым сервером и наоборот) и сколько — уточнить у разработки.</p>
+<p>Старые доки требуют перед обновлением сервера остановить роботов и задания. В коде такого требования нет — уточнить у поддержки и при подтверждении добавить шаг.</p>
+<p>Обновление при нескольких узлах WebApi: миграции выполняет каждый узел при старте; нужно ли обновлять узлы по одному — в коде не найдено, уточнить у разработки.</p>
+<p>Linux: AgentUpdater управляет агентом через <code>systemctl --user</code>. Если агент установлен системным юнитом от root, автообновление, судя по коду, не сможет остановить и запустить службу. Проверить на стенде.</p>
+<p>Старые доки требуют после обновления удалить очереди и обменники RabbitMQ (<code>rabbitmqctl set_policy … expires</code>). Нужен ли этот шаг для перехода с 1.25.7 LTS — проверить.</p>
+<p>Ручное обновление агента без UI4 — описать на <a href="../deploy/agent.html">странице агента</a> после проверки.</p>
+</div>
+
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>UpdateDatabase</code>), <code>Program.cs</code> (<code>ASPNETCORE_ENVIRONMENT</code>, <code>UseIISIntegration</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/AgentDistrsController.cs</code>, <code>WorkersController.cs</code> (<code>AgentUpdate</code>, проверка 1.24.8.0), <code>RobotDistrsController.cs</code>, <code>OrchEventsController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/StudioVersionChecker.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/LicenseChecker.cs</code>; <code>Orchestrator/LTools.Orchestrator.AgentUpdater/</code> (<code>Program.cs</code>, <code>ConfigTransformers/*.cs</code>, <code>ServiceManager/*.cs</code>); <code>Orchestrator/LTools.Orchestrator.Agent/Bl/Commands/UpdateQueueService.cs</code>, <code>Options/Agent.cs</code>; <code>Orchestrator/*/Primo.Orchestrator.*.service</code>, <code>*.user.service</code>; <code>azure/build.ps1</code>, <code>azure/docker.ps1</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (1.25.7 и 1.26.9), <code>docker/ubuntu/web-api.Dockerfile</code>, <code>nuget2.Dockerfile</code>; <code>nginx/readme-nginx.linux.md</code>. UI4: <code>src/features/setting/machines/update-workers/ui/UpdateWorkers.tsx</code>, <code>src/features/setting/machines/update-tracking/ui/UpdateTracking.tsx</code>, <code>src/shared/lib/translations/ru/machines.json</code>, <code>agentdistrs.json</code>, <code>robotdistrs.json</code>, <code>robots.json</code>. Старые доки: руководство 1.25.7, «Автоматическое обновление Агента на машине Робота»; сайт, «Обновление Оркестратора под Windows/Linux», «Установка в Docker» → «Обновление версии».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

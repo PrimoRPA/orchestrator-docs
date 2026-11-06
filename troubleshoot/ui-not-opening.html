@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/ui-not-opening">
+<main>
+<h1>Интерфейс не открывается или падает WebApi</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">UI4 — статические файлы, их отдаёт nginx. Все запросы к API идут на тот же адрес по пути <code>/api/</code>, nginx проксирует их в WebApi. WebApi зависит от БД и RabbitMQ. Проверяйте по цепочке: nginx → файлы UI → WebApi → БД и RabbitMQ.</p>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>Браузер не может подключиться или ругается на сертификат.</li>
+  <li>Пустая страница или 404.</li>
+  <li>Страница входа открылась, но после действия — «Истек таймаут запроса. Попробуйте повторить запрос!» или «Proxy configuration error».</li>
+  <li>Сразу после входа снова выбрасывает на страницу входа.</li>
+  <li>Служба WebApi не стартует после установки, обновления или перезагрузки сервера, либо периодически падает.</li>
+</ul>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li>nginx не запущен, не тот порт или сертификат.</li>
+  <li>WebApi не запущен: не задано окружение, нет доступа к БД или RabbitMQ при старте.</li>
+  <li>После перезагрузки сервера службы стартуют раньше БД или RabbitMQ.</li>
+  <li>Неверный <code>location /api/</code> в nginx.</li>
+</ul>
+
+<h2>Что проверить</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
+  <tr><td>nginx слушает порт</td><td><code>nginx.conf</code>: <code>listen 44392 ssl</code></td><td>Порт открыт на сервере и в сетевом экране</td></tr>
+  <tr><td>Сертификат</td><td><code>ssl_certificate cert1.crt</code>, <code>ssl_certificate_key cert1.rsa</code> (пути относительно каталога nginx)</td><td>Файлы на месте, ключ подходит к сертификату</td></tr>
+  <tr><td>Файлы UI</td><td>Linux: <code>/opt/Primo/nginx/www</code>; Windows: <code>html</code> в каталоге nginx</td><td><code>index.html</code> лежит в корне каталога</td></tr>
+  <tr><td>WebApi жив</td><td>На сервере: <code>curl http://127.0.0.1:5001/health</code></td><td><code>Healthy</code></td></tr>
+  <tr><td>Прокси API</td><td>В браузере: <code>https://&lt;сервер&gt;:44392/api/Account/type</code></td><td>Ответ JSON (метод анонимный), не HTML</td></tr>
+  <tr><td>Swagger</td><td><code>https://&lt;сервер&gt;:44392/api/doc</code></td><td>Открывается описание API</td></tr>
+  <tr><td>Окружение WebApi</td><td>Переменная <code>ASPNETCORE_ENVIRONMENT</code> (в unit-файле Linux — <code>ProdLinux</code>)</td><td>Задана; иначе WebApi завершается с «Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.»</td></tr>
+</table></div>
+<div class="note"><p><code>/health</code> всегда отвечает <code>Healthy</code> и не проверяет БД. Если он отвечает, а UI4 не работает, смотрите журнал WebApi.</p></div>
+
+<h2>Как исправить</h2>
+<h3>Linux</h3>
+<ol class="steps">
+  <li>nginx Оркестратора работает как пользовательская служба <code>Primo.Orchestrator.Nginx</code>. Системный nginx должен быть выключен, для пользователя включён linger. Проверьте: <code>systemctl --user status Primo.Orchestrator.Nginx</code>. <span class="check">active (running)</span></li>
+  <li>Проверьте конфигурацию: <code>nginx -t -p /opt/Primo/nginx/ -c /opt/Primo/nginx/nginx.conf</code>. Журналы nginx — в <code>/opt/Primo/nginx/logs</code>.</li>
+  <li>Закрытый ключ сертификата должен быть доступен только владельцу: <code>chmod 600 /opt/Primo/nginx/cert1.rsa</code>.</li>
+  <li>WebApi: служба <code>Primo.Orchestrator.WebApi</code>, каталог <code>/opt/Primo/WebApi</code>.</li>
+</ol>
+<h3>Windows</h3>
+<p>Вариант с nginx — то же, что выше, конфигурация <code>nginx.win.conf</code>.</p>
+<h3>Docker</h3>
+<p>Контейнер UI собирает конфигурацию nginx из шаблона через переменные <code>NGINX_LISTEN_PORT</code>, <code>NGINX_APP_SERVER_HOSTNAME</code>, <code>NGINX_APP_SERVER_PORT</code> и другие. TLS внутри контейнера нет. nginx сам отвечает на <code>/health</code>, поэтому живой контейнер UI не означает, что WebApi доступен.</p>
+
+<h3>WebApi не стартует или падает</h3>
+<p>Найдите в журнале WebApi последние записи перед остановкой.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Сообщение</th><th>Что делать</th></tr>
+  <tr><td>«Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.»</td><td>Задайте переменную в unit-файле или службе</td></tr>
+  <tr><td>«Error at configuring database: …»</td><td>Не удалось подключиться к БД или применить миграции. Проверьте <code>DbConnection:Items:*</code> или <code>ConnectionStrings:*</code>, права пользователя БД, доступность СУБД</td></tr>
+  <tr><td>«RabbitMQ Client could not connect after timeout=…», «RabbitMQ connections could not be created and opened.»</td><td>Брокер недоступен после всех попыток. Проверьте, что RabbitMQ запущен, адрес и учётные данные в секции <code>RabbitMQ</code></td></tr>
+  <tr><td>«OnConnectionShutdown(): RabbitMQ connection … is shutdown …», «OnConnectionBlocked»</td><td>Соединение оборвалось, или брокер заблокировал публикацию из-за нехватки памяти или диска</td></tr>
+  <tr><td>«Ошибка проверки состояния конфигурационного файла.»</td><td>Служба каждые 5 с проверяет <code>appsettings.json</code> и <code>appsettings.{ASPNETCORE_ENVIRONMENT}.json</code>; файла нет или он не читается</td></tr>
+</table></div>
+<ol class="steps">
+  <li>Если служба не поднялась после перезагрузки сервера, проверьте, что БД и RabbitMQ уже работают, и запустите WebApi вручную. <span class="check">В журнале нет ошибок подключения, <code>/health</code> отвечает</span></li>
+  <li>Если служба падает периодически, сопоставьте время падений с журналами СУБД и RabbitMQ и с нехваткой памяти на сервере.</li>
+</ol>
+
+<h3>Ошибки в UI4 и что они значат</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Что видно</th><th>Причина</th></tr>
+  <tr><td>«Истек таймаут запроса. Попробуйте повторить запрос!»</td><td>Сеть или 502 от nginx: WebApi не запущен или не слушает 5001.</td></tr>
+  <tr><td>«Proxy configuration error»</td><td>На <code>/api/…</code> вернулась HTML-страница 404. Нет или неверен <code>location /api/</code> в nginx.</td></tr>
+  <tr><td>«Server error - check the terminal for more info!»</td><td>Ошибка 500 в WebApi, смотрите его журнал.</td></tr>
+  <tr><td>Выбрасывает на вход</td><td>401: токен недействителен. После обновления WebApi все входят заново — версия зашита в токен. Сетевая ошибка (API недоступен) тоже выполняет выход.</td></tr>
+  <tr><td>«Permission error»</td><td>403: у роли нет нужного права.</td></tr>
+</table></div>
+
+<h3>Нестандартное размещение</h3>
+<p>UI4 собран с <code>&lt;base href="/"&gt;</code> и адресом API <code>/api</code>, поэтому работает только в корне сайта, не в подкаталоге. Если UI отдаётся с другого адреса, чем WebApi, перечислите адреса UI в <code>Security:EnabledOrigins</code> (по умолчанию пусто, CORS выключен).</p>
+<p>WebApi не стартует второй копией на том же порту. Проверьте, что старый процесс завершён.</p>
+
+<div class="todo"><p>Порядок запуска служб после перезагрузки (зависимость WebApi от PostgreSQL и RabbitMQ в unit-файлах) — сверить с поставкой и стендом. По обращениям WebApi после перезагрузки не подключается к RabbitMQ.</p></div>
+<div class="todo"><p>По обращениям после обновления не работает UI старой ветки с новым WebApi. Уточнить у разработки таблицу совместимости версий UI и WebApi.</p></div>
+<div class="todo"><p>В <code>docker/ubuntu/web-api.Dockerfile</code> Kestrel слушает <code>http://*:5001</code>, а HEALTHCHECK проверяет <code>localhost:8080/health</code> и открыт порт 8080. Проверка здоровья контейнера, вероятно, всегда неуспешна. Передать разработке.</p></div>
+<div class="todo"><p>Путь к сертификату Kestrel (если WebApi отдаёт HTTPS сам) в коде по умолчанию не задан. Уточнить, что ставит инсталлятор.</p></div>
+
+<div class="src">Источники: <code>backend: nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/readme-nginx.linux.md</code>, <code>nginx/Primo.Orchestrator.Nginx.user.service</code>, <code>k8s/ui-nginx.conf.template</code>, <code>k8s/ui-docker-entrypoint.sh</code>, <code>docker/ubuntu/web-api.Dockerfile</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/Program.cs</code>, <code>Startup.cs</code> (CORS), <code>Primo.Orchestrator.WebApi.service</code>, <code>LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>, <code>LTools.Orchestrator/Swagger/SwaggerSetupExtensions.cs</code>, <code>LTools.Shared/RabbitMQ/RabbitMQPersistentConnection.cs</code>, <code>LTools.Orchestrator/Security/CollectConfigStatusService.cs</code>, <code>LTools.Orchestrator.Dal/ApplicationDbContext.cs</code>; <code>ui4: src/shared/lib/fetch.ts</code>, <code>vite.config.ts</code>, <code>index.html</code>, <code>src/shared/lib/translations/ru/home.json</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
