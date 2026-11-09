@@ -1,3 +1,4 @@
+html { scrollbar-gutter: stable; }
 :root {
   --bg: #fff; --fg: #1d2330; --muted: #667085; --line: #e4e7ec; --soft: #f5f7fa;
   --accent: #5b3fd6; --accent-soft: #efebff;

@@ -12,7 +12,6 @@
 <div class="applies">Применимо: <span>1.25.7 LTS → 1.26.7 LTS → 1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Что обновлять сначала и почему, затем пошагово: серверные службы на Windows, Linux и в Docker, агенты из UI4, роботы.</p>
 <div class="meta">
-  <div><b>Кому</b>системному администратору</div>
   <div><b>Перед началом</b><a href="config-changes.html">Изменения в конфигах между LTS</a></div>
   <div><b>Результат</b>службы, агенты и роботы на новой версии</div>
 </div>
@@ -43,8 +42,8 @@
 <h2>Что в поставке</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Платформа</th><th>Архив службы</th><th>Конфиг</th></tr>
-  <tr><td>Windows</td><td><code>&lt;Служба&gt;-&lt;версия&gt;.zip</code>, например <code>WebApi-1.26.9.0.zip</code></td><td><code>appsettings.ProdWin.json</code></td></tr>
-  <tr><td>Linux</td><td><code>&lt;Служба&gt;-linux-&lt;версия&gt;.zip</code>, внутри юниты <code>*.user.service</code> (без root) и <code>*.service</code> (от root)</td><td><code>appsettings.ProdLinux.json</code></td></tr>
+  <tr><td>Windows</td><td><code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-windows.zip</code>, например <code>primo-rpa-orchestrator-webapi-1.26.9.0-windows.zip</code></td><td><code>appsettings.ProdWin.json</code></td></tr>
+  <tr><td>Linux</td><td><code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code>, внутри юниты <code>*.user.service</code> (без root) и <code>*.service</code> (от root)</td><td><code>appsettings.ProdLinux.json</code></td></tr>
   <tr><td>Docker</td><td>образы <code>&lt;служба&gt;:&lt;версия&gt;-ubuntu</code> и шаблон <code>docker-compose.yml</code></td><td>переменные окружения в compose</td></tr>
 </table></div>
 <p>Службы собраны self-contained: .NET на сервер ставить не нужно. В архивы WebApi вложены <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> — не удаляйте их.</p>
@@ -82,11 +81,11 @@ done</code></pre>
 <pre><code>cd ~/dist
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook; do
   mv /opt/Primo/$s /opt/Primo/$s-old
-  unzip -q "$s"-linux-*.zip -d /opt/Primo/$s
+  unzip -q primo-rpa-orchestrator-"${s,,}"-*-linux.zip -d /opt/Primo/$s
   chmod +x /opt/Primo/$s/Primo.Orchestrator.$s
 done
 mv /opt/Primo/NuGet2 /opt/Primo/NuGet2-old
-unzip -q NuGet2-linux-*.zip -d /opt/Primo/NuGet2
+unzip -q primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     <span class="check">в каждом каталоге есть <code>Version.txt</code> с новой версией</span></li>
   <li>Перенесите свои значения из <code>/opt/Primo/&lt;Служба&gt;-old/appsettings.ProdLinux.json</code> в новые файлы. <span class="check">новые конфиги содержат ваши значения</span></li>

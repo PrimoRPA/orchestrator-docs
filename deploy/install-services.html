@@ -13,7 +13,6 @@
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
 <p class="lead">Оркестратор ставится на сервер набором служб: на Linux — юнитами systemd, на Windows — службами Windows, перед ними nginx с UI4. Выберите ОС сервера — на вкладке весь путь сверху вниз.</p>
 <div class="meta">
-  <div><b>Кому</b>системному администратору</div>
   <div><b>Перед началом</b><a href="checklist.html">Что подготовить</a></div>
   <div><b>Результат</b>службы запущены и отвечают на <code>/health</code>, UI открывается по <code>https://&lt;адрес&gt;:44392</code></div>
 </div>
@@ -62,26 +61,26 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя можно выбрать любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Компонент</th><th>Архив</th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
-  <tr><td>MachineInfo</td><td><code>MachineInfo-linux</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
-  <tr><td>WebApi</td><td><code>WebApi-linux</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
-  <tr><td>RobotLogs</td><td><code>RobotLogs-linux</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
-  <tr><td>Analytic</td><td><code>Analytic-linux</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
-  <tr><td>Notifications</td><td><code>Notifications-linux</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
-  <tr><td>States</td><td><code>States-linux</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
-  <tr><td>Queues</td><td><code>Queues-linux</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
-  <tr><td>Licenses</td><td><code>Licenses-linux</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
-  <tr><td>LogEventsWebhook</td><td><code>LogEventsWebhook-linux</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
-  <tr><td>NuGet2</td><td><code>NuGet2-linux</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>RDP2-linux</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
-  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>ArcSight-linux</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
+  <tr><th>Компонент</th><th>Архив <code>primo-rpa-orchestrator-…-linux.zip</code></th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
+  <tr><td>MachineInfo</td><td><code>machineinfo</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
+  <tr><td>WebApi</td><td><code>webapi</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
+  <tr><td>RobotLogs</td><td><code>robotlogs</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
+  <tr><td>Analytic</td><td><code>analytic</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
+  <tr><td>Notifications</td><td><code>notifications</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
+  <tr><td>States</td><td><code>states</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
+  <tr><td>Queues</td><td><code>queues</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
+  <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
+  <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
+  <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
+  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>
 <p>Все порты выше 1024, поэтому root службам не нужен. Снаружи открывается только <code>44392</code>: службы слушают локально, nginx проксирует к ним запросы по <code>127.0.0.1</code>.</p>
 
 <h3>Что нужно</h3>
 <ul>
-  <li>Архивы служб <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code> из таблицы выше и <code>PasswordEncryptor-linux-&lt;версия&gt;.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
+  <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
   <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
@@ -90,7 +89,6 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 <div class="todo"><p>Поддерживаемые версии Astra Linux для установки без Docker в коде не заданы. Образы Docker собираются на базе Astra 1.8.6 (<code>registry.astralinux.ru/library/astra/ubi18:1.8.6</code>). Нужна матрица: 1.7 / 1.8, уровни защищённости.</p></div>
-<div class="todo"><p>В <code>azure/build.ps1</code> архивы называются <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code>, в старых доках — <code>Primo-RPA-Orchestrator-&lt;Имя&gt;-&lt;версия&gt;-linux.zip</code>. Уточнить, под какими именами архивы попадают к заказчику. Файлы из каталога <code>nginx/</code> (конфиг, юниты, readme) и архив UI4 в <code>azure/build.ps1</code> не упаковываются — уточнить, в каком виде они входят в поставку.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -137,7 +135,7 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
-<pre><code>unzip PasswordEncryptor-linux-*.zip -d ~/encryptor
+<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ждёт строку. Введите пароль и нажмите Enter. Если вы задаёте свою соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -155,10 +153,10 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
-  unzip -q -o "$s"-linux-*.zip -d /opt/Primo/$s
+  unzip -q -o primo-rpa-orchestrator-"${s,,}"-*-linux.zip -d /opt/Primo/$s
   chmod +x /opt/Primo/$s/Primo.Orchestrator.$s
 done
-unzip -q -o NuGet2-linux-*.zip -d /opt/Primo/NuGet2
+unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     RDP2 и ArcSight уберите из списка, если они не нужны.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
@@ -227,7 +225,7 @@ mkdir -p /opt/Primo/nginx/www
 cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
-unzip -q &lt;архив UI4&gt;.zip -d /opt/Primo/nginx/www</code></pre>
+unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (лежит в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -251,7 +249,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 
 <h3>7. Машины роботов на Astra Linux</h3>
 <p>На каждую машину роботов ставится агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
-<p>Что нужно: архив <code>Agent-linux-&lt;версия&gt;.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
+<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt install expect</code></pre>
@@ -277,7 +275,7 @@ sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
   <li>Под пользователем агента распакуйте архив и настройте конфиг:
 <pre><code>sudo su - agent
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o Agent-linux-*.zip -d /opt/Primo/Agent
+unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
 cd /opt/Primo/Agent
 chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
     В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). <code>AgentCommands:Session</code> на Astra можно не задавать: если параметр пуст, агент сам берёт <code>/usr/bin/fly-wm --execOnly {}</code> (определяет ОС по <code>NAME</code> в <code>/etc/os-release</code>).</li>
@@ -324,26 +322,26 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя можно выбрать любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Компонент</th><th>Архив</th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
-  <tr><td>MachineInfo</td><td><code>MachineInfo-linux</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
-  <tr><td>WebApi</td><td><code>WebApi-linux</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
-  <tr><td>RobotLogs</td><td><code>RobotLogs-linux</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
-  <tr><td>Analytic</td><td><code>Analytic-linux</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
-  <tr><td>Notifications</td><td><code>Notifications-linux</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
-  <tr><td>States</td><td><code>States-linux</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
-  <tr><td>Queues</td><td><code>Queues-linux</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
-  <tr><td>Licenses</td><td><code>Licenses-linux</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
-  <tr><td>LogEventsWebhook</td><td><code>LogEventsWebhook-linux</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
-  <tr><td>NuGet2</td><td><code>NuGet2-linux</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>RDP2-linux</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
-  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>ArcSight-linux</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
+  <tr><th>Компонент</th><th>Архив <code>primo-rpa-orchestrator-…-linux.zip</code></th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
+  <tr><td>MachineInfo</td><td><code>machineinfo</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
+  <tr><td>WebApi</td><td><code>webapi</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
+  <tr><td>RobotLogs</td><td><code>robotlogs</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
+  <tr><td>Analytic</td><td><code>analytic</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
+  <tr><td>Notifications</td><td><code>notifications</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
+  <tr><td>States</td><td><code>states</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
+  <tr><td>Queues</td><td><code>queues</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
+  <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
+  <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
+  <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
+  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>
 <p>Все порты выше 1024, поэтому root службам не нужен. Снаружи открывается только <code>44392</code>: службы слушают локально, nginx проксирует к ним запросы по <code>127.0.0.1</code>.</p>
 
 <h3>Что нужно</h3>
 <ul>
-  <li>Архивы служб <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code> из таблицы выше и <code>PasswordEncryptor-linux-&lt;версия&gt;.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
+  <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
   <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
@@ -352,7 +350,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 <div class="todo"><p>Поддерживаемые версии РЕД ОС (7.3, 8) в коде не заданы; образов Docker на базе РЕД ОС нет (только Ubuntu и Astra). Нужна матрица версий.</p></div>
-<div class="todo"><p>В <code>azure/build.ps1</code> архивы называются <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code>, в старых доках — <code>Primo-RPA-Orchestrator-&lt;Имя&gt;-&lt;версия&gt;-linux.zip</code>. Уточнить, под какими именами архивы попадают к заказчику. Файлы из каталога <code>nginx/</code> (конфиг, юниты, readme) и архив UI4 в <code>azure/build.ps1</code> не упаковываются — уточнить, в каком виде они входят в поставку.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -398,7 +395,7 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
-<pre><code>unzip PasswordEncryptor-linux-*.zip -d ~/encryptor
+<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ждёт строку. Введите пароль и нажмите Enter. Если вы задаёте свою соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -416,10 +413,10 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
-  unzip -q -o "$s"-linux-*.zip -d /opt/Primo/$s
+  unzip -q -o primo-rpa-orchestrator-"${s,,}"-*-linux.zip -d /opt/Primo/$s
   chmod +x /opt/Primo/$s/Primo.Orchestrator.$s
 done
-unzip -q -o NuGet2-linux-*.zip -d /opt/Primo/NuGet2
+unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     RDP2 и ArcSight уберите из списка, если они не нужны.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
@@ -488,7 +485,7 @@ mkdir -p /opt/Primo/nginx/www
 cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
-unzip -q &lt;архив UI4&gt;.zip -d /opt/Primo/nginx/www</code></pre>
+unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (лежит в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -513,7 +510,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 
 <h3>7. Машины роботов на РЕД ОС</h3>
 <p>На каждую машину роботов ставится агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
-<p>Что нужно: архив <code>Agent-linux-&lt;версия&gt;.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
+<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo dnf install expect</code></pre>
@@ -539,7 +536,7 @@ sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
   <li>Под пользователем агента распакуйте архив и настройте конфиг:
 <pre><code>sudo su - agent
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o Agent-linux-*.zip -d /opt/Primo/Agent
+unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
 cd /opt/Primo/Agent
 chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
     В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). <code>AgentCommands:Session</code> на РЕД ОС можно не задавать: если параметр пуст, агент сам берёт <code>/usr/bin/mate-session</code> (определяет ОС по <code>NAME</code> в <code>/etc/os-release</code>, который должен начинаться с <code>RED OS</code>).
@@ -587,26 +584,26 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя можно выбрать любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Компонент</th><th>Архив</th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
-  <tr><td>MachineInfo</td><td><code>MachineInfo-linux</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
-  <tr><td>WebApi</td><td><code>WebApi-linux</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
-  <tr><td>RobotLogs</td><td><code>RobotLogs-linux</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
-  <tr><td>Analytic</td><td><code>Analytic-linux</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
-  <tr><td>Notifications</td><td><code>Notifications-linux</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
-  <tr><td>States</td><td><code>States-linux</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
-  <tr><td>Queues</td><td><code>Queues-linux</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
-  <tr><td>Licenses</td><td><code>Licenses-linux</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
-  <tr><td>LogEventsWebhook</td><td><code>LogEventsWebhook-linux</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
-  <tr><td>NuGet2</td><td><code>NuGet2-linux</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>RDP2-linux</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
-  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>ArcSight-linux</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
+  <tr><th>Компонент</th><th>Архив <code>primo-rpa-orchestrator-…-linux.zip</code></th><th>Каталог</th><th>Юнит</th><th>Порт</th></tr>
+  <tr><td>MachineInfo</td><td><code>machineinfo</code></td><td><code>/opt/Primo/MachineInfo</code></td><td><code>Primo.Orchestrator.MachineInfo</code></td><td><code>5051</code></td></tr>
+  <tr><td>WebApi</td><td><code>webapi</code></td><td><code>/opt/Primo/WebApi</code></td><td><code>Primo.Orchestrator.WebApi</code></td><td><code>5001</code></td></tr>
+  <tr><td>RobotLogs</td><td><code>robotlogs</code></td><td><code>/opt/Primo/RobotLogs</code></td><td><code>Primo.Orchestrator.RobotLogs</code></td><td><code>56748</code></td></tr>
+  <tr><td>Analytic</td><td><code>analytic</code></td><td><code>/opt/Primo/Analytic</code></td><td><code>Primo.Orchestrator.Analytic</code></td><td><code>56749</code></td></tr>
+  <tr><td>Notifications</td><td><code>notifications</code></td><td><code>/opt/Primo/Notifications</code></td><td><code>Primo.Orchestrator.Notifications</code></td><td><code>56751</code></td></tr>
+  <tr><td>States</td><td><code>states</code></td><td><code>/opt/Primo/States</code></td><td><code>Primo.Orchestrator.States</code></td><td><code>56750</code></td></tr>
+  <tr><td>Queues</td><td><code>queues</code></td><td><code>/opt/Primo/Queues</code></td><td><code>Primo.Orchestrator.Queues</code></td><td><code>5088</code></td></tr>
+  <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
+  <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
+  <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
+  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>
 <p>Все порты выше 1024, поэтому root службам не нужен. Снаружи открывается только <code>44392</code>: службы слушают локально, nginx проксирует к ним запросы по <code>127.0.0.1</code>.</p>
 
 <h3>Что нужно</h3>
 <ul>
-  <li>Архивы служб <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code> из таблицы выше и <code>PasswordEncryptor-linux-&lt;версия&gt;.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
+  <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
   <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
@@ -615,7 +612,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 <div class="todo"><p>Поддерживаемые версии Ubuntu для установки без Docker в коде не заданы. Образы Docker собираются на базе <code>ubuntu:24.04</code>. Нужна матрица версий.</p></div>
-<div class="todo"><p>В <code>azure/build.ps1</code> архивы называются <code>&lt;Имя&gt;-linux-&lt;версия&gt;.zip</code>, в старых доках — <code>Primo-RPA-Orchestrator-&lt;Имя&gt;-&lt;версия&gt;-linux.zip</code>. Уточнить, под какими именами архивы попадают к заказчику. Файлы из каталога <code>nginx/</code> (конфиг, юниты, readme) и архив UI4 в <code>azure/build.ps1</code> не упаковываются — уточнить, в каком виде они входят в поставку.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -661,7 +657,7 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
-<pre><code>unzip PasswordEncryptor-linux-*.zip -d ~/encryptor
+<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ждёт строку. Введите пароль и нажмите Enter. Если вы задаёте свою соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -679,10 +675,10 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
-  unzip -q -o "$s"-linux-*.zip -d /opt/Primo/$s
+  unzip -q -o primo-rpa-orchestrator-"${s,,}"-*-linux.zip -d /opt/Primo/$s
   chmod +x /opt/Primo/$s/Primo.Orchestrator.$s
 done
-unzip -q -o NuGet2-linux-*.zip -d /opt/Primo/NuGet2
+unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     RDP2 и ArcSight уберите из списка, если они не нужны.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
@@ -751,7 +747,7 @@ mkdir -p /opt/Primo/nginx/www
 cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
-unzip -q &lt;архив UI4&gt;.zip -d /opt/Primo/nginx/www</code></pre>
+unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (лежит в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -775,7 +771,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 
 <h3>7. Машины роботов на Ubuntu</h3>
 <p>На каждую машину роботов ставится агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
-<p>Что нужно: архив <code>Agent-linux-&lt;версия&gt;.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
+<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt install expect</code></pre>
@@ -801,7 +797,7 @@ sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
   <li>Под пользователем агента распакуйте архив и настройте конфиг:
 <pre><code>sudo su - agent
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o Agent-linux-*.zip -d /opt/Primo/Agent
+unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
 cd /opt/Primo/Agent
 chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
     В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). На Ubuntu обязательно задайте <code>AgentCommands:Session</code> — полный путь к команде запуска графического сеанса (пример в коде — <code>/usr/bin/mate-session</code>). Значение по умолчанию агент подставляет только для Astra, РЕД ОС и CentOS (по <code>NAME</code> в <code>/etc/os-release</code>); для Ubuntu его нет, и без параметра роботы не запустятся.
@@ -848,7 +844,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 
 <h3>Что нужно</h3>
 <ul>
-  <li>Архивы служб для Windows (без суффикса <code>-linux</code>).</li>
+  <li>Архивы служб для Windows: <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-windows.zip</code>.</li>
   <li>Архив UI4, конфиг <code>nginx.win.conf</code>, сертификат <code>cert1.crt</code>/<code>cert1.rsa</code>.</li>
   <li>Готовые СУБД и RabbitMQ.</li>
   <li>PowerShell от имени администратора.</li>

@@ -13,7 +13,6 @@
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
 <p class="lead">На каждую машину, где будут работать роботы, ставится агент Оркестратора. Через него WebApi разворачивает и запускает роботов. После установки машину регистрируют в UI4.</p>
 <div class="meta">
-  <div><b>Кому</b>системному администратору</div>
   <div><b>Перед началом</b><a href="install.html">Установка</a> серверной части</div>
   <div><b>Результат</b>машина зарегистрирована в Оркестраторе, видна версия агента</div>
 </div>
@@ -29,7 +28,7 @@
 <p>Вкладка с вашей ОС откроется сама: страница определяет систему по браузеру. Если ставите агент на другую машину — переключите вкладку.</p>
 <div class="tabs" data-key="agent-os" data-detect="1">
 <section class="tab" id="windows" data-title="Windows" data-os="windows">
-<p>Что нужно: архив <code>Agent-&lt;версия&gt;.zip</code>, PowerShell от имени администратора.</p>
+<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-windows.zip</code>, PowerShell от имени администратора.</p>
 <ol class="steps">
   <li>Откройте порт агента:
 <pre><code>New-NetFirewallRule -Name "Primo Agent (5002)" -DisplayName "Primo Agent (5002)" -Profile "Private, Domain, Public" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5002</code></pre>
@@ -45,7 +44,7 @@ Start-Service "Primo.Orchestrator.Agent"</code></pre>
 <p>Роботов агент запускает заданиями Планировщика заданий Windows от имени пользователя робота.</p>
 </section>
 <section class="tab" id="linux" data-title="Linux" data-os="linux">
-<p>Что нужно: архив <code>Agent-linux-&lt;версия&gt;.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), права root на подготовку.</p>
+<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), права root на подготовку.</p>
 <ol class="steps">
   <li>Создайте группу и пользователя агента (имена по умолчанию; другие — укажите в <code>Agent:GroupName</code> и <code>Agent:UserName</code>):
 <pre><code>sudo groupadd primo-rpa

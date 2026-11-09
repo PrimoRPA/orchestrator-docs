@@ -13,10 +13,22 @@
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Последний шаг планирования: соберите всё по списку. Если каждый пункт отмечен, установка пройдёт без остановок на согласования и поиски дистрибутивов.</p>
 <div class="meta">
-  <div><b>Кому</b>системному администратору</div>
   <div><b>Перед началом</b><a href="service-accounts.html">Учётные записи и права служб</a></div>
   <div><b>Результат</b>всё готово к установке</div>
 </div>
+
+<h2 id="download">Где взять дистрибутивы</h2>
+<p>Все дистрибутивы Primo RPA лежат в открытом репозитории <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>, вход не нужен. Релизы — в папке <code>raw-hosted-release</code>, LTS-версии — в <code>raw-hosted-lts</code>; внутри — папка с номером версии, например <code>1.26.9</code> или <code>1.26.7</code>.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Что скачать</th><th>Где в папке версии</th></tr>
+  <tr><td>Архивы служб Оркестратора, агента и AgentUpdater</td><td><code>orchestrator/linux/</code> или <code>orchestrator/windows/</code>, имена <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-&lt;linux|windows&gt;.zip</code></td></tr>
+  <tr><td>Веб-интерфейс UI4</td><td><code>orchestrator/ui/primo-rpa-orchestrator-ui-&lt;версия&gt;.zip</code> — один архив для всех ОС</td></tr>
+  <tr><td>Конфиги nginx, юниты nginx, тестовый сертификат</td><td><code>orchestrator/data/NGINX/</code></td></tr>
+  <tr><td>Docker: compose-файл</td><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code>; образы — из реестра образов Primo RPA</td></tr>
+  <tr><td>Дистрибутив робота</td><td><code>robot/windows/</code> или <code>robot/linux/</code></td></tr>
+</table></div>
+<p>Какие из архивов служб нужны под ваш вариант — <a href="know.html#services">Что нужно знать → Какие службы ставить</a>.</p>
+<div class="todo"><p>Какой из архивов робота (<code>zip</code>, <code>exe</code>, <code>msi</code>, <code>rpm</code>, <code>deb</code>) загружается в Оркестратор как «дистрибутив робота» — уточнить у разработки. Адрес реестра Docker-образов для клиента — уточнить.</p></div>
 
 <h2>Дистрибутивы</h2>
 <ul>
@@ -88,7 +100,6 @@
 </div>
 
 <div class="todo"><p>Минимальные версии PostgreSQL, MS SQL Server, RabbitMQ и Docker в коде не заданы (в compose — образы <code>postgres:14</code> и <code>rabbitmq:3-management</code>). Нужна матрица совместимости.</p></div>
-<div class="todo"><p>Что именно включает дистрибутив UI4 и под каким именем архив попадает к заказчику — уточнить.</p></div>
 
 <div class="src">Источники: <code>azure/build.ps1</code>; <code>docker/ubuntu/docker-compose.yml.template</code>; <code>docker/ubuntu/*.Dockerfile</code> (имена БД, <code>Email__*</code>); <code>nginx/readme-nginx.linux.md</code>, <code>nginx/nginx.*.conf</code>, <code>nginx/certificates/</code>; <code>Orchestrator/LTools.Shared/Config/ConfigSecrets.cs</code>, <code>Orchestrator/LTools.Shared/Encryption/Jwt.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Agent.cs</code>, <code>ApplicationHostedService.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code>.</div>
 </main>

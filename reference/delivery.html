@@ -13,10 +13,26 @@
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Какие архивы и файлы собирает конвейер сборки Оркестратора 1.26.9 и что лежит внутри. Список составлен по сценариям сборки, а не по старому руководству: сторонние дистрибутивы (СУБД, RabbitMQ и т. п.) конвейер не собирает.</p>
 
-<h2>Архивы служб</h2>
+<h2 id="nexus">Что лежит в репозитории</h2>
+<p>Клиенту дистрибутив приходит из открытого репозитория <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>: релизы — <code>raw-hosted-release/&lt;версия&gt;/</code>, LTS — <code>raw-hosted-lts/&lt;версия&gt;/</code>. Состав папки <code>1.26.9/orchestrator/</code> на 09.11.2026:</p>
+<div class="tbl-wrap"><table>
+<tr><th>Папка</th><th>Что внутри</th></tr>
+<tr><td><code>windows/</code>, <code>linux/</code></td><td>Архивы <code>primo-rpa-orchestrator-&lt;служба&gt;-1.26.9.0-&lt;windows|linux&gt;.zip</code>: webapi, robotlogs, states, notifications, analytic, licenses, queues, machineinfo, logeventswebhook, rdp2, arcsight, nuget2, agent, agentupdater, passwordencryptor</td></tr>
+<tr><td><code>ui/</code></td><td><code>primo-rpa-orchestrator-ui-4.26.9.1.zip</code></td></tr>
+<tr><td><code>data/NGINX/</code></td><td><code>nginx.win.conf</code>, <code>nginx.linux.conf</code>, <code>nginx.docker.conf</code>, юниты nginx, readme, <code>certificates/cert1.crt</code> и <code>cert1.rsa</code></td></tr>
+<tr><td><code>docker/</code></td><td><code>docker-compose-ubuntu.yml</code></td></tr>
+</table></div>
+<div class="todo"><p>Находки по репозиторию — уточнить у разработки:</p>
+<ul>
+  <li>в <code>1.26.9/orchestrator/linux/</code> нет архива RobotLogs (в <code>windows/</code> есть) — пропущен при выкладке?</li>
+  <li>архив <code>webapi-iis</code> по-прежнему выкладывается (1.26.7, 1.26.9), хотя вариант с IIS в документации не поддерживается;</li>
+  <li>в 1.26.7 LTS есть отдельные архивы MCP Server для Windows и Linux (<code>primo-rpa-mcp-1.26.7.1</code>) и DPA-агента (<code>dpaagent</code>), в 1.26.9 их нет — сверить со страницей <a href="mcp.html">MCP Server</a>.</li>
+</ul></div>
+
+<h2>Архивы служб при сборке</h2>
 <p>Каждая служба собирается отдельно для Windows (<code>win-x64</code>) и Linux (<code>linux-x64</code>) как самостоятельное приложение .NET (self-contained).</p>
 <div class="tbl-wrap"><table>
-<tr><th>Компонент</th><th>Windows</th><th>Linux</th><th>Примечание</th></tr>
+<tr><th>Компонент</th><th>Windows (имя при сборке)</th><th>Linux (имя при сборке)</th><th>Примечание</th></tr>
 <tr><td>WebApi</td><td><code>WebApi</code></td><td><code>WebApi-linux</code></td><td>Внутри — архивы обновления агента <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code>.</td></tr>
 <tr><td>RobotLogs</td><td><code>RobotLogs</code></td><td><code>RobotLogs-linux</code></td><td></td></tr>
 <tr><td>States</td><td><code>States</code></td><td><code>States-linux</code></td><td></td></tr>

@@ -2,8 +2,8 @@
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 const TREE = [
   { id: "start", title: "Начало работы", who: "для всех", items: [
-    ["where-to-start", "Кому какой раздел"],
-    ["overview", "Общие сведения об Оркестраторе"],
+    ["overview", "Общие сведения"],
+    ["where-to-start", "Маршрут по задачам"],
   ]},
   { id: "deploy", title: "Развертывание", who: "сисадмину", items: [
     ["planning", "Планирование установки", [
