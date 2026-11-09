@@ -6,12 +6,19 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Оркестратор: документация</title>
 <link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 </head>
 <body data-root="../" data-page="operate/">
 <main>
 <h1>Сопровождение</h1>
-<p class="lead">Повседневная эксплуатация: мониторинг, обслуживание базы данных, резервные копии, журналы служб.</p>
-<div id="children"></div>
+<p class="lead">Для системного администратора и поддержки: как следить, что Оркестратор здоров, и что делать регулярно.</p>
+<div class="cards-grid">
+  <a class="card" href="monitoring.html"><i class="ti ti-chart-line ic" aria-hidden="true"></i><b>Мониторинг и метрики</b><span>Метрики служб для Prometheus и Zabbix: как включить и что смотреть.</span></a>
+  <a class="card" href="events.html"><i class="ti ti-list-details ic" aria-hidden="true"></i><b>События и их коды</b><span>Справочник событий журнала Оркестратора: код, описание, класс.</span></a>
+  <a class="card" href="db-maintenance.html"><i class="ti ti-database-cog ic" aria-hidden="true"></i><b>Обслуживание БД</b><span>Что чистится само, какими параметрами, и что делать вручную.</span></a>
+  <a class="card" href="backup.html"><i class="ti ti-archive ic" aria-hidden="true"></i><b>Резервное копирование и восстановление</b><span>Что входит в копию: БД, файлы, конфиги, секреты.</span></a>
+  <a class="card" href="service-logs.html"><i class="ti ti-file-text ic" aria-hidden="true"></i><b>Журналы служб</b><span>Где технические журналы служб и как поменять уровень детализации.</span></a>
+</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

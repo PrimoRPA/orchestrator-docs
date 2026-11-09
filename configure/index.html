@@ -6,12 +6,22 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Оркестратор: документация</title>
 <link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 </head>
 <body data-root="../" data-page="configure/">
 <main>
 <h1>Настройка</h1>
-<p class="lead">Настройка установленного Оркестратора под задачи компании: вход, безопасность, RDP, очереди, оповещения, интеграции.</p>
-<div id="children"></div>
+<p class="lead">Для системного администратора: настройка установленного Оркестратора под вашу организацию. Страницы независимы — открывайте нужную.</p>
+<div class="cards-grid">
+  <a class="card" href="access.html"><i class="ti ti-login ic" aria-hidden="true"></i><b>Вход и доступ</b><span>Логин и пароль, AD, SSO Kerberos, Keycloak, тенанты и политика паролей.</span></a>
+  <a class="card" href="security.html"><i class="ti ti-shield-lock ic" aria-hidden="true"></i><b>Безопасность</b><span>Шифрование паролей в конфигах, Vault, CyberArk, сертификаты TLS.</span></a>
+  <a class="card" href="robots-rdp.html"><i class="ti ti-device-desktop ic" aria-hidden="true"></i><b>Запуск роботов и RDP-сессии</b><span>От чего зависит запуск робота и как живут его сессии.</span></a>
+  <a class="card" href="project-queue.html"><i class="ti ti-list-numbers ic" aria-hidden="true"></i><b>Очередь проектов</b><span>Как выбирается робот, стратегии очереди и защита от всплесков.</span></a>
+  <a class="card" href="notifications.html"><i class="ti ti-mail ic" aria-hidden="true"></i><b>Почта и оповещения</b><span>SMTP, пороги оповещений, ящик для почтовых триггеров.</span></a>
+  <a class="card" href="storage.html"><i class="ti ti-database ic" aria-hidden="true"></i><b>Хранилища</b><span>Где лежат файлы, подключение S3 (MinIO, Ceph), общие папки.</span></a>
+  <a class="card" href="integrations.html"><i class="ti ti-plug-connected ic" aria-hidden="true"></i><b>Интеграции</b><span>Вебхуки, аналитическая БД, интеграционные таблицы, REST API.</span></a>
+  <a class="card" href="scaling.html"><i class="ti ti-server-2 ic" aria-hidden="true"></i><b>Масштабирование и отказоустойчивость</b><span>Несколько узлов WebApi, балансировка, кластер RabbitMQ, Redis.</span></a>
+</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

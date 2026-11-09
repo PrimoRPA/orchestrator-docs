@@ -11,7 +11,7 @@
 <main>
 <h1>Кому какой раздел</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Найдите свою роль и задачу — ниже страницы в том порядке, в котором их стоит читать. Как Оркестратор устроен внутри, рассказано на следующей странице: <a href="architecture.html">Как устроен Оркестратор</a>.</p>
+<p class="lead">Найдите свою роль и задачу — ниже страницы в том порядке, в котором их стоит читать. Что такое Оркестратор и из чего он состоит, коротко и со схемами, — на следующей странице: <a href="overview.html">Общие сведения об Оркестраторе</a>.</p>
 
 <div class="tbl-wrap"><table>
   <tr><th>Кто вы</th><th>Что делаете</th><th>Куда идти</th></tr>
@@ -26,7 +26,7 @@
 
 <h2 id="plan">Планирую внедрение</h2>
 <ol class="steps">
-  <li>Разберитесь, из чего состоит Оркестратор: <a href="architecture.html">Как устроен Оркестратор</a>, <a href="../reference/concepts.html">Основные понятия</a>. <span class="check">понятно, какие службы и БД нужны</span></li>
+  <li>Разберитесь, из чего состоит Оркестратор: <a href="overview.html">Общие сведения об Оркестраторе</a>, <a href="../reference/concepts.html">Основные понятия</a>. <span class="check">понятно, какие службы и БД нужны</span></li>
   <li>Выберите версию и проверьте, с чем она работает: <a href="../reference/lifecycle.html">Жизненный цикл версий и LTS</a>, <a href="../reference/compatibility.html">Совместимость продуктов и платформ</a>. <span class="check">выбрана версия Оркестратора, Студии и робота</span></li>
   <li>Выберите вариант развертывания и оцените ресурсы: <a href="../deploy/planning-options.html">Выбор варианта развертывания</a>, <a href="../deploy/hardware.html">Требования к железу</a>. <span class="check">понятно, сколько серверов и машин роботов нужно</span></li>
 </ol>
@@ -34,11 +34,10 @@
 
 <h2 id="install">Ставлю с нуля</h2>
 <ol class="steps">
-  <li>Спланируйте установку: <a href="../deploy/planning.html">Планирование установки</a> — вариант, железо, порты, учётные записи. <span class="check">вы знаете, где будут WebApi, БД, RabbitMQ и машины роботов</span></li>
-  <li>Подготовьте всё по списку: <a href="../deploy/checklist.html">Что подготовить до начала</a>. <span class="check">дистрибутивы, СУБД и учётные записи готовы</span></li>
-  <li>Установите серверную часть по странице своей ОС: <a href="../deploy/install.html#docker">Docker</a>, <a href="../deploy/install.html#astra">Astra Linux</a>, <a href="../deploy/install.html#redos">РЕД ОС</a>, <a href="../deploy/install.html#ubuntu">Ubuntu</a> или <a href="../deploy/install.html#windows">Windows Server</a>. На Linux службы ставятся без root — см. <a href="../deploy/rootless.html">Службы Linux без root</a>. <span class="check">службы запущены, UI4 открывается</span></li>
+  <li>Спланируйте установку: <a href="../deploy/planning.html">Планирование установки</a> — что нужно знать, вариант, железо, порты, учётные записи и в конце чек-лист <a href="../deploy/checklist.html">Что подготовить</a>. <span class="check">дистрибутивы, СУБД и учётные записи готовы</span></li>
+  <li>Установите серверную часть по странице своей ОС: <a href="../deploy/install-docker.html">в Docker</a> или службами — <a href="../deploy/install-services.html#astra">Astra Linux</a>, <a href="../deploy/install-services.html#redos">РЕД ОС</a>, <a href="../deploy/install-services.html#ubuntu">Ubuntu</a> или <a href="../deploy/install-services.html#windows">Windows Server</a>. На Linux службы работают без root. <span class="check">службы запущены, UI4 открывается</span></li>
   <li>Подключите машины роботов: <a href="../deploy/agent.html">Машины роботов и агент</a>. <span class="check">машина в списке «Машины роботов» доступна</span></li>
-  <li>Выполните <a href="../deploy/first-run.html">первый запуск</a> и <a href="../deploy/verify.html">проверку</a>. <span class="check">тестовый RPA-проект выполнился на роботе</span></li>
+  <li>Выполните <a href="../deploy/first-run.html">Первый запуск</a> и <a href="../deploy/verify.html">Проверку установки</a>. <span class="check">тестовый RPA-проект выполнился на роботе</span></li>
 </ol>
 
 <h2 id="upgrade">Обновляю</h2>
@@ -53,7 +52,7 @@
 <h2 id="security">Отвечаю за сеть и безопасность</h2>
 <ul>
   <li>Какие порты открыть и между чем: <a href="../deploy/network.html">Порты и сетевой трафик</a>, полный список — <a href="../reference/ports.html">Порты</a>.</li>
-  <li>Под какими учётками работают службы и какие права им нужны: <a href="../deploy/service-accounts.html">Учётные записи и права служб</a>, <a href="../deploy/rootless.html">Службы Linux без root</a>.</li>
+  <li>Под какими учётками работают службы и какие права им нужны: <a href="../deploy/service-accounts.html">Учётные записи и права служб</a>, <a href="../deploy/install-services.html#linux-rootless">Linux: службы работают без root</a>.</li>
   <li>Шифрование паролей, ключи, сертификаты, Vault: <a href="../configure/security.html">Безопасность</a>.</li>
   <li>Вход через AD, SSO, Keycloak: <a href="../configure/access.html">Вход и доступ</a>.</li>
 </ul>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="deploy/know">
+<main>
+<h1>Что нужно знать перед установкой</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Чтобы спланировать установку, достаточно понимать пять вещей. Проверьте себя по списку: если на какой-то вопрос нет ответа — откройте страницу рядом, это займёт несколько минут.</p>
+<div class="meta">
+  <div><b>Кому</b>архитектору, руководителю внедрения, системному администратору</div>
+  <div><b>Результат</b>понятно, что ставить, какую версию и какие службы нужны</div>
+</div>
+
+<h2>Проверьте себя</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Что нужно понимать</th><th>Где прочитать</th></tr>
+  <tr><td>Из чего состоит Оркестратор и как его части связаны</td><td><a href="../start/overview.html">Общие сведения об Оркестраторе</a></td></tr>
+  <tr><td>Какую версию ставить и сколько она будет поддерживаться</td><td><a href="../reference/lifecycle.html">Жизненный цикл версий и LTS</a></td></tr>
+  <tr><td>Будут ли работать ваши Студии, роботы и агенты с этой версией</td><td><a href="../reference/compatibility.html">Совместимость продуктов и платформ</a></td></tr>
+  <tr><td>Что такое машина робота, робот, проект, задание, очередь</td><td><a href="../reference/concepts.html">Основные понятия</a></td></tr>
+  <tr><td>Какие службы нужны всегда, а какие — по необходимости</td><td>ниже на этой странице</td></tr>
+</table></div>
+
+<h2 id="services">Какие службы ставить</h2>
+<p>Оркестратор — набор служб. Большинство нужно всегда, несколько ставятся только под конкретную задачу. В Docker-поставке все обязательные службы уже есть в compose.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Нужно всегда</th><th>Зачем</th></tr>
+  <tr><td>PostgreSQL или MS SQL Server</td><td>базы данных Оркестратора</td></tr>
+  <tr><td>RabbitMQ</td><td>события между службами и очередь проектов</td></tr>
+  <tr><td>nginx с UI4</td><td>веб-интерфейс; единственный адрес, открытый наружу</td></tr>
+  <tr><td>WebApi</td><td>основная служба: проекты, роботы, задания, пользователи, команды агентам</td></tr>
+  <tr><td>MachineInfo</td><td>данные об оборудовании сервера для лицензии</td></tr>
+  <tr><td>RobotLogs</td><td>журналы роботов</td></tr>
+  <tr><td>States, Notifications</td><td>состояния роботов и почтовые оповещения</td></tr>
+  <tr><td>Analytic</td><td>аналитика и дашборды</td></tr>
+  <tr><td>Queues, Licenses</td><td>уведомления и лицензии для attended- и DPA-роботов</td></tr>
+  <tr><td>NuGet2</td><td>репозиторий пакетов для Студии</td></tr>
+  <tr><td>Агент</td><td>на каждой машине, где будут работать роботы</td></tr>
+</table></div>
+<div class="tbl-wrap"><table>
+  <tr><th>По необходимости</th><th>Когда нужна</th></tr>
+  <tr><td>RDP2</td><td>роботы на Windows работают в RDP-сессиях и нужна консоль сессии в браузере; удобно ставить на отдельную машину</td></tr>
+  <tr><td>LogEventsWebhook</td><td>события Оркестратора нужно передавать во внешнюю систему по HTTP; можно поставить позже</td></tr>
+  <tr><td>ArcSight</td><td>события нужно выгружать в SIEM ArcSight</td></tr>
+  <tr><td>MCP Server</td><td>с Оркестратором будут работать ИИ-клиенты; в поставке 1.26.9 — только в Docker-шаблоне для Ubuntu, см. <a href="../reference/mcp.html">MCP Server</a></td></tr>
+</table></div>
+<p>Все службы по умолчанию ставятся на один сервер. Как разнести их по нескольким — <a href="planning-options.html">Выбор варианта развертывания → Один сервер или несколько</a>. Полный список служб с архивами и базами данных — <a href="../reference/components.html">Компоненты и службы</a>.</p>
+<div class="todo"><p>Какие из «нужно всегда» на деле можно не ставить (например, Analytic без дашбордов, Notifications без почты, NuGet2 без публикации пакетов) — уточнить у разработки.</p></div>
+<div class="todo"><p>Назначение States, Analytic, ArcSight описано по именам проектов и старым докам — сверить формулировки с разработкой. Архив UI в <code>azure/build.ps1</code> не собирается (UI собирается из репозитория UI4) — уточнить имя архива UI в поставке 1.26.9.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="planning-options.html">Выбор варианта развертывания<small>Docker или службы, Linux или Windows, одна машина или несколько</small></a>
+</div>
+
+<div class="src">Источники: <code>azure/build.ps1</code> (состав архивов, <code>--self-contained true</code>); <code>docker/ubuntu/*.Dockerfile</code> (имена БД <code>DbConnection__Items__*__DbName</code>, <code>DBVendor</code>); <code>Orchestrator/*.Migrations.MSSQL</code>, <code>*.Migrations.Postgres</code>; <code>nginx/nginx.linux.conf</code>; руководство 1.25.7, разделы «Комплект поставки», «Установка компонентов Оркестратора».</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

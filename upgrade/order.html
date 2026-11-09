@@ -10,7 +10,12 @@
 <main>
 <h1>Порядок обновления: Windows, Linux, Docker</h1>
 <div class="applies">Применимо: <span>1.25.7 LTS → 1.26.7 LTS → 1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Что обновлять сначала и почему, затем пошагово: серверные службы на Windows, Linux и в Docker, агенты из UI4, роботы. Перед началом выполните <a href="before.html">Перед обновлением</a>.</p>
+<p class="lead">Что обновлять сначала и почему, затем пошагово: серверные службы на Windows, Linux и в Docker, агенты из UI4, роботы.</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору</div>
+  <div><b>Перед началом</b><a href="config-changes.html">Изменения в конфигах между LTS</a></div>
+  <div><b>Результат</b>службы, агенты и роботы на новой версии</div>
+</div>
 
 <h2>Общий порядок</h2>
 <p>В таблице — только то, что подтверждено кодом. Остальное отмечено в блоке «уточнить» ниже.</p>
@@ -95,7 +100,7 @@ curl http://localhost:5001/health</code></pre>
 </ol>
 
 <h3>Альтернатива: службы от root</h3>
-<p>Те же шаги, но через <code>sudo</code>: <code>sudo systemctl stop|start Primo.Orchestrator.&lt;Служба&gt;</code>, юниты без <code>.user</code> лежат в <code>/etc/systemd/system/</code>, журнал — <code>journalctl -u Primo.Orchestrator.&lt;Служба&gt;</code>. Как перейти на схему без root — <a href="../deploy/rootless.html">Службы Linux без root</a>.</p>
+<p>Те же шаги, но через <code>sudo</code>: <code>sudo systemctl stop|start Primo.Orchestrator.&lt;Служба&gt;</code>, юниты без <code>.user</code> лежат в <code>/etc/systemd/system/</code>, журнал — <code>journalctl -u Primo.Orchestrator.&lt;Служба&gt;</code>. Как перейти на схему без root — <a href="from-root.html">Переход с root на работу без root</a>.</p>
 
 <h2>Docker</h2>
 <p>Данные хранятся в именованных томах, поэтому пересоздание контейнеров их не трогает.</p>
@@ -141,6 +146,12 @@ curl http://localhost:5001/health</code></pre>
   <li>Отметьте нужный дистрибутив «Сделать основным». <span class="check">в колонке «Основной» — новый дистрибутив</span></li>
   <li>Роботы → Все роботы → «Переразвернуть роботов». <span class="check">статус развёртывания — успешно</span></li>
 </ol>
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../deploy/verify.html">Проверка установки<small>убедиться, что всё работает после обновления</small></a>
+  <a href="from-root.html">Переход с root на работу без root<small>если службы на Linux всё ещё работают от root</small></a>
+</div>
+
 <div class="todo"><p>Скриншот: Настройки → Система → Дистрибутивы робота, выделить «Сделать основным».</p></div>
 
 <div class="todo">

@@ -12,6 +12,10 @@
 <h1>Порты и сетевой трафик</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Какие порты слушают службы Оркестратора, агент и робот, и кто к кому обращается. По этой таблице открывайте порты на файерволах.</p>
+<div class="meta">
+  <div><b>Кому</b>сетевому инженеру, специалисту ИБ</div>
+  <div><b>Результат</b>заявка на открытие портов</div>
+</div>
 
 <h2>Порты служб Оркестратора</h2>
 <p>Порты — значения из поставки по умолчанию. Для установки на Windows и Linux они совпадают (одинаковые <code>upstream</code> в <code>nginx.win.conf</code> и <code>nginx.linux.conf</code>).</p>
@@ -54,6 +58,11 @@
 <h2>Docker</h2>
 <p>В <code>docker-compose.yml</code> на хост опубликованы только: <code>44392</code> (UI), <code>8081</code> (NuGet2), <code>5432</code> (PostgreSQL), <code>15672</code> (консоль RabbitMQ). Остальные службы общаются внутри сети compose по именам (<code>web-api:5001</code> и т. д.).</p>
 <div class="warn"><p>Если PostgreSQL и консоль RabbitMQ не должны быть видны из сети — уберите их из <code>ports</code> в compose или закройте файерволом.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="service-accounts.html">Учётные записи и права служб<small>от кого будут работать службы и агент</small></a>
+</div>
 
 <div class="todo"><p>Диапазон портов роботов в коде не найден: порт робота хранится в карточке робота и приходит от агента при развертывании. Старые доки называли диапазон 8000–9000 — подтвердить.</p></div>
 <div class="todo"><p>Привязка Kestrel служб на Windows/Linux задаётся в <code>appsettings.*.json</code>, которых нет в выгрузке. Порты в таблице взяты из <code>Kestrel__EndPoints__*__Url</code> в Dockerfile и из <code>upstream</code> в конфигах nginx — сверить с <code>appsettings.ProdLinux.json</code>/<code>ProdWin.json</code> поставки. В Dockerfile <code>EXPOSE 8080 10052</code> не совпадает с фактическим портом Kestrel (<code>5001</code>, <code>56748</code>…) — на работу не влияет, но может путать.</p></div>

@@ -9,11 +9,46 @@
 </head>
 <body data-root="../" data-page="deploy/verify">
 <main>
-<h1>Как проверить, что всё работает</h1>
+<h1>Проверка установки</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Проверка после установки или обновления: состояние каждой службы, связь с агентами и работа через UI4.</p>
+<p class="lead">Убедитесь, что Оркестратор работает целиком: службы запущены и отвечают, агенты на связи, а тестовый проект выполняется на роботе и попадает в журнал. Та же проверка нужна после каждого обновления.</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору</div>
+  <div><b>Перед началом</b><a href="first-run.html">Первый запуск</a> (после обновления — <a href="../upgrade/order.html">Порядок обновления</a>)</div>
+  <div><b>Результат</b>тестовый проект выполнился, журнал робота открывается</div>
+</div>
+<div class="path">
+  <a href="#services">1. Службы запущены</a><span>→</span>
+  <a href="#health">2. Службы и агенты отвечают</a><span>→</span>
+  <a href="#run">3. Тестовый запуск</a>
+</div>
 
-<h2>Эндпоинты проверки состояния</h2>
+<span class="stage">Этап 1 из 3</span>
+<h2 id="services">Службы запущены</h2>
+<div class="tabs" data-key="server-os">
+<section class="tab" id="docker" data-title="Docker" data-os="">
+<ol class="steps">
+  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose сам опрашивает <code>/health</code> каждые 30 секунд</span></li>
+  <li>Если сервис <code>unhealthy</code> — <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
+</ol>
+</section>
+<section class="tab" id="linux" data-title="Linux" data-os="linux">
+<ol class="steps">
+  <li>Под пользователем служб: <code>systemctl --user status Primo.Orchestrator.&lt;Имя&gt;</code>. Для варианта от root — <code>sudo systemctl status …</code>. <span class="check"><code>active (running)</code></span></li>
+  <li>Журнал службы: <code>journalctl --user -t Primo.Orchestrator.&lt;Имя&gt;</code> (от root — без <code>--user</code>); имя задано в юните (<code>SyslogIdentifier</code>).</li>
+  <li>nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>.</li>
+</ol>
+</section>
+<section class="tab" id="windows" data-title="Windows Server" data-os="windows">
+<ol class="steps">
+  <li><code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
+  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и посмотрите ошибку в консоли.</li>
+</ol>
+</section>
+</div>
+
+<span class="stage">Этап 2 из 3</span>
+<h2 id="health">Службы и агенты отвечают</h2>
 <p>Каждая служба (WebApi, MachineInfo, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2, RDP2, ArcSight, агент) отвечает на три адреса без авторизации:</p>
 <div class="tbl-wrap"><table>
   <tr><th>Адрес</th><th>Что значит</th></tr>
@@ -22,8 +57,8 @@
   <tr><td><code>/health/liveness</code></td><td>Процесс жив</td></tr>
 </table></div>
 <p>Ответ — <code>Healthy</code> (HTTP 200) или <code>Unhealthy</code> (HTTP 503).</p>
-
-<h3>Когда readiness будет Unhealthy</h3>
+<details>
+<summary>Когда служба отвечает Unhealthy</summary>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Условие готовности</th></tr>
   <tr><td>WebApi, MachineInfo, Notifications, LogEventsWebhook, ArcSight</td><td>Всегда <code>Healthy</code>, если процесс отвечает. Подключение к БД и RabbitMQ эта проверка не показывает.</td></tr>
@@ -31,8 +66,7 @@
   <tr><td>Агент</td><td><code>Healthy</code> только после того, как WebApi хотя бы раз к нему обратился (т. е. машина зарегистрирована и опрошена).</td></tr>
   <tr><td>MCP Server</td><td><code>/mcp/health</code>; 503, пока Оркестратор недоступен.</td></tr>
 </table></div>
-
-<h3>Как проверить</h3>
+</details>
 <p>На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
 <pre><code>curl -f http://localhost:5001/health        # WebApi
 curl -f http://localhost:5051/health        # MachineInfo
@@ -42,32 +76,32 @@ curl -k -f https://localhost:44392/api/Version   # WebApi через nginx, бе
 <pre><code>curl -k https://&lt;IP машины робота&gt;:5002/api/Worker   # 200 и версия агента
 curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pre>
 
-<h2>Docker</h2>
-<ol class="steps">
-  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose сам опрашивает <code>/health</code> каждые 30 секунд</span></li>
-  <li>Если сервис <code>unhealthy</code> — <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
-</ol>
-
-<h2>Linux</h2>
-<ol class="steps">
-  <li><code>systemctl status Primo.Orchestrator.&lt;Имя&gt;</code> (или <code>systemctl --user status …</code>). <span class="check"><code>active (running)</code></span></li>
-  <li>Журнал службы: <code>journalctl -t Primo.Orchestrator.&lt;Имя&gt;</code> — имя задано в юните (<code>SyslogIdentifier</code>).</li>
-  <li>nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>.</li>
-</ol>
-
-<h2>Windows</h2>
-<ol class="steps">
-  <li><code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
-  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и посмотрите ошибку в консоли.</li>
-</ol>
-
-<h2>В UI4</h2>
+<span class="stage">Этап 3 из 3</span>
+<h2 id="run">Тестовый запуск</h2>
+<p>Последняя проверка — сквозная: проект проходит весь путь от Оркестратора до робота и обратно в журнал. Понадобится тестовый RPA-проект из <a href="checklist.html">Что подготовить</a>.</p>
 <ol class="steps">
   <li><b>Настройки → Лицензии</b>. <span class="check">есть действующая лицензия</span></li>
   <li><b>Настройки → Система → Машины роботов</b>. <span class="check">у каждой машины заполнены <b>Доступна</b> и <b>Версия агента</b></span></li>
-  <li>Тестовый запуск робота — см. <a href="../deploy/first-run.html">Первый запуск</a>. <span class="check">событие запуска в <b>Журналы → События оркестратора</b></span></li>
+  <li><b>RPA-проекты → Все RPA-проекты → Добавить RPA-проект</b>, загрузите тестовый проект и нажмите <b>Добавить робота к проекту</b>. <span class="check">робот привязан к проекту</span></li>
+  <li>Нажмите <b>Запустить проект</b>. <span class="check">сообщение «Проект успешно запущен», запуск виден в <b>Журналы → События оркестратора</b>, журнал робота открывается по действию <b>Журнал</b></span></li>
 </ol>
+<p>Готово: Оркестратор, агент и робот работают вместе.</p>
 
+<h2>Если что-то пошло не так</h2>
+<p>С этими проблемами на проверке чаще всего обращаются в поддержку:</p>
+<div class="pitfalls">
+  <div><b>Служба не стартует или отвечает Unhealthy</b><p>Начните с журнала службы (этап 1). Чаще всего не хватает доступа к БД или RabbitMQ либо не задано окружение <code>ASPNETCORE_ENVIRONMENT</code>. → <a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></p></div>
+  <div><b>Запуск завис на 50 % или 75 %</b><p>Робот не получил сессию или не стартовал на машине. → <a href="../troubleshoot/robot-not-starting.html">Робот не запускается: запуск завис на 50 % или 75 %</a></p></div>
+  <div><b>Проект выполнился, а журнал робота пустой</b><p>Причин несколько, их проверяют по порядку. → <a href="../troubleshoot/logs-empty.html">Журнал робота пустой или не открывается</a></p></div>
+</div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../configure/access.html">Вход и доступ<small>подключить AD или Keycloak и выдать права</small></a>
+  <a href="../operate/monitoring.html">Мониторинг и метрики<small>чтобы узнавать о сбоях раньше пользователей</small></a>
+</div>
+
+<div class="todo"><p>Точное расположение кнопок «Добавить робота к проекту», «Запустить проект» проверить на стенде и приложить скриншоты.</p></div>
 <div class="todo"><p>Старые доки: проверка агента <code>https://{IP}:5002/api/Worker</code> «вернёт HTTP 204». По коду 1.26.9 <code>GET api/Worker</code> возвращает 200 и строку версии агента.</p></div>
 <div class="todo"><p>Healthcheck WebApi не проверяет БД и RabbitMQ — для мониторинга этого мало. Описать в «Мониторинг и метрики» метрики Prometheus (порт <code>10052</code>) как основной сигнал.</p></div>
 <div class="todo"><p>В Docker (ubuntu) у nginx нет отдельного <code>location /health</code>: <code>https://localhost:44392/health</code> отдаёт <code>index.html</code> с кодом 200. Проверяет только nginx, не службы.</p></div>

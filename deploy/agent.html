@@ -12,6 +12,11 @@
 <h1>Машины роботов и агент</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
 <p class="lead">На каждую машину, где будут работать роботы, ставится агент Оркестратора. Через него WebApi разворачивает и запускает роботов. После установки машину регистрируют в UI4.</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору</div>
+  <div><b>Перед началом</b><a href="install.html">Установка</a> серверной части</div>
+  <div><b>Результат</b>машина зарегистрирована в Оркестраторе, видна версия агента</div>
+</div>
 
 <h2>Как агент связан с Оркестратором</h2>
 <ul>
@@ -58,6 +63,17 @@ agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
   <li>Установите юнит: системный <code>Primo.Orchestrator.Agent.service</code> (работает от <code>User=agent</code>) в <code>/etc/systemd/system/</code> или пользовательский <code>Primo.Orchestrator.Agent.user.service</code> в <code>~agent/.config/systemd/user/</code>; затем <code>daemon-reload</code> и <code>enable --now</code>. <span class="check">служба <code>active (running)</code>, в журнале нет предупреждений «the launch of robots is impossible»</span></li>
 </ol>
 <p>При старте агент сам проверяет: доступен ли sudo, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале.</p>
+<details>
+<summary>Агент без root: от кого работает и что ему нужно</summary>
+<p>Агент в обоих вариантах работает от <code>Agent:UserName</code> (по умолчанию <code>agent</code>), разница только в том, кто его запускает: системный менеджер (<code>User=agent</code>) или менеджер самого <code>agent</code>. Работа агента без root поддержана с версии 1.24.1.</p>
+<ul>
+  <li>Обновление агента из Оркестратора (AgentUpdater) останавливает и запускает агент командой <code>systemctl --user stop|start Primo.Orchestrator.Agent</code>. Поэтому основной вариант — пользовательский юнит под этим именем.</li>
+  <li>Для пользователя агента нужен linger, как и для служб.</li>
+  <li>Права через <code>sudo</code> без пароля агенту нужны в обоих вариантах: <code>/usr/bin/systemd-run … /opt/Primo/Agent/launch-as-user.expect</code> (запуск роботов) и <code>/usr/sbin/reboot</code> (перезагрузка машины из Оркестратора).</li>
+  <li>В обоих юнитах агента задано <code>UMask=0002</code>; в пользовательском нет <code>Restart=always</code>.</li>
+</ul>
+<p>Как перевести уже установленный агент с системного юнита на пользовательский — <a href="../upgrade/from-root.html">Переход с root на работу без root</a>.</p>
+</details>
 </section>
 </div>
 
@@ -70,6 +86,11 @@ agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
 
 <h2>Обновление агента</h2>
 <p>Загрузите новый дистрибутив в <b>Настройки → Система → Дистрибутивы агента</b> (<b>Добавить дистрибутив Агента</b>), затем на странице <b>Машины роботов</b> выберите машины и нажмите <b>Обновить выбранные</b>. Утилита обновления AgentUpdater для Windows и Linux вшита в архив WebApi.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
+</div>
 
 <div class="todo"><p>Скрипт <code>PrimoWorker.ps1</code> (команды шагов для Windows взяты из него) лежит в проекте агента, но не копируется в архив агента — уточнить, поставляется ли он отдельно. Проекта <code>AgentInstaller</code> (установщик с авторегистрацией из старых доков) в ветке 1.26.9 нет, в <code>azure/build.ps1</code> он не собирается.</p></div>
 <div class="todo"><p>Команды сеанса по умолчанию взяты из кода агента (<code>StartLinuxRobotPipeline.cs</code>); какую команду ставить на Ubuntu — уточнить у разработки. Список пакетов для графических сеансов (Xvfb/Xvnc и др.) — по путям в <code>LinuxToolsPaths</code>, подтвердить.</p></div>

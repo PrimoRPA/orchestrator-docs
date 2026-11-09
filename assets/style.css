@@ -119,3 +119,46 @@ ol.sections span { display: block; font-size: 13px; color: var(--muted); }
 .tab > h3:first-child, .tab > p:first-child { margin-top: 4px; }
 .tab-info { margin: 0 0 20px; padding: 6px 12px; border-left: 3px solid var(--accent); color: var(--muted); font-size: 14px; }
 @media print { .tab[hidden] { display: block !important; } .tab-bar, .tab-info { display: none; } }
+
+/* Подача страниц (правила 09.11.2026) */
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 18px 0 24px; }
+.meta div { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 15px; }
+.meta b { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+.path { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 28px; }
+.path a { text-decoration: none; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 14px; color: var(--fg); }
+.path a:hover { border-color: var(--accent); color: var(--accent); }
+.path span { color: var(--muted); }
+.stage { display: block; font-size: 13px; color: var(--accent); font-weight: 600; letter-spacing: .02em; margin: 28px 0 -10px; }
+.tip { border-left: 4px solid var(--ok); background: var(--soft); border-radius: 6px; padding: 10px 14px; margin: 14px 0; }
+.tip > p:first-child::before { content: "Совет. "; font-weight: 600; color: var(--ok); }
+.tip > :last-child { margin-bottom: 0; } .tip > :first-child { margin-top: 0; }
+.pitfalls { display: grid; gap: 10px; margin: 12px 0 24px; }
+.pitfalls > div { border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.pitfalls b { display: block; margin-bottom: 4px; }
+.pitfalls p { margin: 0; color: var(--muted); font-size: 15px; }
+main details { border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; margin: 10px 0; }
+main details > summary { cursor: pointer; font-weight: 500; }
+main details[open] > summary { margin-bottom: 8px; }
+.next, .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: 12px 0 20px; }
+.next a, .cards-grid .card { display: block; border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; text-decoration: none; color: var(--fg); }
+.next a:hover, .cards-grid .card:hover { border-color: var(--accent); }
+.next small { display: block; color: var(--muted); }
+.cards-grid .card b { display: block; margin-bottom: 4px; }
+.cards-grid .card span { display: block; color: var(--muted); font-size: 14px; }
+.cards-grid .card .ic { font-size: 22px; color: var(--accent); display: block; margin-bottom: 6px; }
+.route { counter-reset: r; list-style: none; padding: 0; margin: 16px 0 24px; }
+.route > li { counter-increment: r; position: relative; padding: 0 0 18px 48px; border-left: 2px solid var(--line); margin-left: 16px; }
+.route > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.route > li::before { content: counter(r); position: absolute; left: -17px; top: -2px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.route > li > a { font-weight: 600; font-size: 17px; }
+.route > li > p { margin: 4px 0 0; color: var(--muted); }
+.diagram { margin: 16px 0 24px; }
+.diagram svg { width: 100%; height: auto; }
+.diagram svg text { font-family: inherit; }
+.diagram .bx { fill: var(--soft); stroke: var(--line); }
+.diagram .bx-a { fill: var(--accent-soft); stroke: var(--accent); }
+.diagram .bx-b { fill: var(--note); stroke: var(--note-b); }
+.diagram .t1 { fill: var(--fg); font-size: 14px; font-weight: 600; }
+.diagram .t2 { fill: var(--muted); font-size: 12px; }
+.diagram .ln { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.diagram figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }

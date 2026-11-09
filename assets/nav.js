@@ -3,22 +3,31 @@
 const TREE = [
   { id: "start", title: "Начало работы", who: "для всех", items: [
     ["where-to-start", "Кому какой раздел"],
-    ["architecture", "Как устроен Оркестратор"],
+    ["overview", "Общие сведения об Оркестраторе"],
   ]},
   { id: "deploy", title: "Развертывание", who: "сисадмину", items: [
     ["planning", "Планирование установки", [
+      ["know", "Что нужно знать"],
       ["planning-options", "Выбор варианта развертывания"],
       ["hardware", "Требования к железу"],
       ["network", "Порты и сетевой трафик"],
       ["service-accounts", "Учётные записи и права служб"],
+      ["checklist", "Что подготовить"],
     ]],
-    ["checklist", "Что подготовить до начала"],
-    ["install", "Установка: Docker, Astra, РЕД ОС, Ubuntu, Windows", [
-      ["rootless", "Службы Linux без root"],
+    ["install", "Установка", [
+      ["install-docker", "Установка в Docker"],
+      ["install-services", "Установка служб"],
       ["agent", "Машины роботов и агент"],
     ]],
     ["first-run", "Первый запуск"],
-    ["verify", "Как проверить, что всё работает"],
+    ["verify", "Проверка установки"],
+  ]},
+  { id: "upgrade", title: "Обновление", who: "сисадмину", items: [
+    ["before", "Перед обновлением: лицензия и бэкап"],
+    ["config-changes", "Изменения в конфигах между LTS"],
+    ["order", "Порядок обновления: Windows, Linux, Docker"],
+    ["from-root", "Переход с root на работу без root"],
+    ["migrate", "Перенос на другой сервер или СУБД"],
   ]},
   { id: "configure", title: "Настройка", who: "сисадмину", items: [
     ["access", "Вход и доступ"],
@@ -29,12 +38,6 @@ const TREE = [
     ["storage", "Хранилища"],
     ["integrations", "Интеграции"],
     ["scaling", "Масштабирование и отказоустойчивость"],
-  ]},
-  { id: "upgrade", title: "Обновление", who: "сисадмину", items: [
-    ["before", "Перед обновлением: лицензия и бэкап"],
-    ["order", "Порядок обновления: Windows, Linux, Docker"],
-    ["config-changes", "Изменения в конфигах между LTS"],
-    ["migrate", "Перенос на другой сервер или СУБД"],
   ]},
   { id: "operate", title: "Сопровождение", who: "сисадмину и поддержке", items: [
     ["monitoring", "Мониторинг и метрики"],

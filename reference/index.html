@@ -6,12 +6,25 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Оркестратор: документация</title>
 <link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 </head>
 <body data-root="../" data-page="reference/">
 <main>
 <h1>Справочник</h1>
-<p class="lead">Параметры, порты, компоненты, API — для тех, кто знает, что ищет.</p>
-<div id="children"></div>
+<p class="lead">Для тех, кто знает, что ищет: параметры, порты, состав поставки и другие таблицы. Пошаговых инструкций здесь нет — они в разделах Развертывание, Обновление и Настройка.</p>
+<div class="cards-grid">
+  <a class="card" href="concepts.html"><i class="ti ti-bulb ic" aria-hidden="true"></i><b>Основные понятия</b><span>Сущности Оркестратора и где их искать в UI4.</span></a>
+  <a class="card" href="compatibility.html"><i class="ti ti-puzzle ic" aria-hidden="true"></i><b>Совместимость продуктов и платформ</b><span>Версии Студии, робота, агента, ОС, СУБД и .NET.</span></a>
+  <a class="card" href="lifecycle.html"><i class="ti ti-calendar-time ic" aria-hidden="true"></i><b>Жизненный цикл версий и LTS</b><span>Номер версии, частота релизов, что такое LTS.</span></a>
+  <a class="card" href="config.html"><i class="ti ti-adjustments ic" aria-hidden="true"></i><b>Параметры конфигурации</b><span>Ключи всех служб: тип, назначение, значение по умолчанию.</span></a>
+  <a class="card" href="components.html"><i class="ti ti-components ic" aria-hidden="true"></i><b>Компоненты и службы</b><span>Службы, их зависимости, потоки трафика, как запускается робот.</span></a>
+  <a class="card" href="ports.html"><i class="ti ti-plug ic" aria-hidden="true"></i><b>Порты</b><span>Кто слушает, по какому протоколу и кто подключается.</span></a>
+  <a class="card" href="delivery.html"><i class="ti ti-package-export ic" aria-hidden="true"></i><b>Комплект поставки</b><span>Какие архивы и файлы собирает конвейер.</span></a>
+  <a class="card" href="db-schema.html"><i class="ti ti-table ic" aria-hidden="true"></i><b>Структура БД</b><span>Базы данных, службы и таблицы.</span></a>
+  <a class="card" href="api.html"><i class="ti ti-api ic" aria-hidden="true"></i><b>API</b><span>Swagger, токен и группы методов WebApi.</span></a>
+  <a class="card" href="mcp.html"><i class="ti ti-sparkles ic" aria-hidden="true"></i><b>MCP Server</b><span>Служба для ИИ-клиентов по протоколу MCP.</span></a>
+  <a class="card" href="glossary.html"><i class="ti ti-book ic" aria-hidden="true"></i><b>Глоссарий</b><span>Термин в UI4 и имя сущности в коде.</span></a>
+</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

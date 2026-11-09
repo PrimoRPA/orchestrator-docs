@@ -13,6 +13,11 @@
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <div class="todo"><p>Нужен ли раздел — уточнить у поддержки: бывают ли такие переносы у клиентов.</p></div>
 <p class="lead">Что перенести, чтобы Оркестратор заработал на новом месте, и что будет с лицензиями. Главный риск переезда — лицензии: они привязаны к оборудованию.</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору</div>
+  <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
+  <div><b>Результат</b>Оркестратор работает на новом сервере или СУБД</div>
+</div>
 
 <h2>К чему привязана лицензия</h2>
 <p>Запрос на лицензию и сама лицензия содержат параметры оборудования: имя, CPU и диск. Откуда WebApi их берёт, зависит от конфигурации:</p>
@@ -49,6 +54,11 @@
 <p>СУБД выбирается параметром <code>DBVendor</code> (<code>Postgres</code> или <code>MSSQL</code>). Для каждой СУБД свой набор миграций, а формат подключения разный: для PostgreSQL — <code>DbConnection:Items:*</code> (или <code>ConnectionStrings</code>), для MS SQL — только <code>ConnectionStrings:DefaultConnection</code>, <code>IdentityConnection</code>, <code>LicenseConnection</code>, <code>ProcessRepositoryConnection</code>, <code>LogsConnection</code>, <code>AnalyticConnection</code>, <code>LicensesConnection</code>.</p>
 <p>Инструмента переноса данных между СУБД в коде нет. При пустых БД новая СУБД заполнится схемой при старте служб, но данные (роботы, проекты, задания, журналы, пользователи) придётся переносить сторонними средствами.</p>
 <div class="warn"><p>При привязке лицензий к серверу СУБД (не задан <code>License:MachineInfoUrl</code>) смена СУБД меняет и привязку лицензий.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../deploy/verify.html">Проверка установки<small>убедиться, что всё работает на новом месте</small></a>
+</div>
 
 <div class="todo">
 <p>Поддерживаемый способ переноса данных PostgreSQL ↔ MS SQL Server (и поддерживается ли он вообще) — уточнить у продукта.</p>

@@ -12,6 +12,10 @@
 <h1>Выбор варианта развертывания</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Какие способы установки поддерживает поставка 1.26.9 и чем они отличаются. Выберите один до начала установки.</p>
+<div class="meta">
+  <div><b>Кому</b>архитектору, системному администратору</div>
+  <div><b>Результат</b>выбран способ установки, СУБД и число серверов</div>
+</div>
 
 <h2>Варианты</h2>
 <div class="tbl-wrap"><table>
@@ -40,6 +44,11 @@
   <li>Linux-сервер без Docker (Astra, Ubuntu, РЕД ОС) — службы Linux.</li>
   <li>Windows-сервер — службы Windows с nginx. Вариант с IIS не поддерживается.</li>
 </ul>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="hardware.html">Требования к железу<small>сколько ресурсов нужно под выбранный вариант</small></a>
+</div>
 
 <div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в выгрузке есть, но конвейер сборки сейчас собирает только ubuntu-вариант (<code>BASE_IMAGE: ubuntu</code>, выбор astra закомментирован), а в astra-compose нет служб Queues и Licenses — уточнить, поставляется ли Docker на Astra в 1.26.9.</p></div>
 <div class="todo"><p>Kubernetes: в <code>k8s/helm/</code> есть Helm-чарты, но они для внутреннего стенда разработки (тестовые адреса и значения). Поставки для Kubernetes заказчику в коде не найдено — не обещать в доках, пока не подтвердят.</p></div>

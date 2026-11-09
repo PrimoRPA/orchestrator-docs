@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="upgrade/from-root">
+<main>
+<h1>Переход с root на работу без root</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Linux</span></div>
+<p class="lead">Старые руководства ставили службы Оркестратора на Linux от root. Начиная с поставки 1.26 основной вариант — пользовательские юниты systemd от обычного пользователя. Здесь — как перевести действующую установку.</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору Linux</div>
+  <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
+  <div><b>Результат</b>службы и агент работают от пользователя, поднимаются после перезагрузки без его входа</div>
+</div>
+<p>Что нужно для работы без root и чем юниты отличаются — <a href="../deploy/install-services.html#linux-rootless">Установка служб → Linux: службы работают без root</a>.</p>
+
+<h2>Службы и nginx</h2>
+<ol class="steps">
+  <li>Остановите и удалите системные юниты (повторите для каждой службы и для <code>Primo.Orchestrator.Nginx</code>):
+<pre><code>sudo systemctl disable --now Primo.Orchestrator.WebApi
+sudo rm /etc/systemd/system/Primo.Orchestrator.WebApi.service
+sudo systemctl daemon-reload</code></pre>
+    <span class="check"><code>systemctl list-units 'Primo.Orchestrator.*'</code> ничего не показывает</span></li>
+  <li>Создайте пользователя служб (если его нет) и включите linger:
+<pre><code>sudo useradd -m -s /bin/bash orch-user
+sudo loginctl enable-linger orch-user</code></pre></li>
+  <li>Отдайте пользователю каталоги служб, nginx (включая созданные от root <code>logs</code> и <code>temp</code>) и каталоги данных:
+<pre><code>sudo chown -R orch-user:orch-user /opt/Primo
+sudo chown -R orch-user:orch-user &lt;каталоги данных из конфигов&gt;</code></pre>
+    <span class="check"><code>find /opt/Primo ! -user orch-user</code> ничего не выводит</span></li>
+  <li>Под <code>orch-user</code> установите пользовательские юниты и запустите службы в обычном порядке (MachineInfo, WebApi, остальные, nginx):
+<pre><code>mkdir -p ~/.config/systemd/user
+cp /opt/Primo/WebApi/Primo.Orchestrator.WebApi.user.service ~/.config/systemd/user/Primo.Orchestrator.WebApi.service
+systemctl --user daemon-reload
+systemctl --user enable --now Primo.Orchestrator.WebApi</code></pre>
+    Юнит NuGet2 — <code>/opt/Primo/NuGet2/Primo.Orchestrator.NuGet.user.service</code>, nginx — <code>Primo.Orchestrator.Nginx.user.service</code> из поставки.
+    <span class="check"><code>systemctl --user list-units 'Primo.Orchestrator.*'</code> — все <code>active running</code>; <code>ps -eo user,cmd | grep Primo.Orchestrator</code> показывает <code>orch-user</code></span></li>
+  <li>Перезагрузите сервер. <span class="check">службы поднялись без входа <code>orch-user</code> в систему</span></li>
+</ol>
+<p>Агент переключается так же: остановите и удалите <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>, включите linger для <code>agent</code> и под ним установите <code>Primo.Orchestrator.Agent.user.service</code> в <code>~/.config/systemd/user/</code>.</p>
+<p>Обратно на root — наоборот: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
+<div class="todo"><p>Проверить на стенде переход с root: не мешают ли службам файлы, оставшиеся от процессов root (например, файлы именованных мьютексов .NET — WebApi и другие службы при старте берут глобальный мьютекс <code>Global\{Primo.Orchestrator.&lt;служба&gt;…}</code>).</p></div>
+<div class="todo"><p>Старые доки: «на Linux службы устанавливаются и работают от root». В 1.26.9 в архивах всех служб, NuGet2, nginx и агента есть пользовательские юниты, в поставке nginx — отдельная инструкция без root (<code>readme-nginx.linux.md</code>).</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../deploy/verify.html">Проверка установки<small>убедиться, что службы и роботы работают</small></a>
+  <a href="order.html">Порядок обновления<small>если переход — часть обновления версии</small></a>
+</div>
+
+<div class="src">Источники: Источники: <code>Orchestrator/LTools.Orchestrator.*/Primo.Orchestrator.*.service</code>, <code>*.user.service</code>; <code>BaGet/src/BaGet/Primo.Orchestrator.NuGet*.service</code>; <code>nginx/Primo.Orchestrator.Nginx.service</code>, <code>nginx/Primo.Orchestrator.Nginx.user.service</code>, <code>nginx/nginx.linux.conf</code>, <code>nginx/readme-nginx.linux.md</code>, <code>nginx/readme-nginx.linux-root.md</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>orch-user</code>, каталоги данных); <code>Orchestrator/LTools.Orchestrator.WebApi/Options/*.cs</code>, <code>Controllers/AccountController.cs</code> (keytab); <code>Orchestrator/LTools.Orchestrator.ArcSight/Options/Files.cs</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/BL/LinuxMachineInfoService.cs</code>; <code>Orchestrator/LTools.Orchestrator/SingleGlobalInstance.cs</code>; <code>Orchestrator/LTools.Orchestrator.AgentUpdater/ServiceManager/AgentLinuxServiceManager.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Agent.cs</code>, <code>ApplicationHostedService.cs</code>, <code>Bl/Runners/LinuxScriptRunner.cs</code>, <code>Readme.txt</code> (1.24.1.0); <code>k8s/agent/install.sh</code> (<code>su -</code> + <code>XDG_RUNTIME_DIR</code>); старый сайт, <code>install/astra-ubuntu/overview-astra-ubuntu.mdx</code>.</div>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

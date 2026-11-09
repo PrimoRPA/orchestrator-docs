@@ -11,6 +11,11 @@
 <h1>Изменения в конфигах между LTS</h1>
 <div class="applies">Применимо: <span>1.25.7 LTS → 1.26.7 LTS → 1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Какие параметры появились, переименованы, удалены или получили другое значение по умолчанию на пути 1.25.7 LTS → 1.26.7 LTS → 1.26.9. Сравнивались классы опций, <code>appsettings*.json</code>, Dockerfile, compose и юниты в ветках <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.9.0</code> (состояние на 06.11.2026, то есть с последними патчами LTS).</p>
+<div class="meta">
+  <div><b>Кому</b>системному администратору</div>
+  <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
+  <div><b>Результат</b>список правок конфигов для вашего перехода</div>
+</div>
 
 <h2>Главное правило</h2>
 <p>Не копируйте старый файл конфигурации поверх нового. В каждом пакете лежит свой <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> или <code>appsettings.ProdLinux.json</code> с актуальными ключами — переносите в него только свои значения: подключения к БД, RabbitMQ, адреса, пароли.</p>
@@ -113,6 +118,11 @@
   <li><code>ConnectionStrings:*</code> для PostgreSQL работают, если не задана секция <code>DbConnection:Items</code>. Для MS SQL используются только они.</li>
   <li><code>Secrets:External=true</code> читается с предупреждением «Secrets:External bool type is obsolete».</li>
 </ul>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="order.html">Порядок обновления<small>пошагово для Windows, Linux и Docker</small></a>
+</div>
 
 <div class="todo">
 <p>Параметры из таблицы «Есть в LTS, но нет в 1.26.9.0»: будут ли они в следующих патчах 1.26.9.x — уточнить у разработки. <code>TokenVersion</code> уже есть в ветке 1.26.11.</p>
