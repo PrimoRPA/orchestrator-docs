@@ -38,7 +38,7 @@ a:hover { text-decoration: underline; }
 .side .n { display: inline-block; width: 20px; color: var(--muted); font-weight: 500; }
 .side ul { list-style: none; margin: 0; padding: 0 0 0 20px; }
 .side li a, .side .sec-link { display: block; padding: 3px 8px; border-radius: 6px; color: var(--fg); }
-.side .sec-link { margin-left: 20px; color: var(--muted); font-size: 13px; }
+.side .sec-link { margin-left: 20px; }
 .side li.kids ul { padding-left: 14px; border-left: 1px solid var(--line); margin-left: 8px; }
 .side .cur > a, .side a.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .side a:hover { text-decoration: none; background: var(--soft); }
