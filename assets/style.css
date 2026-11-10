@@ -198,3 +198,11 @@ body[data-platform] .ptag-platform, body[data-ver] .ptag-ver { display: none; }
 .switches { position: sticky; top: 48px; z-index: 3; background: var(--bg); }
 body.has-switches .tab-bar { top: 86px; }
 @media (max-width: 760px) { .switches { position: static; } body.has-switches .tab-bar { top: 48px; } }
+/* Путеводитель: задачи раскрываются по клику */
+.route details { border: 0; padding: 0; margin: 0; }
+.route details > summary { font-weight: 600; font-size: 17px; color: var(--accent); cursor: pointer; list-style: none; }
+.route details > summary::-webkit-details-marker { display: none; }
+.route details > summary::after { content: "▸"; margin-left: 8px; font-size: 13px; color: var(--muted); }
+.route details[open] > summary::after { content: "▾"; }
+.route details > summary:hover { text-decoration: underline; }
+.substeps.plain > li::before { content: ""; width: 8px; height: 8px; left: 9px; top: 9px; background: var(--accent); opacity: .45; }
