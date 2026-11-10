@@ -171,3 +171,16 @@ main details[open] > summary { margin-bottom: 8px; }
 .route > li > p { margin: 4px 0 0; }
 .route > li > .stage-t { font-weight: 600; font-size: 17px; }
 .auto-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* Переключатель платформы */
+.applies { font-size: 13px; }
+.pswitch { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.pswitch button { font: inherit; font-size: 13px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.pswitch button:hover { border-color: var(--accent); }
+.pswitch button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+body[data-platform="docker"] main [data-only]:not([data-only~="docker"]),
+body[data-platform="linux"] main [data-only]:not([data-only~="linux"]),
+body[data-platform="windows"] main [data-only]:not([data-only~="windows"]) { display: none !important; }
+.ptag { display: inline-block; font-size: 11px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; margin: 0 6px; vertical-align: middle; line-height: 18px; }
+body[data-platform] .ptag { display: none; }
+@media print { main [data-only] { display: revert !important; } }

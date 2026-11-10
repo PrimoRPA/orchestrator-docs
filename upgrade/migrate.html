@@ -49,10 +49,12 @@
   <li>Проверьте лицензии и при необходимости замените их (выше). <span class="check">тестовый робот получил лицензию и выполнил проект</span></li>
 </ol>
 
+<div data-only="windows">
 <h2>Смена СУБД (PostgreSQL ↔ MS SQL Server)</h2>
 <p>СУБД выбирается параметром <code>DBVendor</code> (<code>Postgres</code> или <code>MSSQL</code>). Для каждой СУБД свой набор миграций, а формат подключения разный: для PostgreSQL — <code>DbConnection:Items:*</code> (или <code>ConnectionStrings</code>), для MS SQL — только <code>ConnectionStrings:DefaultConnection</code>, <code>IdentityConnection</code>, <code>LicenseConnection</code>, <code>ProcessRepositoryConnection</code>, <code>LogsConnection</code>, <code>AnalyticConnection</code>, <code>LicensesConnection</code>.</p>
 <p>Инструмента переноса данных между СУБД в коде нет. При пустых БД новая СУБД заполнится схемой при старте служб, но данные (роботы, проекты, задания, журналы, пользователи) придётся переносить сторонними средствами.</p>
 <div class="warn"><p>При привязке лицензий к серверу СУБД (не задан <code>License:MachineInfoUrl</code>) смена СУБД меняет и привязку лицензий.</p></div>
+</div>
 
 <h2>Что дальше</h2>
 <div class="next">

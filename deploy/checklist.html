@@ -39,7 +39,8 @@
 
 <h2>СУБД</h2>
 <ul>
-  <li>PostgreSQL. MS SQL Server — только для служб на Windows Server. В Docker PostgreSQL 14 идёт в compose.</li>
+  <li>PostgreSQL. <span data-only="docker">В Docker PostgreSQL 14 идёт в compose.</span></li>
+  <li data-only="windows">Или MS SQL Server — только для служб на Windows Server.</li>
   <li>Базы: <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, <code>ltoolslogs</code>, <code>ltoolsanalytic</code>, <code>ltoolsnuget</code>. Либо создайте их заранее, либо дайте пользователю миграций право создавать БД.</li>
   <li>Пользователь для работы и пользователь для миграций (может быть один).</li>
 </ul>

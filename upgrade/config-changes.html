@@ -93,6 +93,7 @@
   <tr><td>Analytic</td><td><code>Schedules:RefreshMaterializedViews:*:CommandTimeoutInSeconds</code></td><td>—</td><td><code>600</code></td><td>1.26.9</td></tr>
 </table></div>
 
+<div data-only="docker linux">
 <h2>Docker и юниты Linux</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
@@ -107,6 +108,7 @@
   <tr><td>юниты агента</td><td><code>#Environment=PRIMOSALT=</code>, <code>#Environment=PRIMOSIGNINGKEY=</code></td><td>—</td><td>добавлены закомментированными</td><td>1.26.7 LTS</td></tr>
 </table></div>
 <p>Что делать с MinIO при переходе с compose 1.25.7 — на странице <a href="order.html">Порядок обновления</a>, раздел Docker.</p>
+</div>
 
 <h2>Агент при автообновлении</h2>
 <p>AgentUpdater переносит в новый конфиг агента только фиксированный список ключей (таблица — в <a href="order.html">Порядке обновления</a>). Новые параметры агента после автообновления получают значения по умолчанию.</p>

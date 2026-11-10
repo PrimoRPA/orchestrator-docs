@@ -51,9 +51,11 @@
   <tr><td>SMTP</td><td><code>Email:FromSmtpPort</code> (в образе — <code>465</code>)</td><td>Notifications</td></tr>
 </table></div>
 
+<div data-only="docker">
 <h2>Docker</h2>
 <p>В <code>docker-compose.yml</code> на хост опубликованы только: <code>44392</code> (UI), <code>8081</code> (NuGet2), <code>5432</code> (PostgreSQL), <code>15672</code> (консоль RabbitMQ). Остальные службы общаются внутри сети compose по именам (<code>web-api:5001</code> и т. д.).</p>
 <div class="warn"><p>Если PostgreSQL и консоль RabbitMQ не должны быть видны из сети — уберите их из <code>ports</code> в compose или закройте файерволом.</p></div>
+</div>
 
 <h2>Что дальше</h2>
 <div class="next">

@@ -49,6 +49,7 @@
 <p>Службы собраны self-contained: .NET на сервер ставить не нужно. В архивы WebApi вложены <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> — не удаляйте их.</p>
 <p>Общее правило для всех платформ: не копируйте старый конфиг поверх нового. Переносите в новый файл свои значения и сверяйтесь с <a href="config-changes.html">изменениями в конфигах между LTS</a>.</p>
 
+<div data-only="windows">
 <h2>Windows</h2>
 <ol class="steps">
   <li>Остановите службы Оркестратора:
@@ -64,7 +65,9 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
   <li>Запустите остальные службы, затем nginx. <span class="check">UI4 открывается, вход работает</span></li>
 </ol>
 <p>Переменная <code>ASPNETCORE_ENVIRONMENT=ProdWin</code> задаётся на уровне машины при установке и обновлением не меняется. Без неё WebApi не стартует: «Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.»</p>
+</div>
 
+<div data-only="linux">
 <h2>Linux: службы без root</h2>
 <p>Целевая схема: службы работают под <code>orch-user</code> через пользовательские юниты в <code>~/.config/systemd/user/</code>, как на страницах установки. Все команды — под <code>orch-user</code>, без <code>sudo</code>.</p>
 <ol class="steps">
@@ -100,7 +103,9 @@ curl http://localhost:5001/health</code></pre>
 
 <h3>Альтернатива: службы от root</h3>
 <p>Те же шаги, но через <code>sudo</code>: <code>sudo systemctl stop|start Primo.Orchestrator.&lt;Служба&gt;</code>, юниты без <code>.user</code> лежат в <code>/etc/systemd/system/</code>, журнал — <code>journalctl -u Primo.Orchestrator.&lt;Служба&gt;</code>. Как перейти на схему без root — <a href="from-root.html">Переход с root на работу без root</a>.</p>
+</div>
 
+<div data-only="docker">
 <h2>Docker</h2>
 <p>Данные хранятся в именованных томах, поэтому пересоздание контейнеров их не трогает.</p>
 <ol class="steps">
@@ -112,6 +117,7 @@ curl http://localhost:5001/health</code></pre>
 </ol>
 <div class="warn"><p>Переход с compose 1.25.7: в нём был MinIO, и WebApi с NuGet2 хранили файлы там (<code>FileStore__Type=1</code>, <code>Storage__Type=Minio</code>). С 1.26.7 MinIO в compose нет, файлы хранятся в томах <code>webapidata</code> и <code>nugetdata</code>. Дистрибутивы агента и робота и NuGet-пакеты из MinIO сами не переедут. Либо оставьте MinIO и задайте старые значения явно, либо загрузите файлы заново. Не удаляйте том <code>miniodata</code> до проверки.</p></div>
 <div class="warn"><p>RDP2 в Docker-поставку не входит. Обновите его отдельно по шагам для Windows или Linux.</p></div>
+</div>
 
 <h2>Агенты из UI4</h2>
 <p>Нужно право «Обновление агента» (<code>AgentDistrs.AgentUpdate</code>). Загружаемый дистрибутив должен быть не ниже 1.24.8.0, платформа — совпадать с машиной.</p>
