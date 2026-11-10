@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.8.2", at: "10.11.2026 12:48" };
+const BUILD = { ver: "4.8.3", at: "10.11.2026 12:49" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -296,8 +296,8 @@ const TREE = [
     const groups = [];
     const plat = ["linux", "windows", "docker"].filter((k) => spans.some((s) => DIM.platform.from[s.textContent.trim()] === k));
     const verSpan = spans.find((s) => DIM.ver.from[s.textContent.trim()]);
-    if (verSpan) groups.push(["ver", "Версия", ["1.26.7", "1.26.9"]]);
-    if (plat.length >= 2) groups.push(["platform", "Платформа", plat]);
+    if (verSpan) groups.push(["ver", "Версия:", ["1.26.7", "1.26.9"]]);
+    if (plat.length >= 2) groups.push(["platform", "Платформа:", plat]);
     if (groups.length) {
       const box = document.createElement("div");
       box.className = "switches";
@@ -332,7 +332,8 @@ const TREE = [
           });
         };
       });
-      ap.replaceWith(box);
+      const h1 = document.querySelector("main h1");
+      if (h1) { h1.before(box); ap.remove(); } else ap.replaceWith(box);
       Object.keys(apply).forEach((dim) => {
         let saved = DEF[dim];
         try { saved = localStorage.getItem("sw:" + dim) || DEF[dim]; } catch (e) {}

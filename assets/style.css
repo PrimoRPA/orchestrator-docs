@@ -173,11 +173,11 @@ main details[open] > summary { margin-bottom: 8px; }
 .auto-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
 /* Переключатели «Версия» и «Платформа» */
-.switches { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 28px; margin: 0 0 22px; padding: 0 0 2px; border-bottom: 1px solid var(--line); }
-.sw { display: inline-flex; align-items: baseline; gap: 12px; }
+.switches { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 28px; margin: 0 0 2px; }
+.sw { display: inline-flex; align-items: baseline; gap: 10px; }
 .sw-l { font-size: 12px; color: var(--muted); letter-spacing: .02em; }
 .seg { display: inline-flex; gap: 14px; }
-.seg button { font: inherit; font-size: 14px; font-weight: 500; padding: 6px 0 8px; margin-bottom: -3px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); cursor: pointer; transition: color .15s, border-color .15s; }
+.seg button { font: inherit; font-size: 14px; font-weight: 500; padding: 4px 0 4px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); cursor: pointer; transition: color .15s, border-color .15s; }
 .seg button:hover { color: var(--fg); }
 .seg button[aria-pressed="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 body[data-platform="docker"] main [data-only]:not([data-only~="docker"]),
