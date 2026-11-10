@@ -38,7 +38,6 @@
 <tr><td>Агент</td><td><code>LTools.Orchestrator.Agent</code></td><td>Развёртывание и запуск роботов, RDP-пользователи, триггеры по папке, сбор производительности, скриншоты, обновление.</td><td>WebApi; RobotLogs</td></tr>
 <tr><td>Agent.Runner</td><td><code>LTools.Orchestrator.Agent.Runner</code></td><td>Только Linux: вспомогательный процесс агента для запуска робота в графическом сеансе. Входит в архив агента для Linux.</td><td>Агент</td></tr>
 <tr><td>AgentUpdater</td><td><code>LTools.Orchestrator.AgentUpdater</code></td><td>Обновление агента. Архивы <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> кладутся внутрь архивов WebApi.</td><td>Агент</td></tr>
-<tr><td>DpaAgent</td><td><code>LTools.Orchestrator.DpaAgent</code></td><td>Агент DPA для Linux. Поставляется deb-пакетами <code>primo-rpa-orchestrator-dpa-agent</code> и <code>primo-rpa-orchestrator-dpa-common</code>.</td><td>WebApi</td></tr>
 </table></div>
 
 <h2>Внешние компоненты</h2>
@@ -65,7 +64,6 @@
 <tr><td><code>Primo.Orchestrator.NuGet</code></td><td><code>/opt/Primo/NuGet2</code></td><td><code>root</code></td></tr>
 <tr><td><code>Primo.Orchestrator.Nginx</code></td><td><code>/opt/Primo/nginx</code></td><td><code>root</code></td></tr>
 <tr><td><code>Primo.Orchestrator.Agent</code></td><td><code>/opt/Primo/Agent</code></td><td><code>agent</code>; скрипт <code>k8s/agent/install.sh</code> ставит агент как пользовательский юнит</td></tr>
-<tr><td><code>Primo.Orchestrator.DpaAgent</code> (пользовательский)</td><td><code>/opt/primo-rpa/dpa-agent</code></td><td>—</td></tr>
 </table></div>
 <p>Во всех юнитах задано <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code>; служба запускается с ключом <code>--console</code>.</p>
 

@@ -23,7 +23,7 @@
 <tr><td>Запрос к <code>/api</code></td><td>перенаправление (301) на <code>/api/v1/swagger.json</code></td></tr>
 </table></div>
 <p>Для WebApi через nginx: <code>https://&lt;сервер&gt;:44392/api/doc</code> — путь <code>/api/</code> проксируется в WebApi. Swagger остальных служб открывается напрямую на порту службы (см. <a href="ports.html">«Порты»</a>), например <code>http://&lt;сервер&gt;:56748/api/doc</code> для RobotLogs.</p>
-<p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2, агента и DpaAgent есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
+<p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2 и агента есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
 
 <h2>Аутентификация</h2>
 <p>API защищено JWT-токенами (схема Bearer). Токен подписывает WebApi; издатель, аудиторию и ключ подписи задают переменные окружения <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code>, <code>PRIMOSIGNINGKEY</code> (см. <a href="config.html#common">«Параметры конфигурации»</a>). Время жизни — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
@@ -69,7 +69,6 @@
 <tr><td><code>Subscriptions</code>, <code>NotificationEmailQueue</code>, <code>Email</code></td><td>Подписки на уведомления, очередь писем, отправка писем.</td></tr>
 <tr><td><code>Licenses</code></td><td>Лицензии.</td></tr>
 <tr><td><code>NuGet</code></td><td>Работа с NuGet-сервером.</td></tr>
-<tr><td><code>ProcessRepository</code></td><td>Репозиторий процессов (подсистема DPA).</td></tr>
 <tr><td><code>BlackWhiteIpStudioRules</code></td><td>Чёрный и белый списки IP для Студии.</td></tr>
 <tr><td><code>Settings</code>, <code>UserUISettingsStorage</code>, <code>Culture</code>, <code>Banner</code>, <code>Support</code></td><td>Настройки для UI, пользовательские настройки интерфейса, язык, баннер, ссылка на поддержку (частично без входа).</td></tr>
 <tr><td><code>StatesSlaConfig</code></td><td>Параметры SLA службы States.</td></tr>

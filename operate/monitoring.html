@@ -15,7 +15,7 @@
 
 <h2>Как это устроено</h2>
 <p>Служба сама ничего не отправляет. Она открывает отдельный порт и ждёт, когда к ней обратится Prometheus (HTTP, путь <code>/metrics</code>) или сервер Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
-<p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента и DPA-агента на машинах роботов.</p>
+<p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента на машинах роботов.</p>
 
 <h2>Параметры</h2>
 <div class="tbl-wrap"><table>
@@ -74,7 +74,6 @@
   <tr><td>MachineInfo</td><td><code>primo_mi_</code></td><td>Число обращений к API сведений о машине.</td></tr>
   <tr><td>RDP2</td><td><code>primo_rdp2_</code></td><td>Активные RDP-сессии, подключения и отключения, трансляции, зрители, сеансы с управлением.</td></tr>
   <tr><td>Агент</td><td><code>primo_ag_</code></td><td>Роботы, запущенные на машине; успешные и неудачные запуски.</td></tr>
-  <tr><td>DPA-агент</td><td><code>primo_queues_</code></td><td>Полученные, обработанные и ошибочные события DPA-агента.</td></tr>
 </table></div>
 <p>Общие метрики (если включены): <code>dotnet_*</code> и <code>process_*</code>, <code>kestrel_*</code>, <code>db_client_*</code>.</p>
 <div class="note"><p>Метрики <code>primo_orch_*</code> считаются запросами к БД при каждом обращении Prometheus или Zabbix, но не чаще, чем раз в <code>IdleDurationMillis</code>. При частом опросе увеличьте этот параметр.</p></div>

@@ -25,7 +25,7 @@
 <p>В таблицах ниже ключ записан через двоеточие: <code>Секция:Ключ</code>. В JSON это вложенные объекты. <code>[n]</code> обозначает элемент массива, <code>&lt;имя&gt;</code> — ключ словаря, который вы задаёте сами.</p>
 <div class="note"><p>Пароли в конфиге (RabbitMQ, строки подключения, AD, MinIO и т. п.) службы ожидают в зашифрованном виде, если не используется Vault. Алгоритм задаёт <code>ConfigPasswordEncryptor:Algorithm</code>: <code>RSA</code> или <code>AES</code>; пусто — AES.</p></div>
 
-<p>Службы: <a href="#webapi">WebApi</a> · <a href="#agent">Агент</a> · <a href="#rdp2">RDP2</a> · <a href="#robotlogs">RobotLogs</a> · <a href="#states">States</a> · <a href="#notifications">Notifications</a> · <a href="#analytic">Analytic</a> · <a href="#licenses">Licenses</a> · <a href="#queues">Queues</a> · <a href="#machineinfo">MachineInfo</a> · <a href="#logeventswebhook">LogEventsWebhook</a> · <a href="#dpaagent">DpaAgent</a> · <a href="#arcsight">ArcSight</a></p>
+<p>Службы: <a href="#webapi">WebApi</a> · <a href="#agent">Агент</a> · <a href="#rdp2">RDP2</a> · <a href="#robotlogs">RobotLogs</a> · <a href="#states">States</a> · <a href="#notifications">Notifications</a> · <a href="#analytic">Analytic</a> · <a href="#licenses">Licenses</a> · <a href="#queues">Queues</a> · <a href="#machineinfo">MachineInfo</a> · <a href="#logeventswebhook">LogEventsWebhook</a> · <a href="#arcsight">ArcSight</a></p>
 
 <h2 id="common">Общие параметры</h2>
 <p>Эти ключи читают несколько служб. В колонке «Службы» указано, какие именно.</p>
@@ -42,9 +42,9 @@
 <tr><td><code>ConnectionStrings:AnalyticConnection</code></td><td>Аналитическая БД.</td><td>—</td><td>Analytic</td></tr>
 <tr><td><code>ConnectionStrings:LicensesConnection</code></td><td>Подключение службы Licenses. Служба работает с основной БД Оркестратора (контекст <code>ApplicationDbContext</code>); в Docker-образах — база <code>ltools</code>.</td><td>—</td><td>Licenses</td></tr>
 <tr><td><code>ConfigPasswordEncryptor:Algorithm</code></td><td>Алгоритм шифрования паролей в конфиге: <code>RSA</code> или <code>AES</code>.</td><td>пусто — AES для паролей служб</td><td>все службы</td></tr>
-<tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>Время жизни сессии, мин. В WebApi — для токенов пользователей, в остальных службах — для обращений к WebApi.</td><td>—</td><td>WebApi, Agent, RDP2, RobotLogs, States, Analytic, Licenses, Queues, LogEventsWebhook, DpaAgent</td></tr>
-<tr><td><code>Security:EnabledOrigins</code></td><td>Разрешённые источники CORS (массив строк). У агента и RDP2 ключ называется <code>EnabledOrigins</code> (без <code>Security:</code>).</td><td>—</td><td>WebApi, RobotLogs, Analytic, Licenses, Queues, DpaAgent</td></tr>
-<tr><td><code>Culture</code></td><td>Культура (язык, форматы) службы, например <code>ru-RU</code>. Пусто — культура ОС.</td><td>—</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook, DpaAgent</td></tr>
+<tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>Время жизни сессии, мин. В WebApi — для токенов пользователей, в остальных службах — для обращений к WebApi.</td><td>—</td><td>WebApi, Agent, RDP2, RobotLogs, States, Analytic, Licenses, Queues, LogEventsWebhook</td></tr>
+<tr><td><code>Security:EnabledOrigins</code></td><td>Разрешённые источники CORS (массив строк). У агента и RDP2 ключ называется <code>EnabledOrigins</code> (без <code>Security:</code>).</td><td>—</td><td>WebApi, RobotLogs, Analytic, Licenses, Queues</td></tr>
+<tr><td><code>Culture</code></td><td>Культура (язык, форматы) службы, например <code>ru-RU</code>. Пусто — культура ОС.</td><td>—</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook</td></tr>
 <tr><td><code>UseIISIntegration</code></td><td>Запуск за IIS. Вариант с IIS не поддерживается — оставьте <code>false</code>.</td><td><code>false</code></td><td>WebApi, RobotLogs, States, Notifications, Analytic</td></tr>
 <tr><td><code>Kestrel:EndPoints:ExternalHttps:Url</code></td><td>Адрес HTTPS-точки Kestrel. Если задан, служба работает по HTTPS; из него же берётся порт.</td><td>—</td><td>все службы</td></tr>
 <tr><td><code>Kestrel:EndPoints:InternalHttp:Url</code></td><td>Адрес HTTP-точки Kestrel (если нет HTTPS).</td><td>—</td><td>все службы</td></tr>
@@ -234,19 +234,13 @@
 <tr data-ver="1.26.9"><td><code>RabbitMQ:AssetCacheInvalidationEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий инвалидации локальных кэшей ассетов (для каждого инстанса своя очередь).</td><td><code>assetcacheinvalidationevents</code></td></tr>
 <tr data-ver="1.26.9"><td><code>RabbitMQ:AssetCacheInvalidationEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий событий инвалидации локальных кэшей ассетов. Полное имя строится как AssetCacheInvalidationEventQueueTemplateName + Id инстанса.</td><td><code>assetcacheinvalidationevents</code></td></tr>
 <tr><td><code>RabbitMQ:PostNotifiedEventQueueName</code></td><td>строка</td><td>Очередь с событиями для внесения изменений в БД после нотификации в States.</td><td><code>postntifiedevents</code></td></tr>
-<tr><td><code>RabbitMQ:RobotNotificationExchangeName</code></td><td>строка</td><td>Точка обмена для очередей с нотификациями от DPA-роботов.</td><td><code>robotnotifications</code></td></tr>
+<tr><td><code>RabbitMQ:RobotNotificationExchangeName</code></td><td>строка</td><td>Точка обмена для очередей с нотификациями от роботов.</td><td><code>robotnotifications</code></td></tr>
 <tr><td><code>RabbitMQ:KeepAliveRobotEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий KeepAlive роботов (для каждого инстанса своя очередь).</td><td><code>keepaliverobots</code></td></tr>
 <tr><td><code>RabbitMQ:KeepAliveRobotEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий KeepAlive роботов. Полное имя строится как KeepAliveRobotEventExchangeName + Id инстанса.</td><td><code>keepaliverobots</code></td></tr>
 <tr><td><code>RabbitMQ:RobotLicenseRequestExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с запросами лицензий от роботов. Совпадает с RabbitMQ.RobotLicenseRequestExchangeName из Licenses.</td><td><code>robotlicenserequests</code></td></tr>
 <tr><td><code>RabbitMQ:RobotLicenseRequestQueueName</code></td><td>строка</td><td>Очередь с запросами лицензий от роботов. Совпадает с RabbitMQ.RobotLicenseRequestExchangeName из Licenses.</td><td><code>robotlicenserequests</code></td></tr>
-<tr><td><code>RabbitMQ:RefreshDpaUsersExchangeName</code></td><td>строка</td><td>Точка обмена для очереди событиями старта обновления DPA-пользователей.</td><td><code>refreshdpausers</code></td></tr>
-<tr><td><code>RabbitMQ:RefreshDpaUsersQueueName</code></td><td>строка</td><td>Очередь с событиями старта обновления DPA-пользователей.</td><td><code>refreshdpausers</code></td></tr>
 <tr><td><code>RabbitMQ:EmailEventExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с событиями отправки писем через оркестратор.</td><td><code>emailevents</code></td></tr>
 <tr><td><code>RabbitMQ:EmailEventQueueName</code></td><td>строка</td><td>Имя очереди с событиями отправки писем через оркестратор.</td><td><code>emailevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaCacheEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий кэшей событий в подсистеме Dpa (для каждого инстанса своя очередь).</td><td><code>dpacacheevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaCacheEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий кэшей событий в подсистеме Dpa. Полное имя строится как DpaCacheEventQueueTemplateName + Id инстанса.</td><td><code>dpacacheevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaRobotCacheEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий кэшей событий в подсистеме Dpa для роботов (для каждого инстанса своя очередь).</td><td><code>dparobotcacheevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaRobotCacheEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий кэшей событий в подсистеме Dpa для роботов. Полное имя строится как DpaRobotCacheEventQueueTemplateName + Id инстанса.</td><td><code>dparobotcacheevents</code></td></tr>
 </table></div>
 <h3>RobotDeployment</h3>
 <div class="tbl-wrap"><table>
@@ -282,7 +276,6 @@
 <tr><td><code>ActiveDirectory:MultyForest:&lt;имя&gt;:TrustedDomains</code></td><td>массив строк</td><td>Пользователь может приходить из другого доверенного домена.</td><td><code>—</code></td></tr>
 <tr><td><code>ActiveDirectory:MultyForest:&lt;имя&gt;:AdSuffixes</code></td><td>массив строк</td><td>Список суффиксов домена.</td><td><code>—</code></td></tr>
 <tr><td><code>ActiveDirectory:MultyTenantsGroup</code></td><td>bool</td><td>Разрешена привязка группы AD к ролям из разных тенантов.</td><td><code>false</code></td></tr>
-<tr><td><code>ActiveDirectory:DpaRobotRoleFromHeader</code></td><td>bool</td><td>Пока структура систем, через которую происходит авторизация для AD SSO, не известна, пользователя DPA-робота при AD SSO авторизовать как пользователя с ролью Robot по факту наличия заголовка RobotKey.</td><td><code>false</code></td></tr>
 </table></div>
 <h3>RobotStart</h3>
 <div class="tbl-wrap"><table>
@@ -702,28 +695,6 @@
 <tr data-ver="1.26.9"><td><code>FileStore:S3KerberosKeytabs:&lt;имя&gt;:ObjectName</code></td><td>строка</td><td>Имя объекта keytab.</td><td><code>—</code></td></tr>
 <tr data-ver="1.26.7"><td><code>FileStore:MinioKerberosKeytabs:&lt;имя&gt;:BucketName, ObjectName</code></td><td>строка</td><td>Keytab-файл в MinIO по домену: бакет и имя объекта. В 1.26.9 — <code>FileStore:S3KerberosKeytabs</code>.</td><td><code>—</code></td></tr>
 </table></div>
-<h3>DPA</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>DPA:Enabled</code></td><td>bool</td><td>Показывать ли раздел в UI.</td><td><code>false</code></td></tr>
-<tr><td><code>DPA:TriggerTemplateDuplicateEnabled</code></td><td>bool</td><td>В триггерах разрешено дублирование шаблонов.</td><td><code>true</code></td></tr>
-<tr><td><code>DPA:TmpProjectPath</code></td><td>строка</td><td>Папка с временными папками для формирования архивов проектов.</td><td><code>—</code> <br><small>при чтении в Startup: <code>null</code></small></td></tr>
-<tr><td><code>DPA:SubscriptionGlobalType</code></td><td>перечисление</td><td>Глобальный тип подписки. Значения: <code>Intersection</code>, <code>NotUsed</code>.</td><td><code>NotUsed</code></td></tr>
-<tr><td><code>DPA:RefreshUsersSchedules</code></td><td>словарь</td><td>Интеграция в части оргструктуры: Расписания обновления оргструктуры - пользователей/групп.</td><td><code>—</code></td></tr>
-<tr><td><code>DPA:RefreshUsersSchedules:&lt;имя&gt;:CronString</code></td><td>строка</td><td>Расписание (cron).</td><td><code>—</code></td></tr>
-<tr><td><code>DPA:OrgIntegrationEnabled</code></td><td>bool</td><td>Интеграция в части оргструктуры: Включение/отключение.</td><td><code>false</code></td></tr>
-<tr><td><code>DPA:OrgIntegrationUserNameWithDomain</code></td><td>bool</td><td>Интеграция в части оргструктуры: UserName приходит с доменом, вида user@domain Учитывается также при определении глобальных групп пользователя.</td><td><code>false</code></td></tr>
-<tr><td><code>DPA:OrgIntegrationLinkUsersTriggersAuthType</code></td><td>перечисление</td><td>Интеграция в части оргструктуры: Привязка пользователей к триггерам на основе совпадения глобальных групп для не супервизоров или к последнему проекту слушателю для супервизоров. Значения: <code>Orchestrator</code>, <code>LDAP</code>, <code>Negotiate</code>, <code>KeyCloak1</code>, <code>KeyCloak2</code>.</td><td><code>null</code></td></tr>
-<tr><td><code>DPA:OrgIntegrationLinkUsersTriggersDisabled</code></td><td>bool</td><td>При отключении привязки пользователей к триггерам на основе интеграции привязка осуществляется на основе имеющейся DPA-структуры - вхождения пользователей в группы.</td><td><code>false</code></td></tr>
-<tr><td><code>DPA:KeyCloakTenantAdminRole</code></td><td>строка</td><td>Роль администратора тенанта (интеграция по оргструктуре это не отдает). Если заполнена, берется из KeyCloak-токена. Логически имеет отношение к интеграции по оргструктуре, но, технически с ней не связана.</td><td><code>—</code></td></tr>
-<tr><td><code>DPA:KeyCloakTenantSuperAdminRole</code></td><td>строка</td><td>Роль супур-администратора тенанта (интеграция по оргструктуре это не отдает). Если заполнена, берется из KeyCloak-токена. Логически имеет отношение к интеграции по оргструктуре, но, технически с ней не связана. Для такой роли не используется фильтрация по оргструктуре.</td><td><code>—</code></td></tr>
-<tr><td><code>DPA:LtwFileInputType</code></td><td>перечисление</td><td>Значения: <code>Arguments</code>, <code>Assets</code>.</td><td><code>DpaLtwFileInputType.Arguments | DpaLtwFileInputType.Assets</code></td></tr>
-<tr><td><code>DPA:CollectDpaAgentEventsService:ThreadSleep</code></td><td>число</td><td>Время засыпания потока (мсек).</td><td><code>5000</code></td></tr>
-<tr><td><code>DPA:CollectDpaAgentEventsService:MaxBatch</code></td><td>число</td><td>Максимальная пачка инсерта в БД.</td><td><code>100</code></td></tr>
-<tr><td><code>DPA:CollectDpaAgentEventsService:LastUpdate</code></td><td>число</td><td>Обновляем записи, которые были обновлены не ранее (сек).</td><td><code>60</code></td></tr>
-<tr><td><code>DPA:LinkUsersTriggersCondition</code></td><td>перечисление</td><td>Условная привязка пользователя к триггеру. Значения: <code>NotLinked</code>, <code>LinkedMatchesTags</code>, <code>LinkedMatchesSection</code>, <code>LinkedMatchesTagsAndSection</code>.</td><td><code>null</code></td></tr>
-<tr><td><code>DPA:WorkerRegistry</code></td><td>перечисление</td><td>Включение обработки сигналов от реестра машин. Агент запрашивают это значение у Оркестратора. null - реестр машин не используется. Значения: <code>Dynamic</code>, <code>Static</code>.</td><td><code>Dynamic</code></td></tr>
-</table></div>
 <h3>Mqtt</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
@@ -993,7 +964,6 @@
 <tr><td><code>RabbitMQ:EventDbExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с логами оркестратора, связанными с логами робота по OperationKey.</td><td><code>dbevents</code></td></tr>
 <tr><td><code>RabbitMQ:TruncateDbEventExchangeName</code></td><td>строка</td><td>Очередь с командами очистки логов.</td><td><code>truncatedbevents</code></td></tr>
 <tr><td><code>RabbitMQ:TruncateDbEventQueueName</code></td><td>строка</td><td>Точка обмена для очереди с командами очистки логов.</td><td><code>truncatedbevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaEventExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с DPA-событиями. Совпадает с RabbitMQ.DpaEventExchangeName из Analytic.</td><td><code>dpaevents</code></td></tr>
 <tr><td><code>RabbitMQ:AnalyticExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с Analytic.</td><td><code>dbevents</code></td></tr>
 <tr><td><code>RabbitMQ:WSExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий для веб-сокетов в WebApi (для каждого инстанса WebApi своя очередь).</td><td><code>wsevents</code></td></tr>
 </table></div>
@@ -1279,8 +1249,6 @@
 <tr><td><code>RabbitMQ:RetryTimeOutInSeconds</code></td><td>число</td><td>Интервал в сек. между попытками подключения при возникновении исключения BrokerUnreachableException.</td><td><code>2</code></td></tr>
 <tr><td><code>RabbitMQ:EventDbExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с логами оркестратора, связанными с логами робота по OperationKey. Совпадает с RabbitMQ.EventDbQueueName2 из WebApi.</td><td><code>dbevents</code></td></tr>
 <tr><td><code>RabbitMQ:EventDbQueueName</code></td><td>строка</td><td>Очередь с логами оркестратора, связанными с логами робота по OperationKey.</td><td><code>dbevents2</code></td></tr>
-<tr><td><code>RabbitMQ:DpaEventExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с DPA-событиями. Совпадает с RabbitMQ.DpaEventExchangeName из RobotLogs.</td><td><code>dpaevents</code></td></tr>
-<tr><td><code>RabbitMQ:DpaEventQueueName</code></td><td>строка</td><td>Очередь с DPA-событиями.</td><td><code>dpaevents</code></td></tr>
 <tr><td><code>RabbitMQ:UnloadingEventExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с событиями запуска выгрузки отчета по внутреннемы потоку.</td><td><code>unloadingevents</code></td></tr>
 <tr><td><code>RabbitMQ:UnloadingEventQueueName</code></td><td>строка</td><td>Очередь с событиями запуска выгрузки отчета по внутреннемы потоку.</td><td><code>unloadingevents</code></td></tr>
 </table></div>
@@ -1377,8 +1345,8 @@
 <tr><td><code>RabbitMQ:RetryCount</code></td><td>число</td><td>Количество попыток подключения при возникновении исключения BrokerUnreachableException.</td><td><code>5</code></td></tr>
 <tr><td><code>RabbitMQ:RetryTimeOutInSeconds</code></td><td>число</td><td>Интервал в сек. между попытками подключения при возникновении исключения BrokerUnreachableException.</td><td><code>2</code></td></tr>
 <tr><td><code>RabbitMQ:MaxQueueLength</code></td><td>число</td><td>Максимальная длина очереди.</td><td><code>1000</code></td></tr>
-<tr><td><code>RabbitMQ:RobotNotificationExchangeName</code></td><td>строка</td><td>Точка обмена для очередей с нотификациями от DPA-роботов. Совпадает с RabbitMQ. RobotNotificationExchangeName из WebApi.</td><td><code>robotnotifications</code></td></tr>
-<tr><td><code>RabbitMQ:RobotNotificationQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди с нотификациями от DPA-роботов. Полное имя строится как RobotNotificationQueueTemplateName + Id инстанса.</td><td><code>robotnotifications</code></td></tr>
+<tr><td><code>RabbitMQ:RobotNotificationExchangeName</code></td><td>строка</td><td>Точка обмена для очередей с нотификациями от роботов. Совпадает с RabbitMQ. RobotNotificationExchangeName из WebApi.</td><td><code>robotnotifications</code></td></tr>
+<tr><td><code>RabbitMQ:RobotNotificationQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди с нотификациями от роботов. Полное имя строится как RobotNotificationQueueTemplateName + Id инстанса.</td><td><code>robotnotifications</code></td></tr>
 </table></div>
 <h3>Orchestrator</h3>
 <div class="tbl-wrap"><table>
@@ -1445,43 +1413,6 @@
 <tr><td><code>RabbitMQ:RetryTimeOutInSeconds</code></td><td>число</td><td>Интервал в сек. между попытками подключения при возникновении исключения BrokerUnreachableException.</td><td><code>0</code></td></tr>
 </table></div>
 <p>Общие секции этой службы (описаны в разделе <a href="#common">«Общие параметры»</a>): <code>InstanceInfo</code>, <code>Secrets</code>, <code>PostgresWithSslOptions</code>, <code>DbConnection</code>, <code>Monitoring</code>.</p>
-<h2 id="dpaagent">DpaAgent</h2>
-<p>Агент DPA (Linux). Проект <code>LTools.Orchestrator.DpaAgent</code>, параметры — в <code>appsettings.json</code> службы.</p>
-<h3>Orchestrator</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Orchestrator:BaseUrl</code></td><td>строка</td><td>Адрес WebApi, к которому обращается служба.</td><td><code>—</code></td></tr>
-<tr><td><code>Orchestrator:TenantId</code></td><td>строка</td><td>Идентификатор тенанта.</td><td><code>—</code></td></tr>
-</table></div>
-<h3>Worker</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Worker:DownloadPath</code></td><td>строка</td><td>Папка для скачивания файлов.</td><td><code>—</code></td></tr>
-</table></div>
-<h3>Debug</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Debug:NoScriptService</code></td><td>bool</td><td>Если включен, то методы не вызываются для робота, данные подставляются из Fake-параметров ниже. DPA_KEY берется из переменной окружения, установленной для Debug (в launchSettings.json).</td><td><code>false</code></td></tr>
-<tr><td><code>Debug:FakeUserName</code></td><td>строка</td><td>Отладочное имя пользователя. Должно присутствовать в таблице AgentWorkers.</td><td><code>—</code></td></tr>
-</table></div>
-<h3>CollectOrchEvents</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>CollectOrchEvents:ThreadSleep</code></td><td>число</td><td>Время засыпания потока (мсек), собирающего события с оркестратора.</td><td><code>10000</code></td></tr>
-</table></div>
-<h3>Robot</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Robot:RunFileName</code></td><td>строка</td><td>Имя скрипта запуска робота. Скрипт записывается при установке DPA-агента.</td><td><code>/opt/LTools/dpa-robot-run.sh</code></td></tr>
-<tr><td><code>Robot:RobotDirectory</code></td><td>строка</td><td>Папка с файлами робота. Формируется при установке робота.</td><td><code>/opt/primo/robot-runner</code></td></tr>
-<tr><td><code>Robot:ExecutableName</code></td><td>строка</td><td>Имя исполняемого файла робота.</td><td><code>Primo.Robot</code></td></tr>
-</table></div>
-<h3>QueueOrchEvents</h3>
-<div class="tbl-wrap"><table>
-<tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>QueueOrchEvents:ThreadSleep</code></td><td>число</td><td>Время засыпания потока (мсек), обрабатывающего события Оркестратора.</td><td><code>5000</code></td></tr>
-</table></div>
-<p>Общие секции этой службы (описаны в разделе <a href="#common">«Общие параметры»</a>): <code>Monitoring</code>.</p>
 <h2 id="arcsight">ArcSight</h2>
 <p>Выгрузка событий в формате CEF для ArcSight. Проект <code>LTools.Orchestrator.ArcSight</code>, параметры — в <code>appsettings.json</code> службы.</p>
 <h3>Device</h3>
