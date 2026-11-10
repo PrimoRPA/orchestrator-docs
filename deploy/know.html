@@ -10,7 +10,7 @@
 <body data-root="../" data-page="deploy/know">
 <main>
 <h1>Что нужно знать перед установкой</h1>
-<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="applies" data-sw="ver platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Перед планированием убедитесь, что понимаете, как устроен Оркестратор, и примите четыре решения, от которых зависит всё остальное. В конце страницы — какие службы понадобятся.</p>
 
 <h2>Что планируем</h2>
@@ -86,7 +86,7 @@
 <div class="tbl-wrap"><table>
   <tr><th>Под задачу</th><th>Когда нужна</th></tr>
   <tr><td>ArcSight</td><td>события нужно выгружать в SIEM ArcSight</td></tr>
-  <tr><td>MCP Server</td><td>с Оркестратором будут работать ИИ-клиенты; в поставке 1.26.9 — только в Docker-шаблоне для Ubuntu, см. <a href="../reference/mcp.html">MCP Server</a></td></tr>
+  <tr><td>MCP Server</td><td>с Оркестратором будут работать ИИ-клиенты<span data-ver="1.26.9">; в поставке есть только в Docker-шаблоне для Ubuntu</span><span data-ver="1.26.7">; ставится из отдельного архива для Windows или Linux</span>, см. <a href="../reference/mcp.html">MCP Server</a></td></tr>
 </table></div>
 <p>Все службы по умолчанию ставятся на один сервер. Как разнести их по нескольким — <a href="planning-options.html">Выбор варианта развертывания → Один сервер или несколько</a>. Полный список служб с архивами и базами данных — <a href="../reference/components.html">Компоненты и службы</a>.</p>
 </div>

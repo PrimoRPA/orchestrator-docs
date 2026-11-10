@@ -10,7 +10,7 @@
 <body data-root="../" data-page="deploy/install-services">
 <main>
 <h1>Установка служб</h1>
-<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
+<div class="applies" data-sw="ver platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
 <p class="lead">Оркестратор ставится на сервер набором служб: на Linux — юнитами systemd, на Windows — службами Windows, перед ними nginx с UI4. Выберите ОС сервера — на вкладке весь путь сверху вниз.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="checklist.html">Что подготовить</a></div>
@@ -252,7 +252,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent
 sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code> (с 1.26.9).
+    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
   <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
@@ -503,7 +503,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent
 sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code> (с 1.26.9).
+    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
   <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
@@ -754,7 +754,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent
 sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code> (с 1.26.9).
+    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
   <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
