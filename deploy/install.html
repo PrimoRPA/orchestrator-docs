@@ -11,12 +11,12 @@
 <main>
 <h1>Установка</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Поставьте серверную часть Оркестратора и агенты на машины роботов. Выберите один путь — Docker или службы — и пройдите его сверху вниз.</p>
-<div class="cards-grid">
-  <a class="card" href="install-docker.html"><b>Установка в Docker</b><span>Всё одним <code>docker-compose.yml</code>. Только PostgreSQL, без RDP2.</span></a>
-  <a class="card" href="install-services.html"><b>Установка служб</b><span>Astra Linux, РЕД ОС, Ubuntu, Windows Server. PostgreSQL или MS SQL, RDP2 по необходимости.</span></a>
-  <a class="card" href="agent.html"><b>Машины роботов и агент</b><span>Агент на каждую машину, где будут работать роботы. Нужен при любом пути.</span></a>
-</div>
+<p class="lead">Поставьте серверную часть Оркестратора и агенты на машины роботов. Для серверной части выберите один путь — шаг 1 или 2 — и пройдите его сверху вниз, затем шаг 3.</p>
+<ol class="substeps">
+  <li><a href="install-docker.html">Установка в Docker</a> <span>— всё одним docker-compose.yml, только PostgreSQL, без RDP2</span></li>
+  <li><a href="install-services.html">Установка служб</a> <span>— Astra Linux, РЕД ОС, Ubuntu, Windows Server; PostgreSQL или MS SQL</span></li>
+  <li><a href="agent.html">Машины роботов и агент</a> <span>— агент на каждую машину, где будут работать роботы</span></li>
+</ol>
 <p>Не знаете, что выбрать, — <a href="planning-options.html">Выбор варианта развертывания</a>. Дистрибутивы нужны заранее — где их взять, в <a href="checklist.html#download">Что подготовить</a>.</p>
 
 <h2>В каком порядке поднимаются компоненты</h2>

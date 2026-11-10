@@ -12,10 +12,32 @@
 <h1>Развертывание</h1>
 <p class="lead">Установка Оркестратора с нуля — от планирования до тестового проекта, выполненного на роботе. Пройдите шаги по порядку.</p>
 <ol class="route">
-  <li><a href="planning.html">Планирование установки</a><p>Что нужно знать, вариант развертывания, железо, порты, учётные записи и финальный чек-лист «Что подготовить».</p></li>
-  <li><a href="install.html">Установка</a><p>Серверная часть в Docker или службами на Astra Linux, РЕД ОС, Ubuntu, Windows Server, затем агенты на машинах роботов.</p></li>
-  <li><a href="first-run.html">Первый запуск</a><p>Вход, лицензия, дистрибутив робота, первая машина и первый робот.</p></li>
-  <li><a href="verify.html">Проверка установки</a><p>Службы отвечают, агенты на связи, тестовый проект выполнился.</p></li>
+  <li><a href="planning.html">Планирование установки</a>
+    <ol class="substeps">
+      <li><a href="know.html">Что нужно знать</a> <span>— версия, совместимость, какие службы нужны</span></li>
+      <li><a href="planning-options.html">Выбор варианта развертывания</a> <span>— Docker или службы, СУБД, число серверов</span></li>
+      <li><a href="hardware.html">Требования к железу</a> <span>— сколько серверов и машин роботов</span></li>
+      <li><a href="network.html">Порты и сетевой трафик</a> <span>— заявка сетевикам и ИБ</span></li>
+      <li><a href="service-accounts.html">Учётные записи и права служб</a> <span>— заявка на учётки и права</span></li>
+      <li><a href="checklist.html">Что подготовить</a> <span>— дистрибутивы и чек-лист перед установкой</span></li>
+    </ol>
+  </li>
+  <li><a href="install.html">Установка</a>
+    <ol class="substeps">
+      <li><a href="install.html">Серверная часть</a> <span>— Docker или службы</span></li>
+      <li><a href="agent.html">Машины роботов и агент</a> <span>— агент на каждую машину робота</span></li>
+    </ol>
+  </li>
+  <li><a href="first-run.html">Первый запуск</a>
+    <ol class="substeps">
+      <li><a href="first-run.html">Первый запуск</a> <span>— вход, лицензия, дистрибутив робота, первый робот</span></li>
+    </ol>
+  </li>
+  <li><a href="verify.html">Проверка установки</a>
+    <ol class="substeps">
+      <li><a href="verify.html">Проверка установки</a> <span>— службы отвечают, тестовый проект выполнился</span></li>
+    </ol>
+  </li>
 </ol>
 <h2>Частые задачи</h2>
 <ul>

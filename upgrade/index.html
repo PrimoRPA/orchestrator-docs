@@ -6,23 +6,26 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Оркестратор: документация</title>
 <link rel="stylesheet" href="../assets/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 </head>
 <body data-root="../" data-page="upgrade/">
 <main>
 <h1>Обновление</h1>
 <p class="lead">Переход действующей установки на новую версию без потери лицензий и данных. Пройдите шаги по порядку — начинать с лицензии и бэкапа обязательно.</p>
-<ol class="route">
-  <li><a href="before.html">Перед обновлением: лицензия и бэкап</a><p>Проверьте, что лицензия будет действовать на новой версии, и сделайте копии БД, конфигов и ключей.</p></li>
-  <li><a href="config-changes.html">Изменения в конфигах между LTS</a><p>Что появилось, переименовано и удалено на пути 1.25.7 LTS → 1.26.7 LTS → 1.26.9.</p></li>
-  <li><a href="order.html">Порядок обновления</a><p>Что обновлять сначала, затем пошагово для Windows, Linux и Docker; агенты и роботы.</p></li>
-  <li><a href="../deploy/verify.html">Проверка установки</a><p>Та же проверка, что после установки: службы, агенты, тестовый проект.</p></li>
+<ol class="substeps">
+  <li><a href="before.html">Перед обновлением</a> <span>— лицензия будет действовать на новой версии, копии сделаны</span></li>
+  <li><a href="config-changes.html">Изменения в конфигах</a> <span>— что поправить при переходе 1.25.7 LTS → 1.26.7 LTS → 1.26.9</span></li>
+  <li><a href="order.html">Порядок обновления</a> <span>— службы, агенты, роботы — для Windows, Linux и Docker</span></li>
+  <li><a href="../deploy/verify.html">Проверка установки</a> <span>— всё работает на новой версии</span></li>
 </ol>
 <h2>Отдельные задачи</h2>
-<div class="cards-grid">
-  <a class="card" href="from-root.html"><i class="ti ti-user-shield ic" aria-hidden="true"></i><b>Переход с root на работу без root</b><span>Для установок на Linux по старым руководствам, где службы работали от root.</span></a>
-  <a class="card" href="migrate.html"><i class="ti ti-truck-delivery ic" aria-hidden="true"></i><b>Перенос на другой сервер или СУБД</b><span>Что перенести и что будет с лицензиями при переезде.</span></a>
-</div>
+<ol class="route">
+  <li><a href="from-root.html">Переход с root на работу без root</a>
+    <p>Для установок на Linux по старым руководствам, где службы работали от root.</p>
+  </li>
+  <li><a href="migrate.html">Перенос на другой сервер или СУБД</a>
+    <p>Что перенести и что будет с лицензиями при переезде.</p>
+  </li>
+</ol>
 </main>
 <script src="../assets/nav.js"></script>
 </body>
