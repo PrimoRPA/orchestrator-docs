@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "9.0.0", at: "10.11.2026 17:13" };
+const BUILD = { ver: "9.0.0", at: "10.11.2026 17:15" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -107,7 +107,7 @@ const TREE = [
     walk(sec, sec.items, null);
   });
   const idx = flat.findIndex((n) => n.path === page);
-  const cur = flat[idx] || flat[0];
+  const cur = flat[idx] || (page === "start/how-to-use" ? { path: page, title: "Как читать документацию" } : flat[0]);
 
   // Шапка
   const header = document.createElement("header");
