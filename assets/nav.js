@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.9.0", at: "10.11.2026 12:56" };
+const BUILD = { ver: "4.9.0", at: "10.11.2026 12:57" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -341,8 +341,9 @@ const TREE = [
         t.className = "sw-title"; t.textContent = h1.textContent;
         box.prepend(t);
         document.body.classList.add("has-switches");
-        new IntersectionObserver(([e]) => box.classList.toggle("stuck", !e.isIntersecting && e.boundingClientRect.top < 0),
-          { rootMargin: "-48px 0px 0px 0px" }).observe(h1);
+        const upd = () => box.classList.toggle("stuck", h1.getBoundingClientRect().bottom < 48);
+        window.addEventListener("scroll", upd, { passive: true });
+        upd();
       }
       Object.keys(apply).forEach((dim) => {
         let saved = DEF[dim];
