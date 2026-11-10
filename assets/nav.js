@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.8.7", at: "10.11.2026 12:53" };
+const BUILD = { ver: "4.9.0", at: "10.11.2026 12:56" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -334,6 +334,16 @@ const TREE = [
         };
       });
       ap.replaceWith(box);
+      // Липкая строка: при прокрутке остаётся видна вместе с коротким заголовком страницы
+      const h1 = document.querySelector("main h1");
+      if (h1) {
+        const t = document.createElement("span");
+        t.className = "sw-title"; t.textContent = h1.textContent;
+        box.prepend(t);
+        document.body.classList.add("has-switches");
+        new IntersectionObserver(([e]) => box.classList.toggle("stuck", !e.isIntersecting && e.boundingClientRect.top < 0),
+          { rootMargin: "-48px 0px 0px 0px" }).observe(h1);
+      }
       Object.keys(apply).forEach((dim) => {
         let saved = DEF[dim];
         try { saved = localStorage.getItem("sw:" + dim) || DEF[dim]; } catch (e) {}
