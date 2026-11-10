@@ -173,15 +173,13 @@ main details[open] > summary { margin-bottom: 8px; }
 .auto-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
 /* Переключатели «Версия» и «Платформа» */
-.switches { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 4px 0 20px; padding: 10px 14px; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; }
-.switches::before { content: "Показать для"; font-size: 12px; color: var(--muted); margin-right: -8px; }
-.switches .seg { background: var(--bg); }
-.sw { display: inline-flex; align-items: center; gap: 8px; }
-.sw-l { font-size: 12px; color: var(--muted); }
-.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; }
-.seg button { font: inherit; font-size: 13px; font-weight: 500; line-height: 1; padding: 6px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.switches { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 28px; margin: 0 0 22px; padding: 0 0 2px; border-bottom: 1px solid var(--line); }
+.sw { display: inline-flex; align-items: baseline; gap: 12px; }
+.sw-l { font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+.seg { display: inline-flex; gap: 14px; }
+.seg button { font: inherit; font-size: 14px; font-weight: 500; padding: 6px 0 8px; margin-bottom: -3px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); cursor: pointer; transition: color .15s, border-color .15s; }
 .seg button:hover { color: var(--fg); }
-.seg button[aria-pressed="true"] { background: var(--bg); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px var(--line); }
+.seg button[aria-pressed="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 body[data-platform="docker"] main [data-only]:not([data-only~="docker"]),
 body[data-platform="linux"] main [data-only]:not([data-only~="linux"]),
 body[data-platform="windows"] main [data-only]:not([data-only~="windows"]),
