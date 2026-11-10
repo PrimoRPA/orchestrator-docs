@@ -14,15 +14,54 @@
 <p class="lead">Найдите свою задачу — под ней разделы документации, которые нужно прочитать, по порядку.</p>
 
 <ol class="route dots">
-  <li><a href="overview.html">Понять, что такое Оркестратор</a><p><a href="overview.html">Общие сведения</a>, <a href="../reference/concepts.html">Основные понятия</a>.</p></li>
-  <li><a href="../deploy/planning.html">Спланировать внедрение</a><p><a href="../deploy/know.html">Что нужно знать</a> → <a href="../deploy/planning-options.html">Выбор варианта</a> → <a href="../deploy/hardware.html">Железо</a> → <a href="../deploy/network.html">Порты</a> → <a href="../deploy/service-accounts.html">Учётные записи</a> → <a href="../deploy/checklist.html">Что подготовить</a>. Порты и учётные записи — то, что согласуют с сетью и ИБ.</p></li>
-  <li><a href="../deploy/install.html">Поставить Оркестратор с нуля</a><p><a href="../deploy/install.html">Установка</a> → <a href="../deploy/agent.html">Машины роботов и агент</a> → <a href="../deploy/first-run.html">Первый запуск</a> → <a href="../deploy/verify.html">Проверка установки</a>.</p></li>
-  <li><a href="../upgrade/index.html">Обновить действующую установку</a><p><a href="../upgrade/before.html">Лицензия и бэкап</a> → <a href="../upgrade/config-changes.html">Изменения в конфигах</a> → <a href="../upgrade/order.html">Порядок обновления</a> → <a href="../deploy/verify.html">Проверка установки</a>. Переезд — <a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a>.</p></li>
-  <li><a href="../configure/index.html">Настроить под свою организацию</a><p><a href="../configure/access.html">Вход и доступ</a>, <a href="../configure/security.html">Безопасность</a>, <a href="../configure/robots-rdp.html">Запуск роботов</a>, <a href="../configure/project-queue.html">Очередь проектов</a>, <a href="../configure/notifications.html">Почта</a> и <a href="../configure/index.html">другие страницы раздела</a>.</p></li>
-  <li><a href="../work/index.html">Работать в интерфейсе</a><p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>, дальше — <a href="../work/robots.html">Роботы</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">Задания и триггеры</a>, <a href="../work/logs.html">Журналы</a>. Привыкли к старому интерфейсу — <a href="../work/ui2-to-ui4.html">UI2 → UI4</a>.</p></li>
-  <li><a href="../operate/index.html">Следить за здоровьем системы</a><p><a href="../operate/monitoring.html">Мониторинг</a>, <a href="../operate/service-logs.html">Журналы служб</a>, <a href="../operate/events.html">События</a>; регулярно — <a href="../operate/db-maintenance.html">Обслуживание БД</a> и <a href="../operate/backup.html">Резервное копирование</a>.</p></li>
-  <li><a href="../troubleshoot/index.html">Разобраться со сбоем</a><p>Найдите свой симптом в <a href="../troubleshoot/index.html">Неполадках</a>.</p></li>
-  <li><a href="../reference/index.html">Найти параметр, порт или файл</a><p><a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/ports.html">Порты</a>, <a href="../reference/components.html">Компоненты и службы</a>, <a href="../reference/delivery.html">Комплект поставки</a>, <a href="../reference/glossary.html">Глоссарий</a>.</p></li>
+  <li><a href="overview.html">Понять, что такое Оркестратор</a>
+    <ol class="substeps">
+      <li><a href="overview.html">Общие сведения</a><span>что делает, из чего состоит, как выполняется задание</span></li>
+      <li><a href="../reference/concepts.html">Основные понятия</a><span>робот, машина, проект, задание, очередь</span></li>
+    </ol>
+  </li>
+  <li><a href="../deploy/planning.html">Спланировать внедрение</a>
+    <ol class="substeps">
+      <li><a href="../deploy/know.html">Что нужно знать</a><span>версия, совместимость, какие службы нужны</span></li>
+      <li><a href="../deploy/planning-options.html">Выбор варианта развертывания</a><span>Docker или службы, СУБД, число серверов</span></li>
+      <li><a href="../deploy/hardware.html">Требования к железу</a><span>сколько серверов и машин роботов</span></li>
+      <li><a href="../deploy/network.html">Порты и сетевой трафик</a><span>заявка сетевикам и ИБ</span></li>
+      <li><a href="../deploy/service-accounts.html">Учётные записи и права служб</a><span>заявка на учётки и права</span></li>
+      <li><a href="../deploy/checklist.html">Что подготовить</a><span>дистрибутивы и чек-лист перед установкой</span></li>
+    </ol>
+  </li>
+  <li><a href="../deploy/install.html">Поставить Оркестратор с нуля</a>
+    <ol class="substeps">
+      <li><a href="../deploy/install.html">Установка</a><span>в Docker или службами</span></li>
+      <li><a href="../deploy/agent.html">Машины роботов и агент</a><span>агент на каждую машину робота</span></li>
+      <li><a href="../deploy/first-run.html">Первый запуск</a><span>лицензия, дистрибутив робота, первый робот</span></li>
+      <li><a href="../deploy/verify.html">Проверка установки</a><span>тестовый проект выполнился</span></li>
+    </ol>
+  </li>
+  <li><a href="../upgrade/index.html">Обновить действующую установку</a>
+    <ol class="substeps">
+      <li><a href="../upgrade/before.html">Перед обновлением</a><span>лицензия и бэкап</span></li>
+      <li><a href="../upgrade/config-changes.html">Изменения в конфигах</a><span>что поправить при переходе между LTS</span></li>
+      <li><a href="../upgrade/order.html">Порядок обновления</a><span>службы, агенты, роботы</span></li>
+      <li><a href="../deploy/verify.html">Проверка установки</a><span>всё работает на новой версии</span></li>
+    </ol>
+    <p>Переезд на другой сервер или СУБД — <a href="../upgrade/migrate.html">Перенос</a>.</p>
+  </li>
+  <li><a href="../configure/index.html">Настроить под свою организацию</a>
+    <p>В любом порядке: <a href="../configure/access.html">вход и доступ</a>, <a href="../configure/security.html">безопасность</a>, <a href="../configure/robots-rdp.html">запуск роботов</a>, <a href="../configure/project-queue.html">очередь проектов</a>, <a href="../configure/notifications.html">почта</a> и <a href="../configure/index.html">другие страницы раздела</a>.</p>
+  </li>
+  <li><a href="../work/index.html">Работать в интерфейсе</a>
+    <p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>, дальше — по нужным разделам: <a href="../work/robots.html">роботы</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">задания и триггеры</a>, <a href="../work/logs.html">журналы</a>. Привыкли к старому интерфейсу — <a href="../work/ui2-to-ui4.html">UI2 → UI4</a>.</p>
+  </li>
+  <li><a href="../operate/index.html">Следить за здоровьем системы</a>
+    <p>Постоянно: <a href="../operate/monitoring.html">мониторинг</a>, <a href="../operate/service-logs.html">журналы служб</a>, <a href="../operate/events.html">события</a>. Регулярно: <a href="../operate/db-maintenance.html">обслуживание БД</a>, <a href="../operate/backup.html">резервное копирование</a>.</p>
+  </li>
+  <li><a href="../troubleshoot/index.html">Разобраться со сбоем</a>
+    <p>Найдите свой симптом в <a href="../troubleshoot/index.html">Неполадках</a>.</p>
+  </li>
+  <li><a href="../reference/index.html">Найти параметр, порт или файл</a>
+    <p><a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/ports.html">порты</a>, <a href="../reference/components.html">компоненты и службы</a>, <a href="../reference/delivery.html">комплект поставки</a>, <a href="../reference/glossary.html">глоссарий</a>.</p>
+  </li>
 </ol>
 
 <div class="src">Источники: структура разделов — <code>draft/assets/nav.js</code>; названия меню UI4 — UI4: <code>src/shared/config/menuConfig.ts</code>, <code>src/shared/lib/translations/ru/common.json</code>, <code>src/shared/lib/translations/ru/machines.json</code>.</div>
