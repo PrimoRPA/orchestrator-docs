@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "8.1.0", at: "10.11.2026 17:00" };
+const BUILD = { ver: "8.1.0", at: "10.11.2026 17:01" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -290,7 +290,7 @@ const TREE = [
     });
   });
   // Чек-лист: галочки запоминаются в браузере читателя
-  document.querySelectorAll("main ul.check > li").forEach((li, i) => {
+  document.querySelectorAll("main ul.ticks > li").forEach((li, i) => {
     const key = "chk:" + page + ":" + i;
     const cb = document.createElement("input");
     cb.type = "checkbox";
