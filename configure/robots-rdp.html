@@ -112,10 +112,6 @@
   <li>Откройте трансляцию сессии робота. <span class="check">Картинка идёт; если нет — проверьте <code>RdpBaseUrl</code>, <code>EnabledOrigins</code> RDP2 и проксирование <code>/rdpstream/</code> в nginx (с 1.26.9 там включена поддержка WebSocket).</span></li>
 </ol>
 
-<div class="todo"><p><code>Agent:ProjectZipEncoding</code>: в коде 1.26.9 агент сам определяет кодировку архива (UTF-8 или cp866) и берёт значение из конфига, только если автоопределение упало. Старое руководство описывает параметр как основной способ починить кириллицу — сверить поведение.</p>
-<p>Эффективные значения по умолчанию расходятся с классом опций: <code>EnabledLogOffDisconnectedRDPUsers</code> и <code>LogOffDisconnectedRDPUsersService</code> при отсутствии ключа читаются в <code>Startup</code> как <code>false</code> и <code>0</code>. Подтвердить с разработкой, что это намеренно.</p>
-<p>Старое руководство говорит про <code>Robot</code>: «остальные параметры менять запрещено без согласования с вендором». Перечень «запрещённых» параметров в коде не обозначен.</p>
-<p>Значения <code>MaxSessionsLimit</code> и <code>RdpClientConnectionUpdateInterval</code> равные <code>0</code> — как RDP2 их трактует (без лимита / значение по умолчанию), не проверено.</p></div>
 
 </main>
 <script src="../assets/nav.js"></script>

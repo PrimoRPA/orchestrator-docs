@@ -63,11 +63,9 @@
   <li>Если отключённые сессии копятся, включите их завершение: <code>RDP:EnabledLogOffDisconnectedRDPUsers=true</code>. Для Linux-машин операция не поддерживается.</li>
 </ol>
 
-<div class="todo"><p>Скриншот: карточка машины, RDP-пользователь с флагами «Автоматически поддерживать RDP-сессию» и «RDP-сессия активна»; окно консоли робота.</p></div>
 <div class="warn"><p>UI4 1.26.9 для Linux-консоли жёстко использует <code>https</code> и порт <code>5002</code>, а не настройки порта и протокола агента. Если агент слушает другой порт или HTTP, консоль не откроется.</p></div>
-<div class="todo"><p>Поле <b>Нестандартный RDP-порт</b> в карточке RDP-пользователя RDP2 не использует: подключение всегда идёт на 3389. Проверить на стенде и передать разработке.</p></div>
-<div class="todo"><p><code>RDP:EnabledLogOffDisconnectedRDPUsers</code>: в классе <code>true</code>, но Startup читает со значением по умолчанию <code>false</code>. Без явного ключа завершение отключённых сессий выключено. Аналогично <code>LogOffDisconnectedRDPUsersService</code>: в классе <code>Opt2</code>, в Startup — <code>Legacy</code>.</p></div>
-<div class="todo"><p>Строки «rdp-timeout» в коде Оркестратора нет: это, вероятно, сообщение Студии или робота. Теневой сессии и xrdp для Linux в коде нет.</p></div>
+
+
 
 </main>
 <script src="../assets/nav.js"></script>

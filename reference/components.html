@@ -71,7 +71,6 @@
 
 <h3>Windows</h3>
 <p>Службы на Windows работают как службы Windows (<code>ServiceBase</code>). Скрипт <code>PrimoWorker.ps1</code> регистрирует агент как службу <code>Primo.Orchestrator.Agent</code> (папка <code>C:\Primo\Agent</code>) и открывает в брандмауэре порт 5002.</p>
-<div class="todo"><p>Имена служб Windows для серверных компонентов (WebApi, RobotLogs и др.) в коде не заданы — их задаёт администратор при установке. Сверить с инструкциями по установке.</p></div>
 
 <h3>Docker</h3>
 <p>Образы собираются скриптом <code>azure/docker.ps1</code> на двух базах: Ubuntu 24.04 и Astra Linux (<code>astra/ubi18</code>). Имена образов и сервисов в шаблоне <code>docker-compose.yml.template</code>:</p>
@@ -93,8 +92,6 @@
 <tr><td><code>rabbitmq:3-management</code></td><td><code>0rabbitmq</code></td><td>RabbitMQ</td></tr>
 </table></div>
 <p>RDP2 в compose не входит: в <code>nginx.docker.conf</code> адрес RDP2 указывается вручную, служба работает вне Docker. Helm-чарты (<code>k8s/helm</code>) есть для webapi, robotlogs, licenses, queues, machineinfo, nuget2 и ui.</p>
-<div class="todo"><p>Старая статья «Компоненты системы» не упоминает службы Licenses и Queues: в 1.26.9 они есть в сборке, в Docker-образах и в маршрутах nginx. Там же указан PostgreSQL 13, а Docker-шаблоны 1.26.9 используют <code>postgres:14</code> — поддерживаемые версии СУБД сверить с требованиями.</p>
-<p>Для States, Notifications, Analytic и LogEventsWebhook Helm-чартов в <code>k8s/helm</code> нет — уточнить, как они разворачиваются в Kubernetes.</p></div>
 
 <h2>Служебные утилиты</h2>
 <div class="tbl-wrap"><table>
@@ -124,10 +121,6 @@ UI ◄── /events (WS:Path) ── WebApi: живые обновления в
 </ol>
 <p>Развёртывание идёт так же через агента (<code>api/Robots/Deploy</code>): агент скачивает дистрибутив робота, распаковывает его, на Windows правит <code>Primo.Robot.exe.config</code> (порт и сертификат) и резервирует URL робота.</p>
 
-<div class="todo"><p>Расхождение со старыми доками: в руководстве 1.25.7 Linux-робот запускается через <code>robotTask.sh</code>, в коде 1.26.9 — цепочка <code>start-0-runner.sh</code> / <code>start-1-session.sh</code> / <code>start-2-robot.sh</code> с хуками pre/post (хуки — с 1.26.6).</p>
-<p>Старые доки: «Оркестратор открывает RDP-сессию под учётной записью робота, дожидается загрузки профиля» перед запуском Windows-робота. В коде есть вызовы агента <code>RDPUserProfileLoaded</code> и <code>LinuxUserSessionReady</code>, но кто и когда открывает сессию (WebApi, RDP2 или внешний клиент) — проверить и описать на странице <a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a>.</p>
-<p>В Docker-поставке на Ubuntu есть ещё служба <code>mcp</code> (MCP-сервер, <code>PrimoRpa.McpServer.Api</code>). Её код не входит в решение <code>Orchestrator.Backend.sln</code>. Через неё ИИ-клиенты работают с Оркестратором по протоколу MCP — см. <a href="../reference/mcp.html">MCP Server</a>.</p>
-</div>
 
 </main>
 <script src="../assets/nav.js"></script>

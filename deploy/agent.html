@@ -91,10 +91,9 @@ agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
   <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
 
-<div class="todo"><p>Скрипт <code>PrimoWorker.ps1</code> (команды шагов для Windows взяты из него) лежит в проекте агента, но не копируется в архив агента — уточнить, поставляется ли он отдельно. Проекта <code>AgentInstaller</code> (установщик с авторегистрацией из старых доков) в ветке 1.26.9 нет, в <code>azure/build.ps1</code> он не собирается.</p></div>
-<div class="todo"><p>Команды сеанса по умолчанию взяты из кода агента (<code>StartLinuxRobotPipeline.cs</code>); какую команду ставить на Ubuntu — уточнить у разработки. Список пакетов для графических сеансов (Xvfb/Xvnc и др.) — по путям в <code>LinuxToolsPaths</code>, подтвердить.</p></div>
-<div class="todo"><p>Расхождение со старыми доками: в инструкции для Agent 1.26.7 в sudoers были также <code>systemd-run … --unit=primo-robot-*</code> и <code>systemctl stop primo-robot-*.service</code>. В коде 1.26.9 таких вызовов нет; есть <code>systemd-run</code> без <code>--unit</code> и <code>reboot</code>. С 1.26.8 роботы запускаются через <code>su</code> вместо <code>sudo</code>.</p></div>
-<div class="todo"><p>Где лежит HTTPS-сертификат агента для порта 5002 (<code>Kestrel:EndPoints:ExternalHttps:Certificate</code>, в архиве есть <code>cert1.pfx</code>) и как его заменить — описать после проверки.</p></div>
+
+
+
 
 </main>
 <script src="../assets/nav.js"></script>

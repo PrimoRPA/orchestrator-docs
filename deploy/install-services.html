@@ -32,8 +32,7 @@
 <pre><code>sudo su - &lt;пользователь&gt;
 export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
 <p>Без <code>XDG_RUNTIME_DIR</code> команда <code>systemctl --user</code> после <code>su</code> не найдёт менеджер пользователя.</p>
-<div class="todo"><p>Порт ниже 1024 для nginx без root (например, <code>443</code>): способы в коде не описаны, поставка предлагает для этого вариант от root. Уточнить, поддерживаются ли <code>setcap</code> или <code>net.ipv4.ip_unprivileged_port_start</code>.</p></div>
-<div class="todo"><p>MachineInfo вызывает <code>lsblk --nodeps -no serial</code> и <code>cpuid</code>. Проверить на стенде, что без root они отдают те же значения, что от root: иначе после перехода изменятся параметры машины для лицензии.</p></div>
+
 </details>
 <details>
 <summary>Чем системный юнит отличается от пользовательского</summary>
@@ -88,7 +87,6 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
-<div class="todo"><p>Поддерживаемые версии Astra Linux для установки без Docker в коде не заданы. Образы Docker собираются на базе Astra 1.8.6 (<code>registry.astralinux.ru/library/astra/ubi18:1.8.6</code>). Нужна матрица: 1.7 / 1.8, уровни защищённости.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -117,10 +115,9 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
 </ol>
 <div class="warn"><p>Параметры, которые отдаёт MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Поставьте <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не меняйте их потом.</p></div>
-<div class="todo"><p>Обязателен ли <code>cpuid</code> и как смена параметров машины влияет на действующую лицензию — уточнить у разработки. Проверить, отдаёт ли <code>lsblk</code> серийный номер диска без root.</p></div>
-<div class="todo"><p>Astra 1.7: в коде нет версии пакета ICU (<code>libicu72</code> — для 1.8). Уточнить имя пакета для 1.7.</p></div>
-<div class="todo"><p>Замкнутая программная среда (ЗПС) Astra: в конвейере подписываются (<code>bsign</code>) только исполняемые файлы образов Docker (<code>azure/sign_image.sh</code>), архивы <code>*-linux.zip</code> в <code>azure/build.ps1</code> не подписываются. Уточнить, как запускать службы при включённой ЗПС.</p></div>
-<div class="todo"><p>Команды открытия порта на файерволе Astra в коде не найдены — дать после проверки на стенде.</p></div>
+
+
+
 
 <h3>2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Оркестратору нужно:</p>
@@ -129,7 +126,6 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Для каждой БД — рабочий пользователь и пользователь миграций (может быть один). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
-<div class="todo"><p>Минимальные версии PostgreSQL и RabbitMQ в коде не заданы (в compose — образы <code>postgres:14</code> и <code>rabbitmq:3-management</code>). Старые доки для Astra/Ubuntu ставили PostgreSQL и RabbitMQ по инструкциям поставщиков и вписывали имя хоста в <code>/etc/hosts</code> для RabbitMQ — в коде не найдено.</p></div>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
@@ -210,7 +206,6 @@ done</code></pre>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
-<div class="todo"><p>Файлы <code>appsettings.ProdLinux.json</code> поставки в выгрузке отсутствуют. Таблица собрана по переменным в Dockerfile и <code>docker-compose.yml.template</code>. Сверить с поставкой: какие значения уже заполнены, куда по умолчанию пишутся журналы и данные, на каком порту работает ArcSight.</p></div>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
@@ -235,7 +230,6 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     <span class="check"><code>systemctl --user status Primo.Orchestrator.Nginx</code> — <code>active (running)</code>; <code>curl -k https://localhost:44392/</code> возвращает страницу UI</span></li>
 </ol>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
-<div class="todo"><p>В <code>nginx.linux.conf</code> есть блоки <code>location /grafana/</code> и <code>location /mcp</code> (MCP Server, порт <code>5080</code>). Уточнить, что делать с ними при установке без Grafana и MCP.</p></div>
 
 <h3>6. Проверка</h3>
 <ol class="steps">
@@ -288,9 +282,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
-<div class="todo"><p>Скриншот: Настройки → Система → Машины роботов, форма «Добавить машину» с включённым переключателем Linux.</p></div>
 <p>При старте агент сам проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
-<div class="todo"><p>Имена пакетов Astra для Xvnc/Xvfb, <code>xauth</code>, <code>vncpasswd</code>, <code>dbus-launch</code> (1.8) в коде не заданы — в коде только пути к файлам (<code>LinuxToolsPaths</code>). Дать список пакетов для 1.7 и 1.8 после проверки. Агент запускает скрипты через <code>/usr/bin/bash</code> — проверить, что этот путь есть на Astra 1.7.</p></div>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -311,7 +303,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
     <span class="check"><code>systemctl status Primo.Orchestrator.Nginx</code> — <code>active (running)</code></span></li>
 </ol>
 <div class="note"><p>В системных юнитах служб, кроме RDP2 и nginx, нет <code>Restart=always</code>: упавшая служба сама не перезапустится. В пользовательских юнитах служб перезапуск через 5 секунд задан.</p></div>
-<div class="todo"><p>Старые доки: «службы устанавливаются и работают от root». В 1.26.9 в каждом архиве есть пользовательский юнит, а у nginx — отдельная инструкция без root; целевая схема — без root. Строка <code>DOTNET_ROOT=/usr/lib64/dotnet</code> во всех юнитах при self-contained сборке, вероятно, не нужна — уточнить у разработки.</p></div>
 
 </details>
 </section>
@@ -348,7 +339,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
-<div class="todo"><p>Поддерживаемые версии РЕД ОС (7.3, 8) в коде не заданы; образов Docker на базе РЕД ОС нет (только Ubuntu и Astra). Нужна матрица версий.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -376,10 +366,9 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
 </ol>
 <div class="warn"><p>Параметры, которые отдаёт MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Поставьте <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не меняйте их потом.</p></div>
-<div class="todo"><p>Обязателен ли <code>cpuid</code> и как смена параметров машины влияет на действующую лицензию — уточнить у разработки. Проверить, отдаёт ли <code>lsblk</code> серийный номер диска без root.</p></div>
-<div class="todo"><p>Имена пакетов ICU и <code>cpuid</code> в репозиториях РЕД ОС в коде не найдены (в Dockerfile только <code>libicu72</code>/<code>libicu74</code> для Astra/Ubuntu) — проверить на РЕД ОС 7.3 и 8. Старые доки для РЕД ОС 8 ставили для WebApi пакет <code>gssntlmssp</code>; в коде упоминаний нет — уточнить, нужен ли он для входа через AD.</p></div>
-<div class="todo"><p>Файервол: в коде команд нет. Старые доки (РЕД ОС 8) открывали порты так: <code>sudo firewall-cmd --zone=public --add-port=44392/tcp --permanent</code>, затем <code>sudo firewall-cmd --reload</code> — подтвердить. Старые доки также открывали наружу <code>5432</code>, <code>5672</code>, <code>15672</code>, <code>25672</code>, <code>56748</code>, <code>5051</code>; по конфигу nginx снаружи нужен только <code>44392</code>.</p></div>
-<div class="todo"><p>SELinux: старые доки (РЕД ОС 8) требовали отключить его в <code>/etc/selinux/config</code>. В коде упоминаний SELinux нет — проверить, работают ли юниты и nginx из <code>/opt/Primo</code> с включённым SELinux.</p></div>
+
+
+
 
 <h3>2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Оркестратору нужно:</p>
@@ -388,7 +377,6 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Для каждой БД — рабочий пользователь и пользователь миграций (может быть один). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
-<div class="todo"><p>Минимальные версии PostgreSQL и RabbitMQ в коде не заданы (в compose — образы <code>postgres:14</code> и <code>rabbitmq:3-management</code>). Старые доки для РЕД ОС 8 ставили их из репозитория (<code>dnf install rabbitmq-server</code>, <code>postgresql15-server</code>) — в коде не найдено, версии подтвердить.</p></div>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
@@ -469,7 +457,6 @@ done</code></pre>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
-<div class="todo"><p>Файлы <code>appsettings.ProdLinux.json</code> поставки в выгрузке отсутствуют. Таблица собрана по переменным в Dockerfile и <code>docker-compose.yml.template</code>. Сверить с поставкой: какие значения уже заполнены, куда по умолчанию пишутся журналы и данные, на каком порту работает ArcSight.</p></div>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
@@ -494,8 +481,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     <span class="check"><code>systemctl --user status Primo.Orchestrator.Nginx</code> — <code>active (running)</code>; <code>curl -k https://localhost:44392/</code> возвращает страницу UI</span></li>
 </ol>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
-<div class="todo"><p>Старые доки для РЕД ОС 8 описывали веб-сервер Angie вместо nginx. В коде есть только конфиг и юниты для nginx — нужен ли вариант с Angie, уточнить.</p></div>
-<div class="todo"><p>В <code>nginx.linux.conf</code> есть блоки <code>location /grafana/</code> и <code>location /mcp</code> (MCP Server, порт <code>5080</code>). Уточнить, что делать с ними при установке без Grafana и MCP.</p></div>
+
 
 <h3>6. Проверка</h3>
 <ol class="steps">
@@ -549,9 +535,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
-<div class="todo"><p>Скриншот: Настройки → Система → Машины роботов, форма «Добавить машину» с включённым переключателем Linux.</p></div>
 <p>При старте агент сам проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
-<div class="todo"><p>Имена пакетов РЕД ОС для Xvnc/Xvfb, <code>xauth</code>, <code>vncpasswd</code>, MATE в коде не заданы — в коде только пути к файлам (<code>LinuxToolsPaths</code>). Нужна ли команда <code>StopSession</code> для MATE — уточнить у разработки.</p></div>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -572,7 +556,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
     <span class="check"><code>systemctl status Primo.Orchestrator.Nginx</code> — <code>active (running)</code></span></li>
 </ol>
 <div class="note"><p>В системных юнитах служб, кроме RDP2 и nginx, нет <code>Restart=always</code>: упавшая служба сама не перезапустится. В пользовательских юнитах служб перезапуск через 5 секунд задан.</p></div>
-<div class="todo"><p>Старые доки: «службы устанавливаются и работают от root». В 1.26.9 в каждом архиве есть пользовательский юнит, а у nginx — отдельная инструкция без root; целевая схема — без root. Строка <code>DOTNET_ROOT=/usr/lib64/dotnet</code> во всех юнитах при self-contained сборке, вероятно, не нужна — уточнить у разработки.</p></div>
 
 </details>
 </section>
@@ -609,7 +592,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
-<div class="todo"><p>Поддерживаемые версии Ubuntu для установки без Docker в коде не заданы. Образы Docker собираются на базе <code>ubuntu:24.04</code>. Нужна матрица версий.</p></div>
 
 <h3>1. Подготовка сервера</h3>
 <ol class="steps">
@@ -638,9 +620,8 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
 </ol>
 <div class="warn"><p>Параметры, которые отдаёт MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Поставьте <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не меняйте их потом.</p></div>
-<div class="todo"><p>Обязателен ли <code>cpuid</code> и как смена параметров машины влияет на действующую лицензию — уточнить у разработки. Проверить, отдаёт ли <code>lsblk</code> серийный номер диска без root.</p></div>
-<div class="todo"><p>Имя пакета ICU указано для Ubuntu 24.04 (как в образе Docker). Для других версий Ubuntu — уточнить.</p></div>
-<div class="todo"><p>Команды открытия порта на файерволе Ubuntu в коде не найдены — дать после проверки на стенде.</p></div>
+
+
 
 <h3>2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Оркестратору нужно:</p>
@@ -649,7 +630,6 @@ sudo chown -R orch-user:orch-user /opt/Primo</code></pre>
   <li>Для каждой БД — рабочий пользователь и пользователь миграций (может быть один). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
-<div class="todo"><p>Минимальные версии PostgreSQL и RabbitMQ в коде не заданы (в compose — образы <code>postgres:14</code> и <code>rabbitmq:3-management</code>). Старые доки для Astra/Ubuntu ставили PostgreSQL и RabbitMQ по инструкциям поставщиков и вписывали имя хоста в <code>/etc/hosts</code> для RabbitMQ — в коде не найдено.</p></div>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Шифрует их утилита из архива <code>PasswordEncryptor-linux</code>.</p>
@@ -730,7 +710,6 @@ done</code></pre>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
-<div class="todo"><p>Файлы <code>appsettings.ProdLinux.json</code> поставки в выгрузке отсутствуют. Таблица собрана по переменным в Dockerfile и <code>docker-compose.yml.template</code>. Сверить с поставкой: какие значения уже заполнены, куда по умолчанию пишутся журналы и данные, на каком порту работает ArcSight.</p></div>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
@@ -755,7 +734,6 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     <span class="check"><code>systemctl --user status Primo.Orchestrator.Nginx</code> — <code>active (running)</code>; <code>curl -k https://localhost:44392/</code> возвращает страницу UI</span></li>
 </ol>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
-<div class="todo"><p>В <code>nginx.linux.conf</code> есть блоки <code>location /grafana/</code> и <code>location /mcp</code> (MCP Server, порт <code>5080</code>). Уточнить, что делать с ними при установке без Grafana и MCP.</p></div>
 
 <h3>6. Проверка</h3>
 <ol class="steps">
@@ -809,9 +787,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
-<div class="todo"><p>Скриншот: Настройки → Система → Машины роботов, форма «Добавить машину» с включённым переключателем Linux.</p></div>
 <p>При старте агент сам проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
-<div class="todo"><p>Проверенное значение <code>AgentCommands:Session</code> (и при необходимости <code>StopSession</code>) для Ubuntu и графическое окружение для роботов в коде не заданы. Имена пакетов Ubuntu для Xvnc/Xvfb, <code>xauth</code>, <code>vncpasswd</code> — тоже: в коде только пути к файлам (<code>LinuxToolsPaths</code>). Дать после проверки на стенде.</p></div>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -832,7 +808,6 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
     <span class="check"><code>systemctl status Primo.Orchestrator.Nginx</code> — <code>active (running)</code></span></li>
 </ol>
 <div class="note"><p>В системных юнитах служб, кроме RDP2 и nginx, нет <code>Restart=always</code>: упавшая служба сама не перезапустится. В пользовательских юнитах служб перезапуск через 5 секунд задан.</p></div>
-<div class="todo"><p>Старые доки: «службы устанавливаются и работают от root». В 1.26.9 в каждом архиве есть пользовательский юнит, а у nginx — отдельная инструкция без root; целевая схема — без root. Строка <code>DOTNET_ROOT=/usr/lib64/dotnet</code> во всех юнитах при self-contained сборке, вероятно, не нужна — уточнить у разработки.</p></div>
 
 </details>
 </section>
@@ -874,9 +849,8 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
 
 <div class="note"><p>Вариант с IIS не поддерживается. WebApi ставится службой Windows за nginx; в его конфиге <code>UseIISIntegration</code> = <code>false</code>.</p></div>
 
-<div class="todo"><p>Скрипт регистрации служб сервера на Windows в выгрузке не найден; команды <code>New-Service</code> выше — по образцу <code>PrimoWorker.ps1</code> агента. Имена служб для остальных компонентов (<code>Primo.Orchestrator.&lt;Имя&gt;</code>) и учётную запись службы подтвердить.</p></div>
-<div class="todo"><p>Регистрация nginx как службы Windows в коде отсутствует (старые доки использовали обёртку <code>nginx-service.exe</code> из поставки) — уточнить, что входит в поставку 1.26.9. Версию nginx для Windows в коде не нашли (в конфиге — путь <code>nginx-1.21.x</code>).</p></div>
-<div class="todo"><p>Старое руководство 1.25.7 для варианта «WebApi — служба, Front — nginx» допускало SSO только через keytab-файл. Проверить на странице «Вход и доступ».</p></div>
+
+
 
 </section>
 </div>
@@ -892,9 +866,7 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
 <p>Окружение задаёт переменная <code>ASPNETCORE_ENVIRONMENT</code>: <code>ProdLinux</code> или <code>ProdWin</code>. Если она не задана, служба сразу завершается с ошибкой.</p>
 
 <div class="note"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. Он применяет миграции к четырём БД, пишет ход в консоль (в конце — <code>Migrations done successfully</code> или <code>Migration error: …</code>) и не поднимает API. Удобно, чтобы проверить доступ к БД до первого запуска.</p></div>
-<div class="todo"><p>По коду процесс в режиме <code>--migration</code> не завершается сам после миграций (хост продолжает работать без API) — проверить на стенде и описать, нужно ли останавливать его вручную.</p></div>
 
-<div class="todo"><p>Порядок чтения конфигурации проверен по <code>LTools.Orchestrator.WebApi/Program.cs</code>; для остальных служб предполагается такой же — проверить выборочно.</p></div>
 
 <h2>Что дальше</h2>
 <div class="next">

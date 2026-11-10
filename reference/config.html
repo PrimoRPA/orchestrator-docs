@@ -1515,19 +1515,6 @@
 <p>Общие секции этой службы (описаны в разделе <a href="#common">«Общие параметры»</a>): <code>Monitoring</code>.</p>
 
 <h2 id="todo">Что сверить</h2>
-<div class="todo">
-<p>Расхождения значений по умолчанию внутри кода. Класс опций задаёт одно, а при регистрации служб в <code>Startup.cs</code> ключ читается напрямую с другим значением. Пока ключ не задан в конфиге, работает значение из Startup:</p>
-<ul>
-  <li><code>RDP:EnabledLogOffDisconnectedRDPUsers</code>: в классе <code>true</code>, в Startup — <code>false</code>. Без явного ключа служба разлогинивания не регистрируется.</li>
-  <li><code>RDP:LogOffDisconnectedRDPUsersService</code>: в классе <code>Opt2</code>, в Startup — <code>Legacy</code>.</li>
-  <li><code>Secrets:PasswordEncripted</code>, <code>Secrets:ConnectionPasswordEncripted</code> (WebApi): в классе <code>true</code>, в Startup — <code>false</code>.</li>
-  <li><code>Secrets:External</code> в классах опций RobotLogs, Analytic, Licenses, Queues, LogEventsWebhook объявлен как <code>bool</code>, а Startup этих служб читает его как перечисление <code>DB</code>/<code>Vault</code>.</li>
-</ul>
-<p>В старом руководстве (1.25.7, «Открытие/отключение/разлогинивание RDP-сессий») <code>RDPSessionsReleaseService</code> и <code>LogOffDisconnectedRDPUsersService</code> названы «системными, будут удалены». В 1.26.9 они по-прежнему выбирают реализацию служб.</p>
-<p>Нет назначения в коде: <code>IsMultiMaster</code> (уточнить сценарий), <code>Robot:RequestTimeoutSec</code> в WebApi (значения по умолчанию нет: без ключа читается 0, а нулевой таймаут HTTP-клиент .NET не принимает — проверить, нужен ли ключ в поставляемом конфиге), <code>Observability:Unloading:Items:&lt;имя&gt;:ObjectFlow</code>, <code>CustomerBinding:Key</code> (MachineInfo).</p>
-<p>В Docker-образах (<code>k8s/*.Dockerfile</code>) задан <code>Security__Jwt__SessionLifetimeTailMin=60</code>, но в коде 1.26.9 этот ключ не читается. Там же <code>Security__Jwt__SessionLifetimeMin=720</code> — в коде значения по умолчанию у этого ключа нет.</p>
-<p>Не вошли в таблицы: внутренние файлы параметров агента (<code>RunnerOptions</code>, <code>AgentUpdaterOptions</code>), которые агент сам пишет при запуске робота в Linux и при обновлении. Также не вошли служебные утилиты из поставки (ComplectDescriber, BluePrismConverter, WinClient, RobotMock).</p>
-</div>
 
 </main>
 <script src="../assets/nav.js"></script>

@@ -64,10 +64,9 @@
 
 <div class="warn"><p>Порты <code>5432</code> и <code>15672</code> опубликованы на хосте. Если доступ к БД и консоли RabbitMQ извне не нужен — уберите их из <code>ports</code>.</p></div>
 
-<div class="todo"><p>Адрес клиентского реестра в коде указан только в комментарии скрипта сборки (<code>azure/docker.ps1</code>, путь <code>primo-rpa/orchestrator</code>, теги вида <code>&lt;версия&gt;-&lt;дата&gt;-ubuntu</code>). Уточнить адрес, способ получения учётных данных и офлайн-вариант (перенос образов через <code>docker save</code>/<code>load</code>).</p></div>
-<div class="todo"><p>Healthcheck сервиса <code>ui</code> обращается к <code>https://localhost:44392/health</code>, но в <code>nginx.docker.conf</code> отдельного <code>location /health</code> нет — запрос обслуживает <code>location /</code> (отдаёт <code>index.html</code>). Работает, но проверяет только nginx. В astra-шаблоне <code>/health</code> есть.</p></div>
-<div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в 1.26.9 конвейером не собираются; их compose старее (порт <code>5080</code> по HTTP, без Queues/Licenses/MCP). Не описывать, пока не подтвердят поставку. Helm-чарты в <code>k8s/helm</code> — для внутреннего стенда.</p></div>
-<div class="todo"><p>Можно ли менять <code>CustomerBinding__Key</code> после выдачи лицензии — в коде не видно; уточнить у разработки.</p></div>
+
+
+
 
 
 <h2>Что дальше</h2>

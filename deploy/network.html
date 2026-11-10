@@ -62,9 +62,8 @@
   <a href="service-accounts.html">Учётные записи и права служб<small>от кого будут работать службы и агент</small></a>
 </div>
 
-<div class="todo"><p>Диапазон портов роботов в коде не найден: порт робота хранится в карточке робота и приходит от агента при развертывании. Старые доки называли диапазон 8000–9000 — подтвердить.</p></div>
-<div class="todo"><p>Привязка Kestrel служб на Windows/Linux задаётся в <code>appsettings.*.json</code>, которых нет в выгрузке. Порты в таблице взяты из <code>Kestrel__EndPoints__*__Url</code> в Dockerfile и из <code>upstream</code> в конфигах nginx — сверить с <code>appsettings.ProdLinux.json</code>/<code>ProdWin.json</code> поставки. В Dockerfile <code>EXPOSE 8080 10052</code> не совпадает с фактическим портом Kestrel (<code>5001</code>, <code>56748</code>…) — на работу не влияет, но может путать.</p></div>
-<div class="todo"><p>Старая таблица портов упоминала 3389 для RDP2, 389/636 (LDAP/LDAPS). В коде nginx RDP2 доступен на 5102; порты LDAP и RDP до машин роботов описать на странице интеграций/RDP после проверки.</p></div>
+
+
 
 </main>
 <script src="../assets/nav.js"></script>

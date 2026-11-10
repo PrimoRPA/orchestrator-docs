@@ -24,7 +24,6 @@
 </table></div>
 <p>Для WebApi через nginx: <code>https://&lt;сервер&gt;:44392/api/doc</code> — путь <code>/api/</code> проксируется в WebApi. Swagger остальных служб открывается напрямую на порту службы (см. <a href="ports.html">«Порты»</a>), например <code>http://&lt;сервер&gt;:56748/api/doc</code> для RobotLogs.</p>
 <p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2, агента и DpaAgent есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
-<div class="todo"><p>В старой документации были отдельные инструкции «Открытие Swagger в Nginx». По коду 1.26.9 Swagger WebApi доступен через <code>/api/doc</code> без дополнительной настройки nginx — проверить на стенде, не закрыт ли путь в поставляемых конфигах.</p></div>
 
 <h2>Аутентификация</h2>
 <p>API защищено JWT-токенами (схема Bearer). Токен подписывает WebApi; издатель, аудиторию и ключ подписи задают переменные окружения <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code>, <code>PRIMOSIGNINGKEY</code> (см. <a href="config.html#common">«Параметры конфигурации»</a>). Время жизни — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
@@ -92,7 +91,6 @@
 </table></div>
 <p>Во всех службах есть служебные методы вне Swagger: <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code>, <code>/info</code> (сведения о службе) и <code>/loggers</code> (просмотр и смена уровня журналирования: <code>POST /loggers/{имя}/{уровень}</code>).</p>
 
-<div class="todo"><p>Маршрут <code>/loggers</code> и <code>/info</code> объявлены в общей библиотеке <code>LTools.Orchestrator</code>; проверить на стенде, что они действительно отвечают в каждой службе.</p></div>
 
 </main>
 <script src="../assets/nav.js"></script>

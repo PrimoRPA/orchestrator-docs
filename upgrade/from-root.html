@@ -43,8 +43,7 @@ systemctl --user enable --now Primo.Orchestrator.WebApi</code></pre>
 </ol>
 <p>Агент переключается так же: остановите и удалите <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>, включите linger для <code>agent</code> и под ним установите <code>Primo.Orchestrator.Agent.user.service</code> в <code>~/.config/systemd/user/</code>.</p>
 <p>Обратно на root — наоборот: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
-<div class="todo"><p>Проверить на стенде переход с root: не мешают ли службам файлы, оставшиеся от процессов root (например, файлы именованных мьютексов .NET — WebApi и другие службы при старте берут глобальный мьютекс <code>Global\{Primo.Orchestrator.&lt;служба&gt;…}</code>).</p></div>
-<div class="todo"><p>Старые доки: «на Linux службы устанавливаются и работают от root». В 1.26.9 в архивах всех служб, NuGet2, nginx и агента есть пользовательские юниты, в поставке nginx — отдельная инструкция без root (<code>readme-nginx.linux.md</code>).</p></div>
+
 
 <h2>Что дальше</h2>
 <div class="next">

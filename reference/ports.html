@@ -75,13 +75,6 @@
 <tr><td>Почтовый сервер для триггеров</td><td><code>Pop3Port</code> / <code>ImapPort</code> в <code>Tenants:IncomingEmail</code></td><td>POP3/IMAP/EWS</td><td>WebApi</td></tr>
 </table></div>
 
-<div class="todo">
-<p>Docker-образ LogEventsWebhook для Astra (<code>docker/astra/log-events-webhook.Dockerfile</code>) и <code>k8s/log-events-webhook.Dockerfile</code> задают <code>Kestrel__EndPoints__InternalHttp__Url=http://*:80</code>, а объявляют <code>EXPOSE 8080</code>. Проверить на стенде, на каком порту служба реально слушает.</p>
-<p>Расхождения со старой статьёй «Сетевые порты» (раздел для системного администратора): диапазон 8000–9000 «для роботов» в 1.26.9 не используется — параметры <code>RobotDeployment:PortMin</code>/<code>PortMax</code> помечены в коде как неиспользуемые новыми версиями робота. Порт 3389 там приписан RDP2, но по коду RDP2 сам подключается к машинам роботов по 3389, а слушает 5102. В старой таблице нет портов RobotLogs, Queues, Licenses, NuGet2, RDP2, метрик и RabbitMQ Management.</p>
-<p>LDAP/LDAPS (389/636) и SMTP 465 из старой статьи в коде как значения по умолчанию не заданы: порт LDAP задаётся адресом контроллера в <code>ActiveDirectory:MultyForest</code>, SMTP — <code>Email:FromSmtpPort</code>.</p>
-<p>Порт MS SQL Server и порты Redis, Vault, MQTT в коде не заданы: они берутся из строк подключения и адресов в конфиге.</p>
-<p>Путь, по которому служба отдаёт метрики Prometheus, в коде явно не задан (используется <code>KestrelMetricServer</code> с настройками по умолчанию) — сверить на стенде.</p>
-</div>
 
 </main>
 <script src="../assets/nav.js"></script>

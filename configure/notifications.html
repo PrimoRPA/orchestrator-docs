@@ -92,8 +92,6 @@
   <li>Если письма нет — откройте «Уведомления». <span class="check">Письмо в очереди есть → проблема в SMTP: включите <code>UseProtocolLogger</code> и смотрите <code>smtp.log</code>. Письма нет → проверьте подписку и службу States.</span></li>
 </ol>
 
-<div class="todo"><p>Старое руководство говорит, что параметры оповещений настраиваются в <code>appsettings.json</code> службы States, и перечисляет только <code>UserExpired</code> и <code>LicenseExpired</code>. Пороги <code>SLA</code> и флаг <code>SLAFromDb</code> в нём не описаны; где в UI4 редактировать SLA из БД, не найдено.</p>
-<p>В Docker-образе States <code>UserExpired:StartBefore=3</code> и <code>NotificationInterval=1</code> (минуты) — похоже на тестовые значения. Сверить с разработкой.</p></div>
 
 </main>
 <script src="../assets/nav.js"></script>

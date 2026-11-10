@@ -85,10 +85,9 @@
 <p>UI4 собран с <code>&lt;base href="/"&gt;</code> и адресом API <code>/api</code>, поэтому работает только в корне сайта, не в подкаталоге. Если UI отдаётся с другого адреса, чем WebApi, перечислите адреса UI в <code>Security:EnabledOrigins</code> (по умолчанию пусто, CORS выключен).</p>
 <p>WebApi не стартует второй копией на том же порту. Проверьте, что старый процесс завершён.</p>
 
-<div class="todo"><p>Порядок запуска служб после перезагрузки (зависимость WebApi от PostgreSQL и RabbitMQ в unit-файлах) — сверить с поставкой и стендом. По обращениям WebApi после перезагрузки не подключается к RabbitMQ.</p></div>
-<div class="todo"><p>По обращениям после обновления не работает UI старой ветки с новым WebApi. Уточнить у разработки таблицу совместимости версий UI и WebApi.</p></div>
-<div class="todo"><p>В <code>docker/ubuntu/web-api.Dockerfile</code> Kestrel слушает <code>http://*:5001</code>, а HEALTHCHECK проверяет <code>localhost:8080/health</code> и открыт порт 8080. Проверка здоровья контейнера, вероятно, всегда неуспешна. Передать разработке.</p></div>
-<div class="todo"><p>Путь к сертификату Kestrel (если WebApi отдаёт HTTPS сам) в коде по умолчанию не задан. Уточнить, что ставит инсталлятор.</p></div>
+
+
+
 
 </main>
 <script src="../assets/nav.js"></script>
