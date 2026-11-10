@@ -220,3 +220,22 @@ main ul.check label { display: flex; gap: 10px; align-items: flex-start; cursor:
 main ul.check input { margin: 5px 0 0; flex: none; width: 15px; height: 15px; accent-color: var(--accent); }
 main ul.check input:checked + span { color: var(--muted); }
 main ul.check label a { cursor: pointer; }
+/* Как пользоваться документацией: образец элемента и пояснение */
+.legend { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 0 32px; margin: 8px 0 24px; border-top: 1px solid var(--line); }
+.legend > div { padding: 18px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.legend > div > b { display: block; margin-bottom: 4px; }
+.legend > div > p { margin: 0; }
+.legend .demo { display: flex; align-items: center; }
+.legend .demo > * { margin: 0; width: 100%; }
+.legend .demo > span { width: auto; }
+.legend .demo .meta { grid-template-columns: 1fr 1fr; }
+.legend .demo .meta div, .legend .demo .next a { font-size: 14px; padding: 8px 12px; }
+.legend .demo .next { grid-template-columns: 1fr; }
+.legend .demo .substeps > li:last-child { padding-bottom: 2px; }
+.demo-menu { border: 1px solid var(--line); border-radius: 10px; padding: 8px; font-size: 14px; }
+.demo-menu b, .demo-menu span { display: block; padding: 3px 8px; border-radius: 6px; }
+.demo-menu b i { font-style: normal; font-weight: 500; color: var(--muted); display: inline-block; width: 20px; }
+.demo-menu span { margin-left: 20px; }
+.demo-menu span.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.demo-date { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
+@media (max-width: 760px) { .legend { grid-template-columns: 1fr; } .legend .demo { border-bottom: 0; padding-bottom: 0; } }
