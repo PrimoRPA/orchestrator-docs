@@ -34,11 +34,12 @@
   <tr><th>Что</th><th>Где задаётся</th><th>Комментарий</th></tr>
   <tr><td>Дистрибутивы робота</td><td><code>RobotDistrUpload:TargetFilePath</code> (WebApi)</td><td>При <code>FileStore:Type</code> = <code>1</code> (S3) — в бакете S3.</td></tr>
   <tr><td>Дистрибутивы Агента</td><td><code>AgentDistrUpload:TargetFilePath</code> (WebApi)</td><td>То же.</td></tr>
-  <tr><td>Архивы RPA-проектов</td><td><code>RpaProjectArchiveUpload:StoreType</code> (WebApi)</td><td>По умолчанию <code>1</code> (<code>LocalDb</code>) — в БД <code>ltools</code>; <code>2</code> — в S3; <code>0</code> (файловая система, папка <code>TargetFilePath</code>) устарел.</td></tr>
+  <tr data-ver="1.26.7"><td>Архивы RPA-проектов</td><td><code>RpaProjectArchiveUpload:DbStore</code> (WebApi)</td><td>По умолчанию <code>true</code> — в БД <code>ltools</code>; <code>false</code> — в папке <code>TargetFilePath</code>.</td></tr>
+  <tr data-ver="1.26.9"><td>Архивы RPA-проектов</td><td><code>RpaProjectArchiveUpload:StoreType</code> (WebApi)</td><td>По умолчанию <code>1</code> (<code>LocalDb</code>) — в БД <code>ltools</code>; <code>2</code> — в S3; <code>0</code> (файловая система, папка <code>TargetFilePath</code>) устарел.</td></tr>
   <tr><td>Скриншоты роботов</td><td><code>ScreenFileUpload:ScreenFilePath</code>, <code>ScreenFileUpload:StoreType</code> (RobotLogs)</td><td>Файловая система (по умолчанию) или S3.</td></tr>
   <tr><td>NuGet-пакеты</td><td>секция <code>Storage</code> службы NuGet</td><td>В Docker-образе — бакет <code>nuget</code> в S3.</td></tr>
   <tr><td>Бакеты S3 Оркестратора</td><td><code>FileStore:MainBucketName</code></td><td>Если пусто — для дистрибутивов и архивов проектов создаются отдельные бакеты.</td></tr>
-  <tr><td>Keytab-файлы Kerberos</td><td><code>ActiveDirectory:MultyForest:&lt;домен&gt;:KerberosKeytabPath</code></td><td>Либо в Vault/переменной окружения (<code>KerberosKeytabVault</code>), либо в S3 (<code>FileStore:S3KerberosKeytabs</code>).</td></tr>
+  <tr><td>Keytab-файлы Kerberos</td><td><code>ActiveDirectory:MultyForest:&lt;домен&gt;:KerberosKeytabPath</code></td><td>Либо в Vault/переменной окружения (<code>KerberosKeytabVault</code>), либо в S3 (<span data-ver="1.26.9"><code>FileStore:S3KerberosKeytabs</code></span><span data-ver="1.26.7"><code>FileStore:MinioKerberosKeytabs</code></span>).</td></tr>
 </table></div>
 
 <h2>Конфиги, сертификаты, секреты</h2>

@@ -231,8 +231,8 @@
 <tr><td><code>RabbitMQ:LogsDbAdminEventQueueName</code></td><td>строка</td><td>Имя очереди с событиями административных команд БД логов.</td><td><code>logsdbadminevents</code></td></tr>
 <tr><td><code>RabbitMQ:RpaProjectLaunchExchangeName</code></td><td>строка</td><td>Точка обмена для очереди с событиями сброса таблицы RpaProjectLaunches.</td><td><code>rpaprojectlaunch</code></td></tr>
 <tr><td><code>RabbitMQ:RpaProjectLaunchQueueName</code></td><td>строка</td><td>Имя очереди с событиями сброса таблицы RpaProjectLaunches.</td><td><code>rpaprojectlaunch</code></td></tr>
-<tr><td><code>RabbitMQ:AssetCacheInvalidationEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий инвалидации локальных кэшей ассетов (для каждого инстанса своя очередь).</td><td><code>assetcacheinvalidationevents</code></td></tr>
-<tr><td><code>RabbitMQ:AssetCacheInvalidationEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий событий инвалидации локальных кэшей ассетов. Полное имя строится как AssetCacheInvalidationEventQueueTemplateName + Id инстанса.</td><td><code>assetcacheinvalidationevents</code></td></tr>
+<tr data-ver="1.26.9"><td><code>RabbitMQ:AssetCacheInvalidationEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий инвалидации локальных кэшей ассетов (для каждого инстанса своя очередь).</td><td><code>assetcacheinvalidationevents</code></td></tr>
+<tr data-ver="1.26.9"><td><code>RabbitMQ:AssetCacheInvalidationEventQueueTemplateName</code></td><td>строка</td><td>Шаблон имени очереди событий событий инвалидации локальных кэшей ассетов. Полное имя строится как AssetCacheInvalidationEventQueueTemplateName + Id инстанса.</td><td><code>assetcacheinvalidationevents</code></td></tr>
 <tr><td><code>RabbitMQ:PostNotifiedEventQueueName</code></td><td>строка</td><td>Очередь с событиями для внесения изменений в БД после нотификации в States.</td><td><code>postntifiedevents</code></td></tr>
 <tr><td><code>RabbitMQ:RobotNotificationExchangeName</code></td><td>строка</td><td>Точка обмена для очередей с нотификациями от DPA-роботов.</td><td><code>robotnotifications</code></td></tr>
 <tr><td><code>RabbitMQ:KeepAliveRobotEventExchangeName</code></td><td>строка</td><td>Точка обмена для очередей событий KeepAlive роботов (для каждого инстанса своя очередь).</td><td><code>keepaliverobots</code></td></tr>
@@ -287,6 +287,8 @@
 <h3>RobotStart</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
+<tr data-ver="1.26.7"><td><code>RobotStart:OverlayTimeOutInMinutes</code></td><td>число</td><td>Таймаут проверки наложений, мин: для запусков старше этого срока проверка наложения и эксклюзивного запуска не срабатывает; <code>0</code> — без таймаута.</td><td><code>30</code></td></tr>
+<tr data-ver="1.26.7"><td><code>Scheduler:TimeZoneId</code></td><td>строка</td><td>Часовой пояс расписаний и производственного календаря: Windows-имя (<code>Russian Standard Time</code>) или IANA (<code>Europe/Moscow</code>). Не задан — пояс ОС сервера. С 1.26.7.6; в 1.26.9 параметра нет, используется пояс ОС.</td><td><code>—</code></td></tr>
 <tr><td><code>RobotStart:StartWithTracking</code></td><td>bool</td><td>Устаревший: в коде помечен к удалению (всегда true, удалить).</td><td><code>true</code></td></tr>
 <tr><td><code>RobotStart:TimeOutInMinutesForUnlock</code></td><td>число</td><td>Таймаут (минут), после которого с робота снимается блокировка.</td><td><code>5</code></td></tr>
 <tr><td><code>RobotStart:TimeOutInMinutesForStage</code></td><td>число</td><td>Таймаут (минут), после которого стадия считается не завершенной.</td><td><code>5</code></td></tr>
@@ -386,7 +388,7 @@
 <tr><td><code>Assignment:ChainLimiterTriggerEventFromRobot</code></td><td>bool</td><td>Использовать ограничение для потока событий триггеров запуска из роботов.</td><td><code>false</code></td></tr>
 <tr><td><code>Assignment:MaxLastEventsInterval</code></td><td>число</td><td>Максимальный интервал (минут) для отображения последних событий уменьшения/увеличения/переполнения внутренней очереди на главной странице.</td><td><code>5</code></td></tr>
 <tr><td><code>Assignment:EnableIntegralIntensityWidget</code></td><td>bool</td><td>Включить виджет на главной странице.</td><td><code>false</code></td></tr>
-<tr><td><code>Assignment:LaunchTimeoutPeriod</code></td><td>число</td><td>Период в (сек) между последовательными срабатывания сервиса обработки триггеров на останов роботов по таймауту.</td><td><code>30</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Assignment:LaunchTimeoutPeriod</code></td><td>число</td><td>Период в (сек) между последовательными срабатывания сервиса обработки триггеров на останов роботов по таймауту.</td><td><code>30</code></td></tr>
 </table></div>
 <h3>Robot</h3>
 <div class="tbl-wrap"><table>
@@ -471,7 +473,8 @@
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>RpaProjectArchiveUpload:TargetFilePath</code></td><td>строка</td><td>Папка с архивами RPA-проектов (при Store = RpaProjectArchiveStoreType.FileSystem).</td><td><code>—</code> <br><small>при чтении в Startup: <code>null</code></small></td></tr>
 <tr><td><code>RpaProjectArchiveUpload:FileNameTemplate</code></td><td>строка</td><td>Шаблон имени архива RPA-проекта.</td><td><code>{0}.zip</code></td></tr>
-<tr><td><code>RpaProjectArchiveUpload:StoreType</code></td><td>перечисление</td><td>При обновлении на версию 1.26.8.0 не будет учитываться старый параметр DbStore, который нужно будет либо удалить из конфига, либо заменить новым. Значения: <code>FileSystem</code>, <code>LocalDb</code>, <code>S3</code>.</td><td><code>LocalDb</code></td></tr>
+<tr data-ver="1.26.9"><td><code>RpaProjectArchiveUpload:StoreType</code></td><td>перечисление</td><td>При обновлении на версию 1.26.8.0 не будет учитываться старый параметр DbStore, который нужно будет либо удалить из конфига, либо заменить новым. Значения: <code>FileSystem</code>, <code>LocalDb</code>, <code>S3</code>.</td><td><code>LocalDb</code></td></tr>
+<tr data-ver="1.26.7"><td><code>RpaProjectArchiveUpload:DbStore</code></td><td>bool</td><td><code>true</code> — архивы проектов в БД, <code>false</code> — в папке <code>TargetFilePath</code>.</td><td><code>true</code></td></tr>
 </table></div>
 <h3>ScreenFileUpload</h3>
 <div class="tbl-wrap"><table>
@@ -694,9 +697,10 @@
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>FileStore:Type</code></td><td>перечисление</td><td>Где хранить файлы: <code>FileSystem</code> или <code>S3</code>. Значения: <code>FileSystem</code>, <code>S3</code>.</td><td><code>FileSystem</code></td></tr>
 <tr><td><code>FileStore:MainBucketName</code></td><td>строка</td><td>Наименование основного (единственного) бакета. Если пустое значение (по умолчанию), то для хранения дистрибутивов Робота/Агента и архивов проектов будут созданы отдельные бакеты.</td><td><code>&quot;&quot;</code></td></tr>
-<tr><td><code>FileStore:S3KerberosKeytabs</code></td><td>словарь</td><td>До 1.26.8.0 был MinioKerberosKeytab Если Type=FileStoreType.S3, то если не пустой, Keytab будет тоже храниться в S3.</td><td><code>—</code></td></tr>
-<tr><td><code>FileStore:S3KerberosKeytabs:&lt;имя&gt;:BucketName</code></td><td>строка</td><td>Бакет, в котором лежит keytab.</td><td><code>—</code></td></tr>
-<tr><td><code>FileStore:S3KerberosKeytabs:&lt;имя&gt;:ObjectName</code></td><td>строка</td><td>Имя объекта keytab.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:S3KerberosKeytabs</code></td><td>словарь</td><td>До 1.26.8.0 был MinioKerberosKeytab Если Type=FileStoreType.S3, то если не пустой, Keytab будет тоже храниться в S3.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:S3KerberosKeytabs:&lt;имя&gt;:BucketName</code></td><td>строка</td><td>Бакет, в котором лежит keytab.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:S3KerberosKeytabs:&lt;имя&gt;:ObjectName</code></td><td>строка</td><td>Имя объекта keytab.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.7"><td><code>FileStore:MinioKerberosKeytabs:&lt;имя&gt;:BucketName, ObjectName</code></td><td>строка</td><td>Keytab-файл в MinIO по домену: бакет и имя объекта. В 1.26.9 — <code>FileStore:S3KerberosKeytabs</code>.</td><td><code>—</code></td></tr>
 </table></div>
 <h3>DPA</h3>
 <div class="tbl-wrap"><table>
@@ -723,9 +727,9 @@
 <h3>Mqtt</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Mqtt:Url</code></td><td>строка</td><td>Адрес MQTT-брокера.</td><td><code>—</code></td></tr>
-<tr><td><code>Mqtt:Username</code></td><td>строка</td><td>Пользователь MQTT-брокера.</td><td><code>—</code></td></tr>
-<tr><td><code>Mqtt:Password</code></td><td>строка</td><td>Пароль MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Url</code></td><td>строка</td><td>Адрес MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Username</code></td><td>строка</td><td>Пользователь MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Password</code></td><td>строка</td><td>Пароль MQTT-брокера.</td><td><code>—</code></td></tr>
 </table></div>
 <h3>WS</h3>
 <div class="tbl-wrap"><table>
@@ -741,12 +745,13 @@
 <h3>Vault</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Vault:AssetsCredentialsPath</code></td><td>строка</td><td>Путь в Vault для учётных данных ассетов.</td><td><code>asset</code></td></tr>
-<tr><td><code>Vault:AllCredentialsPath</code></td><td>строка</td><td>Путь в Vault для учётных данных.</td><td><code>credentials</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>строка</td><td>Путь в Vault для учётных данных ассетов.</td><td><code>asset</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Vault:AllCredentialsPath</code></td><td>строка</td><td>Путь в Vault для учётных данных.</td><td><code>credentials</code></td></tr>
 </table></div>
 <h3>Security</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
+<tr data-ver="1.26.7"><td><code>Security:Jwt:TokenVersionStore</code></td><td>—</td><td>Хранение версии токенов пользователей в отдельной таблице — чтобы отзыв токенов работал и для пользователей AD и Keycloak. С 1.26.7.18.</td><td><code>—</code></td></tr>
 <tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>число</td><td>Время жизни сессии (JWT), мин.</td><td><code>—</code></td></tr>
 <tr><td><code>Security:EnabledOrigins</code></td><td>массив строк</td><td>Разрешённые источники CORS.</td><td><code>—</code></td></tr>
 <tr><td><code>Security:Password:RequireDigit</code></td><td>bool</td><td>Пароль должен содержать цифру.</td><td><code>true</code></td></tr>
@@ -761,17 +766,17 @@
 <h3>FileStore</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>FileStore:S3</code></td><td>S3Type</td><td>Тип S3-хранилища при <code>FileStore:Type</code> = <code>S3</code>: <code>Minio</code> или <code>Ceph</code>.</td><td><code>Minio</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:S3</code></td><td>S3Type</td><td>Тип S3-хранилища при <code>FileStore:Type</code> = <code>S3</code>: <code>Minio</code> или <code>Ceph</code>.</td><td><code>Minio</code></td></tr>
 <tr><td><code>FileStore:Minio:Endpoint</code></td><td>строка</td><td>Адрес MinIO (хост:порт).</td><td><code>—</code></td></tr>
 <tr><td><code>FileStore:Minio:AccessKey</code></td><td>строка</td><td>Ключ доступа.</td><td><code>—</code></td></tr>
 <tr><td><code>FileStore:Minio:SecretKey</code></td><td>строка</td><td>Секретный ключ (зашифрованный, если не используется внешнее хранилище секретов).</td><td><code>—</code></td></tr>
 <tr><td><code>FileStore:Minio:SSL</code></td><td>bool</td><td>Подключаться по HTTPS.</td><td><code>false</code></td></tr>
-<tr><td><code>FileStore:Minio:IgnoreValidateCert</code></td><td>bool</td><td>Не проверять сертификат.</td><td><code>false</code></td></tr>
-<tr><td><code>FileStore:Ceph:Endpoint</code></td><td>строка</td><td>Адрес Ceph S3.</td><td><code>—</code></td></tr>
-<tr><td><code>FileStore:Ceph:AccessKey</code></td><td>строка</td><td>Ключ доступа.</td><td><code>—</code></td></tr>
-<tr><td><code>FileStore:Ceph:SecretKey</code></td><td>строка</td><td>Секретный ключ.</td><td><code>—</code></td></tr>
-<tr><td><code>FileStore:Ceph:ForcePathStyle</code></td><td>bool</td><td>Адресация в стиле path (bucket в пути URL).</td><td><code>false</code></td></tr>
-<tr><td><code>FileStore:Ceph:IgnoreValidateCert</code></td><td>bool</td><td>Не проверять сертификат.</td><td><code>false</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Minio:IgnoreValidateCert</code></td><td>bool</td><td>Не проверять сертификат.</td><td><code>false</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Ceph:Endpoint</code></td><td>строка</td><td>Адрес Ceph S3.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Ceph:AccessKey</code></td><td>строка</td><td>Ключ доступа.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Ceph:SecretKey</code></td><td>строка</td><td>Секретный ключ.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Ceph:ForcePathStyle</code></td><td>bool</td><td>Адресация в стиле path (bucket в пути URL).</td><td><code>false</code></td></tr>
+<tr data-ver="1.26.9"><td><code>FileStore:Ceph:IgnoreValidateCert</code></td><td>bool</td><td>Не проверять сертификат.</td><td><code>false</code></td></tr>
 </table></div>
 <h3>Redis</h3>
 <div class="tbl-wrap"><table>
@@ -833,6 +838,7 @@
 <h3>Agent</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
+<tr data-ver="1.26.7"><td><code>Agent:CredentialsCheckDelayMsec</code></td><td>число</td><td>Пауза, мс, между первой неуспешной и второй попыткой проверить логин и пароль учётной записи Linux-робота.</td><td><code>3000</code></td></tr>
 <tr><td><code>Agent:DataPath</code></td><td>строка</td><td>Полный путь к папке с данными агента.</td><td><code>—</code></td></tr>
 <tr><td><code>Agent:ProjectZipEncoding</code></td><td>строка</td><td>Кодировка для распаковки архива проекта перед запуском робота.</td><td><code>—</code></td></tr>
 <tr><td><code>Agent:DistribDir</code></td><td>строка</td><td>Относительный путь к папке с дистрибутивами агента.</td><td><code>AgentDistrib</code></td></tr>
@@ -942,13 +948,14 @@
 <h3>Mqtt</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Mqtt:Url</code></td><td>строка</td><td>Адрес MQTT-брокера.</td><td><code>—</code></td></tr>
-<tr><td><code>Mqtt:Username</code></td><td>строка</td><td>Пользователь MQTT-брокера.</td><td><code>—</code></td></tr>
-<tr><td><code>Mqtt:Password</code></td><td>строка</td><td>Пароль MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Url</code></td><td>строка</td><td>Адрес MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Username</code></td><td>строка</td><td>Пользователь MQTT-брокера.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Mqtt:Password</code></td><td>строка</td><td>Пароль MQTT-брокера.</td><td><code>—</code></td></tr>
 </table></div>
 <h3>Параметры верхнего уровня</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
+<tr data-ver="1.26.7"><td><code>SuppressOutputWhenIdle</code></td><td>bool</td><td>Просить RDP-сервер не отрисовывать рабочий стол, пока сессию никто не смотрит. Экономит трафик и CPU, но GUI-активности робота (скриншоты, поиск по изображению, OCR) в такой сессии перестают работать.</td><td><code>false</code></td></tr>
 <tr><td><code>AddressFilter</code></td><td>строка</td><td>Фильтр адресов машин, сессии которых обслуживает этот экземпляр RDP2.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>Host</code></td><td>строка</td><td>Имя/адрес этого экземпляра RDP2.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>RdpClientConnectionUpdateInterval</code></td><td>число</td><td>Период цикла обновления RDP-сессий, мс. Допустимо 1000–60000, иначе приводится к границе.</td><td><code>0 → 1000</code></td></tr>
@@ -1078,9 +1085,9 @@
 <h3>ScreenFileUpload (S3)</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>ScreenFileUpload:S3</code></td><td>S3Type</td><td>Тип S3 при <code>ScreenFileUpload:StoreType</code> = <code>S3</code>: <code>Minio</code> или <code>Ceph</code>.</td><td><code>Minio</code></td></tr>
+<tr data-ver="1.26.9"><td><code>ScreenFileUpload:S3</code></td><td>S3Type</td><td>Тип S3 при <code>ScreenFileUpload:StoreType</code> = <code>S3</code>: <code>Minio</code> или <code>Ceph</code>.</td><td><code>Minio</code></td></tr>
 <tr><td><code>ScreenFileUpload:Minio:*</code></td><td>—</td><td>Параметры MinIO — те же ключи, что <code>FileStore:Minio:*</code> у WebApi.</td><td><code>—</code></td></tr>
-<tr><td><code>ScreenFileUpload:Ceph:*</code></td><td>—</td><td>Параметры Ceph — те же ключи, что <code>FileStore:Ceph:*</code> у WebApi.</td><td><code>—</code></td></tr>
+<tr data-ver="1.26.9"><td><code>ScreenFileUpload:Ceph:*</code></td><td>—</td><td>Параметры Ceph — те же ключи, что <code>FileStore:Ceph:*</code> у WebApi.</td><td><code>—</code></td></tr>
 </table></div>
 <p>Общие секции этой службы (описаны в разделе <a href="#common">«Общие параметры»</a>): <code>Secrets</code>, <code>PostgresWithSslOptions</code>, <code>InstanceInfo</code>, <code>DbConnection</code>, <code>Monitoring</code>.</p>
 <h2 id="states">States</h2>
@@ -1212,6 +1219,7 @@
 <tr><td><code>Email:UseSsl</code></td><td>bool</td><td>Если задан SecureSocketOption - он перекрывает этот параметр.</td><td><code>false</code></td></tr>
 <tr><td><code>Email:UseProtocolLogger</code></td><td>bool</td><td>Если true, то в папке службы будет создат файл smtp.log с логом протокола.</td><td><code>false</code></td></tr>
 <tr><td><code>Email:ClientTimeOut</code></td><td>число</td><td>120000 ms - default value.</td><td><code>120000</code></td></tr>
+<tr data-ver="1.26.7"><td><code>Email:MaxRetryCount</code></td><td>число</td><td>Сколько раз письмо после ошибки возвращается в очередь отправки; дальше оно теряется. В поставочном конфиге — 100.</td><td><code>50</code></td></tr>
 </table></div>
 <h3>RabbitMQ</h3>
 <div class="tbl-wrap"><table>
@@ -1292,7 +1300,7 @@
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>Schedules:RefreshMaterializedViews</code></td><td>словарь</td><td>Расписания обновления мат представлений.</td><td><code>—</code></td></tr>
 <tr><td><code>Schedules:RefreshMaterializedViews:&lt;имя&gt;:CronString</code></td><td>строка</td><td>Расписание обновления (cron).</td><td><code>—</code></td></tr>
-<tr><td><code>Schedules:RefreshMaterializedViews:&lt;имя&gt;:CommandTimeoutInSeconds</code></td><td>число</td><td>Таймаут (сек) команды обновления мат представления (0 - без ограничения).</td><td><code>600</code></td></tr>
+<tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;имя&gt;:CommandTimeoutInSeconds</code></td><td>число</td><td>Таймаут (сек) команды обновления мат представления (0 - без ограничения).</td><td><code>600</code></td></tr>
 </table></div>
 <h3>Integration</h3>
 <div class="tbl-wrap"><table>

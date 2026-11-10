@@ -44,7 +44,8 @@
 <h2>Где хранятся архивы</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr><td><code>RpaProjectArchiveUpload:StoreType</code></td><td>Хранилище архивов: <code>LocalDb</code>, <code>S3</code>, <code>FileSystem</code> (устарело)</td><td><code>LocalDb</code></td></tr>
+  <tr data-ver="1.26.7"><td><code>RpaProjectArchiveUpload:DbStore</code></td><td><code>true</code> — архивы в БД, <code>false</code> — в папке на сервере WebApi</td><td><code>true</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>RpaProjectArchiveUpload:StoreType</code></td><td>Хранилище архивов: <code>LocalDb</code>, <code>S3</code>, <code>FileSystem</code> (устарело)</td><td><code>LocalDb</code></td></tr>
 </table></div>
 <p>Ограничения размера в самом Оркестраторе нет. Ограничивает nginx: <code>client_max_body_size 700m</code> в блоке server.</p>
 

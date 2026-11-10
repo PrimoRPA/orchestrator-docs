@@ -28,26 +28,29 @@
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>FileStore:Type</code></td><td><code>0</code> — файловая система, <code>1</code> — S3</td><td><code>0</code></td></tr>
-  <tr><td><code>FileStore:S3</code></td><td>Реализация S3: <code>0</code> — MinIO, <code>1</code> — Ceph</td><td><code>0</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>FileStore:S3</code></td><td>Реализация S3: <code>0</code> — MinIO, <code>1</code> — Ceph</td><td><code>0</code></td></tr>
   <tr><td><code>FileStore:MainBucketName</code></td><td>Один общий бакет. Пусто — отдельные бакеты по видам данных</td><td>пусто</td></tr>
   <tr><td><code>FileStore:Minio:Endpoint</code></td><td>Адрес MinIO (хост:порт)</td><td>—</td></tr>
   <tr><td><code>FileStore:Minio:AccessKey</code>, <code>SecretKey</code></td><td>Ключи доступа. <code>SecretKey</code> зашифрован</td><td>—</td></tr>
   <tr><td><code>FileStore:Minio:SSL</code></td><td>Подключаться по HTTPS</td><td><code>false</code></td></tr>
   <tr><td><code>FileStore:Minio:IgnoreValidateCert</code></td><td>Не проверять сертификат</td><td><code>false</code></td></tr>
-  <tr><td><code>FileStore:Ceph:Endpoint</code>, <code>AccessKey</code>, <code>SecretKey</code></td><td>То же для Ceph</td><td>—</td></tr>
-  <tr><td><code>FileStore:Ceph:ForcePathStyle</code>, <code>IgnoreValidateCert</code></td><td>Адресация бакета в пути URL; не проверять сертификат</td><td><code>false</code></td></tr>
-  <tr><td><code>FileStore:S3KerberosKeytabs:&lt;домен&gt;</code></td><td><code>BucketName</code> и <code>ObjectName</code> keytab-файла. До 1.26.8 параметр назывался <code>MinioKerberosKeytab</code></td><td>пусто</td></tr>
+  <tr data-ver="1.26.9"><td><code>FileStore:Ceph:Endpoint</code>, <code>AccessKey</code>, <code>SecretKey</code></td><td>То же для Ceph</td><td>—</td></tr>
+  <tr data-ver="1.26.9"><td><code>FileStore:Ceph:ForcePathStyle</code>, <code>IgnoreValidateCert</code></td><td>Адресация бакета в пути URL; не проверять сертификат</td><td><code>false</code></td></tr>
+  <tr data-ver="1.26.7"><td><code>FileStore:MinioKerberosKeytabs:&lt;домен&gt;</code></td><td><code>BucketName</code> и <code>ObjectName</code> keytab-файла в MinIO</td><td>пусто</td></tr>
+  <tr data-ver="1.26.9"><td><code>FileStore:S3KerberosKeytabs:&lt;домен&gt;</code></td><td><code>BucketName</code> и <code>ObjectName</code> keytab-файла. До 1.26.8 параметр назывался <code>MinioKerberosKeytab</code></td><td>пусто</td></tr>
 </table></div>
+<div class="note" data-ver="1.26.7"><p>В 1.26.7 LTS S3 — только MinIO: параметров <code>FileStore:S3</code> и <code>FileStore:Ceph:*</code> нет.</p></div>
 
 <h2>Архивы RPA-проектов: <code>RpaProjectArchiveUpload</code></h2>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th><th>С версии</th></tr>
-  <tr><td><code>RpaProjectArchiveUpload:StoreType</code></td><td><code>1</code> — в БД <code>ltools</code>, <code>2</code> — в S3. <code>0</code> (папка на сервере WebApi) устарел</td><td><code>1</code></td><td><code>2</code> — 1.26.9</td></tr>
+  <tr data-ver="1.26.7"><td><code>RpaProjectArchiveUpload:DbStore</code></td><td><code>true</code> — в БД <code>ltools</code>, <code>false</code> — в папке <code>TargetFilePath</code> на сервере WebApi</td><td><code>true</code></td><td></td></tr>
+  <tr data-ver="1.26.9"><td><code>RpaProjectArchiveUpload:StoreType</code></td><td><code>1</code> — в БД <code>ltools</code>, <code>2</code> — в S3. <code>0</code> (папка на сервере WebApi) устарел</td><td><code>1</code></td><td><code>2</code> — 1.26.9</td></tr>
   <tr><td><code>RpaProjectArchiveUpload:TargetFilePath</code></td><td>Папка архивов для устаревшего <code>StoreType=0</code></td><td>—</td><td></td></tr>
   <tr><td><code>RpaProjectArchiveUpload:FileNameTemplate</code></td><td>Шаблон имени файла для <code>StoreType=0</code></td><td><code>{0}.zip</code></td><td></td></tr>
 </table></div>
-<div class="warn"><p><code>StoreType=2</code> работает, только если в WebApi включён S3: <code>FileStore:Type=1</code>. Иначе загрузка проекта упадёт — заглушка хранилища не реализует запись. Новый тип действует для новых загрузок; уже загруженные версии читаются из того места, куда были сохранены.</p></div>
-<div class="note"><p>При обновлении до 1.26.8 старый параметр <code>DbStore</code> больше не учитывается — удалите его или замените на <code>StoreType</code>.</p></div>
+<div class="warn" data-ver="1.26.9"><p><code>StoreType=2</code> работает, только если в WebApi включён S3: <code>FileStore:Type=1</code>. Иначе загрузка проекта упадёт — заглушка хранилища не реализует запись. Новый тип действует для новых загрузок; уже загруженные версии читаются из того места, куда были сохранены.</p></div>
+<div class="note" data-ver="1.26.9"><p>При обновлении до 1.26.8 старый параметр <code>DbStore</code> больше не учитывается — удалите его или замените на <code>StoreType</code>.</p></div>
 
 <h2>Папки на сервере WebApi</h2>
 <div class="tbl-wrap"><table>

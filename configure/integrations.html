@@ -42,7 +42,7 @@
   <tr><td><code>DbConnection:Items:Analytic:*</code></td><td>Подключение к БД аналитики: <code>Hostname</code>, <code>Port</code>, <code>DbName</code>, <code>UserName</code>, <code>Password</code> и др.</td><td><code>DbName</code> в Docker — <code>ltoolsanalytic</code></td></tr>
   <tr><td><code>Orchestrator:BaseUrl</code></td><td>Адрес WebApi</td><td>—</td></tr>
   <tr><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CronString</code></td><td>Расписание обновления (Quartz cron). Ключи: <code>mv_WorkersUsage</code>, <code>mv_RobotsUsage</code>, <code>mv_DpaEvents</code></td><td>не задано — не обновляются</td></tr>
-  <tr><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
   <tr><td><code>Integration:Unloading</code>, <code>Observability:Unloading</code></td><td>Выгрузки в интеграционные таблицы (<code>Enabled</code>, <code>Items</code> с <code>CronString</code>, <code>ObjectFlow</code>, <code>LeaveIterations</code>)</td><td>выключены</td></tr>
 </table></div>
 <div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>DpaEvents</code>, <code>RobotsUsage</code>, <code>WorkersUsage</code> — без префикса <code>mv_</code>. Код узнаёт только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>

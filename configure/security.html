@@ -50,8 +50,8 @@
 <p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётку в Vault. В UI4 в карточке машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». RDP-учётки в Vault появились в 1.26.8.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётками для ресурсов</td><td><code>asset</code></td></tr>
-  <tr><td><code>Vault:AllCredentialsPath</code></td><td>Подпуть с учётками, из которого выбираются RDP-пользователи машин</td><td><code>credentials</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётками для ресурсов</td><td><code>asset</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>Vault:AllCredentialsPath</code></td><td>Подпуть с учётками, из которого выбираются RDP-пользователи машин</td><td><code>credentials</code></td></tr>
 </table></div>
 <p>Подключение — те же переменные <code>VAULT_*</code> с префиксом <code>WEBAPI_</code>; включать <code>Secrets:External</code> для этого не нужно.</p>
 

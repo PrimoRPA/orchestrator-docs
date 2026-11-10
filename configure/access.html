@@ -50,7 +50,7 @@
   <tr><td><code>ActiveDirectory:MultyTenantsGroup</code></td><td>Мультитенантная AD-авторизация: одна группа AD может быть привязана к ролям разных тенантов. На форме входа появляется переключатель «Мультитенантная AD-авторизация» и выбор тенанта</td><td><code>false</code></td><td></td></tr>
   <tr><td><code>ActiveDirectory:KerberosKeytabVault</code></td><td>Откуда брать keytab: <code>0</code> — из Vault через клиент приложения, <code>1</code> — из переменной окружения <code>KEYTAB_&lt;ДОМЕН&gt;</code> (Base64; точки в имени домена заменяются на <code>_</code>, буквы — заглавные). Не задан — файл <code>KerberosKeytabPath</code> или S3</td><td>не задан</td><td>1.26.4</td></tr>
 </table></div>
-<p>Keytab можно хранить и в S3: <code>FileStore:S3KerberosKeytabs:&lt;домен&gt;</code> с полями <code>BucketName</code>, <code>ObjectName</code> (работает при <code>FileStore:Type=1</code>, см. <a href="storage.html">Хранилища</a>).</p>
+<p>Keytab можно хранить и в S3: <span data-ver="1.26.9"><code>FileStore:S3KerberosKeytabs:&lt;домен&gt;</code></span><span data-ver="1.26.7"><code>FileStore:MinioKerberosKeytabs:&lt;домен&gt;</code></span> с полями <code>BucketName</code>, <code>ObjectName</code> (работает при <code>FileStore:Type=1</code>, см. <a href="storage.html">Хранилища</a>).</p>
 <p>Группы AD привязываются к ролям в UI4: <b>Настройки → Администрирование → Роли пользователей</b>, в карточке роли — «Группы AD».</p>
 
 <h2>Keycloak: секция <code>OpenId:KeyCloak</code></h2>
