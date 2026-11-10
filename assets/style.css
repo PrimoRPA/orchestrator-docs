@@ -211,3 +211,5 @@ body.has-switches .tab-bar { top: 86px; }
 .switches.sw-static { position: static; }
 /* Название группы в меню: не ссылка, страницы за ним нет */
 .side li.grp > span { display: block; padding: 3px 8px; color: var(--fg); }
+/* Путеводитель: пометка, важен ли порядок шагов */
+.route .ord { margin-left: 10px; font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }
