@@ -11,35 +11,7 @@
 <main>
 <h1>Планирование установки</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">До установки нужно принять несколько решений: что ставить, на чём, какие порты открыть и под какими учётными записями всё будет работать. Пройдите шаги по порядку и записывайте ответы в лист планирования внизу страницы — с ним вы придёте к установке.</p>
-<p>Дольше всего обычно идут согласования портов и учётных записей с сетевыми администраторами и службой безопасности — отправьте эти заявки, как только определитесь с вариантом установки.</p>
-
-<h2>Что планируем</h2>
-<figure class="diagram">
-<svg viewBox="0 0 680 230" role="img" aria-labelledby="p1t p1d"><title id="p1t">Что нужно решить до установки</title><desc id="p1d">Пользователи открывают Оркестратор в браузере по адресу и порту. Сервер Оркестратора обменивается данными с машинами роботов и с сервером базы данных. Для каждой части нужно решить: вариант установки, операционную систему, ресурсы, порты и учётные записи.</desc>
-<defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect class="bx" x="20" y="24" width="130" height="64" rx="8"/>
-<text class="t1" x="85" y="50" text-anchor="middle">Браузер</text>
-<text class="t2" x="85" y="70" text-anchor="middle">как входят</text>
-<text class="t3" x="200" y="48" text-anchor="middle">адрес, порт</text>
-<line class="ln" x1="153" y1="56" x2="246" y2="56" marker-end="url(#ar3)"/>
-<rect class="bx-a" x="250" y="24" width="180" height="64" rx="8"/>
-<text class="t1" x="340" y="50" text-anchor="middle">Сервер Оркестратора</text>
-<text class="t2" x="340" y="70" text-anchor="middle">вариант, ОС, ресурсы</text>
-<text class="t3" x="470" y="48" text-anchor="middle">порты</text>
-<line class="ln" x1="434" y1="56" x2="506" y2="56" marker-start="url(#ar3)" marker-end="url(#ar3)"/>
-<rect class="bx-b" x="510" y="24" width="150" height="64" rx="8"/>
-<text class="t1" x="585" y="50" text-anchor="middle">Машины роботов</text>
-<text class="t2" x="585" y="70" text-anchor="middle">сколько, какая ОС</text>
-<line class="ln" x1="340" y1="92" x2="340" y2="146" marker-start="url(#ar3)" marker-end="url(#ar3)"/>
-<text class="t3" x="350" y="123">порт, учётная запись</text>
-<rect class="bx" x="250" y="150" width="180" height="56" rx="8"/>
-<text class="t1" x="340" y="172" text-anchor="middle">Сервер БД</text>
-<text class="t2" x="340" y="192" text-anchor="middle">какая СУБД, где стоит</text>
-</svg>
-</figure>
-
-<h2>Шаги</h2>
+<p class="lead">До установки нужно решить, что ставить, на чём, какие порты открыть и под какими учётными записями всё будет работать. Пройдите шаги по порядку, а ответы записывайте в <a href="checklist.html#sheet">лист планирования</a>.</p>
 <ol class="route">
   <li><span class="stage-t">Разобраться</span>
     <ol class="substeps">
@@ -65,39 +37,6 @@
     </ol>
   </li>
 </ol>
-
-<h2 id="sheet">Лист планирования</h2>
-<p>Заполняйте по ходу шагов. Страницу можно распечатать или перенести таблицу в свою заявку.</p>
-<div class="tbl-wrap"><table>
-  <tr><th style="width:36%">Что решить</th><th style="width:36%">Ваш ответ</th><th>Где решается</th></tr>
-  <tr><td>Версия Оркестратора</td><td></td><td><a href="know.html">Что нужно знать</a></td></tr>
-  <tr><td>Вариант установки: Docker или службы, какая ОС</td><td></td><td><a href="planning-options.html">Выбор варианта развертывания</a></td></tr>
-  <tr><td>Какие службы ставить</td><td></td><td><a href="know.html#services">Что нужно знать</a></td></tr>
-  <tr><td>СУБД и где она стоит</td><td></td><td><a href="planning-options.html">Выбор варианта развертывания</a></td></tr>
-  <tr><td>Сколько серверов и какие ресурсы</td><td></td><td><a href="hardware.html">Требования к железу</a></td></tr>
-  <tr><td>Сколько машин роботов и на какой ОС</td><td></td><td><a href="hardware.html">Требования к железу</a></td></tr>
-  <tr><td>Адрес, по которому откроется Оркестратор</td><td></td><td><a href="network.html">Порты и сетевой трафик</a></td></tr>
-  <tr><td>Порты, которые нужно открыть</td><td></td><td><a href="network.html">Порты и сетевой трафик</a></td></tr>
-  <tr><td>Учётные записи служб и роботов</td><td></td><td><a href="service-accounts.html">Учётные записи и права служб</a></td></tr>
-  <tr><td>Как пользователи будут входить</td><td></td><td><a href="know.html">Что нужно знать</a></td></tr>
-</table></div>
-<details>
-  <summary>Пример: 20 роботов на Windows, Оркестратор на Astra Linux, один сервер</summary>
-  <div class="tbl-wrap"><table>
-    <tr><th>Что решить</th><th>Ответ в примере</th></tr>
-    <tr><td>Версия Оркестратора</td><td>1.26.9</td></tr>
-    <tr><td>Вариант установки: Docker или службы, какая ОС</td><td>службы на Astra Linux, без Docker</td></tr>
-    <tr><td>Какие службы ставить</td><td>обязательные и RDP2, потому что роботы на Windows</td></tr>
-    <tr><td>СУБД и где она стоит</td><td>PostgreSQL на том же сервере</td></tr>
-    <tr><td>Сколько серверов и какие ресурсы</td><td>один сервер; ресурсы — по таблице из «Требований к железу»</td></tr>
-    <tr><td>Сколько машин роботов и на какой ОС</td><td>20 роботов на Windows; число машин — по расчёту из «Требований к железу»</td></tr>
-    <tr><td>Адрес, по которому откроется Оркестратор</td><td><code>https://orchestrator.example.local</code></td></tr>
-    <tr><td>Порты, которые нужно открыть</td><td>по таблице из «Портов»: вход пользователей, сервер ↔ машины роботов</td></tr>
-    <tr><td>Учётные записи служб и роботов</td><td>одна учётная запись для служб на сервере; по учётной записи Windows на каждого робота</td></tr>
-    <tr><td>Как пользователи будут входить</td><td>по логину и паролю Оркестратора</td></tr>
-  </table></div>
-</details>
-<p>Лист — это решения. Что должно быть на руках перед установкой (дистрибутивы, доступы, лицензия), проверяется по списку <a href="checklist.html">Что подготовить</a>.</p>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

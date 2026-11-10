@@ -13,6 +13,32 @@
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Перед планированием проверьте себя по списку ниже. Если на какой-то вопрос нет ответа — откройте страницу рядом: это займёт несколько минут.</p>
 
+<h2>Что планируем</h2>
+<p>На схеме — части будущей установки и то, что по каждой нужно решить до начала.</p>
+<figure class="diagram">
+<svg viewBox="0 0 680 230" role="img" aria-labelledby="p1t p1d"><title id="p1t">Что нужно решить до установки</title><desc id="p1d">Пользователи открывают Оркестратор в браузере по адресу и порту. Сервер Оркестратора обменивается данными с машинами роботов и с сервером базы данных. Для каждой части нужно решить: вариант установки, операционную систему, ресурсы, порты и учётные записи.</desc>
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect class="bx" x="20" y="24" width="130" height="64" rx="8"/>
+<text class="t1" x="85" y="50" text-anchor="middle">Браузер</text>
+<text class="t2" x="85" y="70" text-anchor="middle">как входят</text>
+<text class="t3" x="200" y="48" text-anchor="middle">адрес, порт</text>
+<line class="ln" x1="153" y1="56" x2="246" y2="56" marker-end="url(#ar3)"/>
+<rect class="bx-a" x="250" y="24" width="180" height="64" rx="8"/>
+<text class="t1" x="340" y="50" text-anchor="middle">Сервер Оркестратора</text>
+<text class="t2" x="340" y="70" text-anchor="middle">вариант, ОС, ресурсы</text>
+<text class="t3" x="470" y="48" text-anchor="middle">порты</text>
+<line class="ln" x1="434" y1="56" x2="506" y2="56" marker-start="url(#ar3)" marker-end="url(#ar3)"/>
+<rect class="bx-b" x="510" y="24" width="150" height="64" rx="8"/>
+<text class="t1" x="585" y="50" text-anchor="middle">Машины роботов</text>
+<text class="t2" x="585" y="70" text-anchor="middle">сколько, какая ОС</text>
+<line class="ln" x1="340" y1="92" x2="340" y2="146" marker-start="url(#ar3)" marker-end="url(#ar3)"/>
+<text class="t3" x="350" y="123">порт, учётная запись</text>
+<rect class="bx" x="250" y="150" width="180" height="56" rx="8"/>
+<text class="t1" x="340" y="172" text-anchor="middle">Сервер БД</text>
+<text class="t2" x="340" y="192" text-anchor="middle">какая СУБД, где стоит</text>
+</svg>
+</figure>
+
 <h2>Проверьте себя</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Что нужно понимать</th><th>Где прочитать</th></tr>
