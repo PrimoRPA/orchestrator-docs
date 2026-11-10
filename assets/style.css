@@ -163,3 +163,4 @@ main details[open] > summary { margin-bottom: 8px; }
 .diagram .ln { stroke: var(--muted); stroke-width: 1.2; fill: none; }
 .diagram figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
 
+.route.dots > li::before { content: ""; width: 14px; height: 14px; left: -8px; top: 5px; }
