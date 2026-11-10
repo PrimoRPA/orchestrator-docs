@@ -11,95 +11,19 @@
 <main>
 <h1>Путеводитель</h1>
 <div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Найдите свою задачу — и разделы документации, которые нужно прочитать, в нужном порядке.</p>
+<p class="lead">Найдите свою задачу — под ней разделы документации, которые нужно прочитать, по порядку.</p>
 
-<h2>Что вы хотите сделать</h2>
-<ul class="scenarios">
-  <li><a href="overview.html"><b>Понять, что такое Оркестратор</b><span>Общие сведения</span></a></li>
-  <li><a href="#plan"><b>Спланировать внедрение и посчитать ресурсы</b><span>Планирую внедрение</span></a></li>
-  <li><a href="#install"><b>Поставить Оркестратор с нуля</b><span>Ставлю с нуля</span></a></li>
-  <li><a href="#upgrade"><b>Обновить действующую установку</b><span>Обновляю</span></a></li>
-  <li><a href="#security"><b>Согласовать порты, учётки и защиту с сетью и ИБ</b><span>Отвечаю за сеть и безопасность</span></a></li>
-  <li><a href="#configure"><b>Настроить вход, роботов, очереди, оповещения</b><span>Настраиваю</span></a></li>
-  <li><a href="#work"><b>Опубликовать проект, запустить робота, посмотреть журналы</b><span>Работаю в интерфейсе</span></a></li>
-  <li><a href="#operate"><b>Следить за здоровьем системы</b><span>Сопровождаю</span></a></li>
-  <li><a href="#broken"><b>Разобраться со сбоем</b><span>Что-то сломалось</span></a></li>
-</ul>
-
-<h2 id="plan">Планирую внедрение</h2>
-<ol class="steps">
-  <li>Разберитесь, из чего состоит Оркестратор: <a href="overview.html">Общие сведения</a>, <a href="../reference/concepts.html">Основные понятия</a>. <span class="check">понятно, какие службы и БД нужны</span></li>
-  <li>Выберите версию и проверьте, с чем она работает: <a href="../reference/lifecycle.html">Жизненный цикл версий и LTS</a>, <a href="../reference/compatibility.html">Совместимость продуктов и платформ</a>. <span class="check">выбрана версия Оркестратора, Студии и робота</span></li>
-  <li>Выберите вариант развертывания и оцените ресурсы: <a href="../deploy/planning-options.html">Выбор варианта развертывания</a>, <a href="../deploy/hardware.html">Требования к железу</a>. <span class="check">понятно, сколько серверов и машин роботов нужно</span></li>
+<ol class="route">
+  <li><a href="overview.html">Понять, что такое Оркестратор</a><p><a href="overview.html">Общие сведения</a>, <a href="../reference/concepts.html">Основные понятия</a>.</p></li>
+  <li><a href="../deploy/planning.html">Спланировать внедрение</a><p><a href="../deploy/know.html">Что нужно знать</a> → <a href="../deploy/planning-options.html">Выбор варианта</a> → <a href="../deploy/hardware.html">Железо</a> → <a href="../deploy/network.html">Порты</a> → <a href="../deploy/service-accounts.html">Учётные записи</a> → <a href="../deploy/checklist.html">Что подготовить</a>. Порты и учётные записи — то, что согласуют с сетью и ИБ.</p></li>
+  <li><a href="../deploy/install.html">Поставить Оркестратор с нуля</a><p><a href="../deploy/install.html">Установка</a> → <a href="../deploy/agent.html">Машины роботов и агент</a> → <a href="../deploy/first-run.html">Первый запуск</a> → <a href="../deploy/verify.html">Проверка установки</a>.</p></li>
+  <li><a href="../upgrade/index.html">Обновить действующую установку</a><p><a href="../upgrade/before.html">Лицензия и бэкап</a> → <a href="../upgrade/config-changes.html">Изменения в конфигах</a> → <a href="../upgrade/order.html">Порядок обновления</a> → <a href="../deploy/verify.html">Проверка установки</a>. Переезд — <a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a>.</p></li>
+  <li><a href="../configure/index.html">Настроить под свою организацию</a><p><a href="../configure/access.html">Вход и доступ</a>, <a href="../configure/security.html">Безопасность</a>, <a href="../configure/robots-rdp.html">Запуск роботов</a>, <a href="../configure/project-queue.html">Очередь проектов</a>, <a href="../configure/notifications.html">Почта</a> и <a href="../configure/index.html">другие страницы раздела</a>.</p></li>
+  <li><a href="../work/index.html">Работать в интерфейсе</a><p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>, дальше — <a href="../work/robots.html">Роботы</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">Задания и триггеры</a>, <a href="../work/logs.html">Журналы</a>. Привыкли к старому интерфейсу — <a href="../work/ui2-to-ui4.html">UI2 → UI4</a>.</p></li>
+  <li><a href="../operate/index.html">Следить за здоровьем системы</a><p><a href="../operate/monitoring.html">Мониторинг</a>, <a href="../operate/service-logs.html">Журналы служб</a>, <a href="../operate/events.html">События</a>; регулярно — <a href="../operate/db-maintenance.html">Обслуживание БД</a> и <a href="../operate/backup.html">Резервное копирование</a>.</p></li>
+  <li><a href="../troubleshoot/index.html">Разобраться со сбоем</a><p>Найдите свой симптом в <a href="../troubleshoot/index.html">Неполадках</a>.</p></li>
+  <li><a href="../reference/index.html">Найти параметр, порт или файл</a><p><a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/ports.html">Порты</a>, <a href="../reference/components.html">Компоненты и службы</a>, <a href="../reference/delivery.html">Комплект поставки</a>, <a href="../reference/glossary.html">Глоссарий</a>.</p></li>
 </ol>
-
-<h2 id="install">Ставлю с нуля</h2>
-<ol class="steps">
-  <li>Спланируйте установку: <a href="../deploy/planning.html">Планирование установки</a> — что нужно знать, вариант, железо, порты, учётные записи и в конце чек-лист <a href="../deploy/checklist.html">Что подготовить</a>. <span class="check">дистрибутивы, СУБД и учётные записи готовы</span></li>
-  <li>Установите серверную часть по странице своей ОС: <a href="../deploy/install-docker.html">в Docker</a> или службами — <a href="../deploy/install-services.html#astra">Astra Linux</a>, <a href="../deploy/install-services.html#redos">РЕД ОС</a>, <a href="../deploy/install-services.html#ubuntu">Ubuntu</a> или <a href="../deploy/install-services.html#windows">Windows Server</a>. На Linux службы работают без root. <span class="check">службы запущены, UI4 открывается</span></li>
-  <li>Подключите машины роботов: <a href="../deploy/agent.html">Машины роботов и агент</a>. <span class="check">машина в списке «Машины роботов» доступна</span></li>
-  <li>Выполните <a href="../deploy/first-run.html">Первый запуск</a> и <a href="../deploy/verify.html">Проверку установки</a>. <span class="check">тестовый RPA-проект выполнился на роботе</span></li>
-</ol>
-
-<h2 id="upgrade">Обновляю</h2>
-<ol class="steps">
-  <li>Проверьте лицензию и сделайте резервные копии: <a href="../upgrade/before.html">Перед обновлением: лицензия и бэкап</a>. <span class="check">лицензия будет действовать на новой версии, копии БД и конфигов сделаны</span></li>
-  <li>Проверьте, что Студии и роботы будут работать с новой версией: <a href="../reference/compatibility.html">Совместимость продуктов и платформ</a>. <span class="check">целевая версия выбрана</span></li>
-  <li>Посмотрите, что поменялось в конфигах: <a href="../upgrade/config-changes.html">Изменения в конфигах между LTS</a>. <span class="check">список правок конфигов готов</span></li>
-  <li>Обновите по шагам своей платформы: <a href="../upgrade/order.html">Порядок обновления: Windows, Linux, Docker</a>. <span class="check">все службы и агенты на новой версии</span></li>
-</ol>
-<p>Переезжаете на другой сервер или другую СУБД — см. <a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a>.</p>
-
-<h2 id="security">Отвечаю за сеть и безопасность</h2>
-<ul>
-  <li>Какие порты открыть и между чем: <a href="../deploy/network.html">Порты и сетевой трафик</a>, полный список — <a href="../reference/ports.html">Порты</a>.</li>
-  <li>Под какими учётками работают службы и какие права им нужны: <a href="../deploy/service-accounts.html">Учётные записи и права служб</a>, <a href="../deploy/install-services.html#linux-rootless">Linux: службы работают без root</a>.</li>
-  <li>Шифрование паролей, ключи, сертификаты, Vault: <a href="../configure/security.html">Безопасность</a>.</li>
-  <li>Вход через AD, SSO, Keycloak: <a href="../configure/access.html">Вход и доступ</a>.</li>
-</ul>
-
-<h2 id="configure">Настраиваю</h2>
-<div class="tbl-wrap"><table>
-  <tr><th>Задача</th><th>Страница</th></tr>
-  <tr><td>Вход через AD, Keycloak, права и роли</td><td><a href="../configure/access.html">Вход и доступ</a></td></tr>
-  <tr><td>Шифрование паролей, секреты, Vault, сертификаты</td><td><a href="../configure/security.html">Безопасность</a></td></tr>
-  <tr><td>RDP-сессии и запуск роботов</td><td><a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a></td></tr>
-  <tr><td>Стратегия и параметры очереди проектов</td><td><a href="../configure/project-queue.html">Очередь проектов</a></td></tr>
-  <tr><td>Почта, уведомления, подписки</td><td><a href="../configure/notifications.html">Почта и оповещения</a></td></tr>
-  <tr><td>Файлы, S3 (MinIO, Ceph)</td><td><a href="../configure/storage.html">Хранилища</a></td></tr>
-  <tr><td>Вебхуки, ArcSight, CyberArk и другие системы</td><td><a href="../configure/integrations.html">Интеграции</a></td></tr>
-  <tr><td>Несколько узлов, Redis, кластер</td><td><a href="../configure/scaling.html">Масштабирование и отказоустойчивость</a></td></tr>
-</table></div>
-
-<h2 id="work">Работаю в интерфейсе</h2>
-<p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>. Дальше — по разделам меню UI4: <a href="../work/robots.html">Роботы и машины</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">Задания и триггеры</a>, <a href="../work/queues.html">Очереди</a>, <a href="../work/logs.html">Журналы</a>, <a href="../work/dashboards.html">Дашборды и аналитика</a>, <a href="../work/administration.html">Администрирование</a>.</p>
-<p>Привыкли к старому интерфейсу — откройте <a href="../work/ui2-to-ui4.html">Где это теперь: UI2 → UI4</a>.</p>
-
-<h2 id="operate">Сопровождаю</h2>
-<ul>
-  <li>Здоровье системы: <a href="../operate/monitoring.html">Мониторинг и метрики</a>, <a href="../operate/service-logs.html">Журналы служб</a>, <a href="../operate/events.html">События и их коды</a>.</li>
-  <li>Регулярные работы: <a href="../operate/db-maintenance.html">Обслуживание БД</a>, <a href="../operate/backup.html">Резервное копирование и восстановление</a>.</li>
-</ul>
-
-<h3 id="broken">Что-то сломалось</h3>
-<div class="tbl-wrap"><table>
-  <tr><th>Симптом</th><th>Страница</th></tr>
-  <tr><td>Задание не стартует по расписанию или триггеру</td><td><a href="../troubleshoot/job-not-started.html">Задание не запускается по расписанию или триггеру</a></td></tr>
-  <tr><td>Не срабатывает триггер по почте</td><td><a href="../troubleshoot/email-trigger.html">Не срабатывает триггер по почте</a></td></tr>
-  <tr><td>Проект висит в очереди</td><td><a href="../troubleshoot/project-queue.html">Проект висит в очереди и не уходит на робота</a></td></tr>
-  <tr><td>Запуск завис на 50 % или 75 %</td><td><a href="../troubleshoot/robot-not-starting.html">Робот не запускается: запуск завис на 50 % или 75 %</a></td></tr>
-  <tr><td>Робот останавливается сам или не останавливается</td><td><a href="../troubleshoot/robot-stops.html">Робот останавливается сам или не останавливается по кнопке</a></td></tr>
-  <tr><td>Нет RDP-сессии у робота</td><td><a href="../troubleshoot/rdp.html">Сессия робота не поднимается или не видна в консоли</a></td></tr>
-  <tr><td>Пустой журнал робота</td><td><a href="../troubleshoot/logs-empty.html">Журнал робота пустой или не открывается</a></td></tr>
-  <tr><td>Проблемы с лицензией</td><td><a href="../troubleshoot/license.html">Нет валидной лицензии или робот не получает лицензию</a></td></tr>
-  <tr><td>Не открывается веб-интерфейс</td><td><a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></td></tr>
-  <tr><td>Всё медленно</td><td><a href="../troubleshoot/slow.html">Оркестратор и БД работают медленно</a></td></tr>
-  <tr><td>Не пускает через AD или Keycloak</td><td><a href="../troubleshoot/login.html">Не получается войти через AD, SSO или Keycloak</a></td></tr>
-  <tr><td>Пользователь не видит папки или разделы</td><td><a href="../troubleshoot/access.html">Пользователь не видит папки, проекты или разделы</a></td></tr>
-</table></div>
-
-<h2>Ищу конкретный параметр, порт или файл</h2>
-<p>Сразу в <a href="../reference/index.html">Справочник</a>: <a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/components.html">Компоненты и службы</a>, <a href="../reference/ports.html">Порты</a>, <a href="../reference/delivery.html">Комплект поставки</a>, <a href="../reference/glossary.html">Глоссарий</a>.</p>
 
 <div class="src">Источники: структура разделов — <code>draft/assets/nav.js</code>; названия меню UI4 — UI4: <code>src/shared/config/menuConfig.ts</code>, <code>src/shared/lib/translations/ru/common.json</code>, <code>src/shared/lib/translations/ru/machines.json</code>.</div>
 </main>
