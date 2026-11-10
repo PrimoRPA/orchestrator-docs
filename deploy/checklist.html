@@ -11,7 +11,7 @@
 <main>
 <h1>Что подготовить</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Последний шаг планирования: проверьте, что все решения приняты, и соберите всё по списку. Если каждый пункт отмечен, установка пройдёт без остановок на согласования и поиски дистрибутивов.</p>
+<p class="lead">Последний шаг планирования: проверьте, что все решения приняты, и соберите всё по списку. Пункты сгруппированы по тем, кто их выполняет, — так их удобно раздавать.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="download.html">Дистрибутивы</a></div>
   <div><b>Результат</b>всё готово к установке</div>
@@ -48,73 +48,57 @@
     <tr><td>Как пользователи будут входить</td><td>по логину и паролю Оркестратора</td></tr>
   </table></div>
 </details>
-<p>Ниже — что должно быть на руках перед установкой.</p>
 
-<h2>Дистрибутивы</h2>
-<ul>
+<h2 id="list">Что должно быть на руках</h2>
+<p>Отмечайте готовое — отметки сохраняются в вашем браузере.</p>
+
+<h3>Вы сами</h3>
+<ul class="check">
   <li>Архивы под ваш вариант установки скачаны — список и адреса на странице <a href="download.html">Дистрибутивы</a>.</li>
   <li>Дистрибутив робота — его загружают в Оркестратор после установки.</li>
-  <li>Утилита <code>PasswordEncryptor</code> — чтобы зашифровать пароли для конфигов.</li>
-  <li>Тестовый RPA-проект — понадобится на шаге <a href="../deploy/verify.html">Проверка установки</a>.</li>
+  <li>Утилита PasswordEncryptor — чтобы зашифровать пароли для конфигов.</li>
+  <li>Тестовый RPA-проект — понадобится на шаге <a href="verify.html">Проверка установки</a>.</li>
+  <li>Известно, кому отправлять запрос на лицензию: запрос формируется в интерфейсе уже установленного Оркестратора и отправляется вендору — см. <a href="first-run.html">Первый запуск</a>.</li>
 </ul>
 
-<h2>Серверы и ОС</h2>
-<ul>
-  <li>Сервер(ы) под выбранный <a href="../deploy/planning-options.html">вариант</a> и <a href="../deploy/hardware.html">ресурсы</a>.</li>
-  <li>Docker: Docker Engine с плагином <code>docker compose</code> (в compose используются <code>depends_on</code> с <code>condition</code> и <code>healthcheck.start_interval</code>).</li>
-  <li>Linux без Docker: nginx из репозитория дистрибутива (<code>apt</code> или <code>dnf</code>); от пакета нужны <code>/usr/sbin/nginx</code> и <code>/etc/nginx/mime.types</code>.</li>
-  <li>Машины роботов с ОС под агент; на Linux — пакет <code>expect</code> (<code>/usr/bin/expect</code>) и sudo.</li>
+<h3>Администратор серверов</h3>
+<ul class="check">
+  <li>Сервер или серверы под выбранный <a href="planning-options.html">вариант</a> и <a href="hardware.html">ресурсы</a>, с поддерживаемой версией ОС — см. <a href="../reference/compatibility.html">Совместимость</a>.</li>
+  <li>У вас есть права администратора на этих серверах.</li>
+  <li>Время на серверах и машинах роботов синхронизировано.</li>
+  <li data-only="docker">Установлен Docker Engine с плагином <code>docker compose</code>.</li>
+  <li data-only="linux">Установлен nginx из репозитория вашего дистрибутива (<code>apt</code> или <code>dnf</code>).</li>
+  <li>RabbitMQ установлен, для служб создан пользователь. <span data-only="docker">В Docker RabbitMQ уже есть в compose-файле.</span></li>
+  <li>Машины роботов готовы; на машинах с Linux установлены пакет <code>expect</code> и <code>sudo</code>.</li>
+  <li>Созданы учётные записи ОС из таблицы <a href="service-accounts.html#request">Что заказать</a>: для служб, для агента, для роботов.</li>
 </ul>
 
-<h2>СУБД</h2>
-<ul>
-  <li>PostgreSQL. <span data-only="docker">В Docker PostgreSQL 14 идёт в compose.</span></li>
-  <li data-only="windows">Или MS SQL Server — только для служб на Windows Server.</li>
-  <li>Базы: <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, <code>ltoolslogs</code>, <code>ltoolsanalytic</code>, <code>ltoolsnuget</code>. Либо создайте их заранее, либо дайте пользователю миграций право создавать БД.</li>
-  <li>Пользователь для работы и пользователь для миграций (может быть один).</li>
+<h3>Администратор БД</h3>
+<ul class="check">
+  <li>PostgreSQL установлен. <span data-only="docker">В Docker PostgreSQL 14 уже есть в compose-файле.</span><span data-only="windows"> Вместо него можно MS SQL Server — только для служб на Windows Server.</span></li>
+  <li>Базы <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, <code>ltoolslogs</code>, <code>ltoolsanalytic</code>, <code>ltoolsnuget</code> созданы — или пользователю миграций дано право создавать БД.</li>
+  <li>Созданы пользователь для работы и пользователь для миграций (может быть один).</li>
 </ul>
 
-<h2>RabbitMQ</h2>
-<ul>
-  <li>Сервер RabbitMQ (в Docker — образ <code>rabbitmq:3-management</code> в compose), порт <code>5672</code>.</li>
-  <li>Пользователь и пароль для служб.</li>
+<h3>Сетевой администратор</h3>
+<ul class="check">
+  <li>Есть внешний адрес Оркестратора — DNS-имя или IP, по которому его увидят пользователи, роботы и агенты.</li>
+  <li>Открыты порты по таблице <a href="network.html#request">Что открыть между машинами</a>.</li>
+  <li>Если нужны письма с оповещениями — известны адрес и порт почтового сервера и учётная запись для отправки.</li>
 </ul>
 
-<h2>Сеть и DNS</h2>
-<ul>
-  <li>Внешний адрес Оркестратора (DNS-имя или IP), по которому его увидят пользователи, роботы и агенты. Он прописывается в <code>RobotDeployment:OrchBaseUrl</code>, <code>RobotDeployment:RobotLogsBaseUrl</code>, <code>NuGet:NuGetBaseUrl</code>, <code>RDP:RdpBaseUrl</code>.</li>
-  <li>Открыты порты по таблице <a href="../deploy/network.html">Порты и сетевой трафик</a>: <code>44392</code> к nginx, <code>5002</code> от WebApi к агентам, порты роботов от WebApi к машинам роботов.</li>
-  <li>SMTP-сервер для оповещений (адрес, порт, учётная запись) — если нужны письма.</li>
+<h3>Служба безопасности</h3>
+<ul class="check">
+  <li>Выпущен сертификат на внешнее имя Оркестратора, есть файл сертификата и закрытый ключ. Сертификат, который лежит в репозитории рядом с конфигами nginx, выпущен для внутреннего стенда и для промышленной установки не подходит.</li>
+  <li>Для промышленной установки заданы свои значения <code>PRIMOSALT</code> (соль шифрования паролей в конфигах) и <code>PRIMOSIGNINGKEY</code> (ключ подписи токенов) — одинаковые на всех службах и агентах. Задать их нужно до того, как шифровать пароли утилитой.</li>
 </ul>
-
-<h2>Сертификаты</h2>
-<ul>
-  <li>Сертификат и ключ для nginx. Конфиги ждут файлы <code>cert1.crt</code> и <code>cert1.rsa</code> рядом с <code>nginx.conf</code>.</li>
-  <li>Выпустите сертификат на внешнее имя Оркестратора. Сертификат, лежащий в репозитории рядом с конфигами nginx, выпущен для внутреннего стенда и для продуктива не подходит.</li>
-</ul>
-
-<h2>Учётные записи</h2>
-<ul>
-  <li>Пользователь ОС для служб на Linux (службы работают без root) — см. <a href="../deploy/service-accounts.html">Учётные записи и права служб</a>.</li>
-  <li>На машинах роботов Linux: пользователь агента (<code>agent</code>) и группа <code>primo-rpa</code>, пользователи роботов.</li>
-  <li>На машинах роботов Windows: пользователи, от имени которых будут запускаться роботы (RDP-пользователи).</li>
-</ul>
-
-<h2>Секреты</h2>
-<ul>
-  <li>Решите, задаёте ли свои <code>PRIMOSALT</code> (соль шифрования паролей в конфигах) и <code>PRIMOSIGNINGKEY</code> (ключ подписи токенов). Для промышленной установки задавайте свои — одинаковые на всех службах и агентах, и до шифрования паролей утилитой.</li>
-</ul>
-
-<h2>Лицензии</h2>
-<ul>
-  <li>Контакт вендора для обмена файлами: запрос на лицензию формируется в UI уже установленного Оркестратора и отправляется вендору. См. <a href="../deploy/first-run.html">Первый запуск</a>.</li>
-</ul>
-
 
 <h2>Что дальше</h2>
 <div class="next">
   <a href="install.html">Установка<small>Docker или службы — выберите путь</small></a>
 </div>
+
+
 
 
 </main>

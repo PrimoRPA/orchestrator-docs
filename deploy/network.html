@@ -11,40 +11,83 @@
 <main>
 <h1>Порты и сетевой трафик</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Здесь — всё для заявки на открытие портов: какие порты слушают службы Оркестратора, агент и робот и кто к кому обращается.</p>
-
+<p class="lead">Здесь — всё для заявки на открытие портов: сначала короткий список того, что нужно открыть между машинами, ниже — справка по всем портам.</p>
 <p>Согласование портов с сетевыми администраторами и службой безопасности обычно идёт дольше всего остального — отправьте заявку, как только определитесь с вариантом установки.</p>
 
-<h2>Порты служб Оркестратора</h2>
-<p>Порты — значения из поставки по умолчанию. Для установки на Windows и Linux они совпадают (одинаковые <code>upstream</code> в <code>nginx.win.conf</code> и <code>nginx.linux.conf</code>).</p>
+<h2 id="request">Что открыть между машинами</h2>
+<figure class="diagram">
+<svg viewBox="0 0 680 250" role="img" aria-labelledby="n1t n1d"><title id="n1t">Сетевой трафик Оркестратора</title><desc id="n1d">Пользователи и машины роботов обращаются к серверу Оркестратора на порт 44392. Сервер обращается к агенту на машине робота на порт 5002 и к роботу на его порт, к базе данных на порт 5432 и к RabbitMQ на порт 5672.</desc>
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect class="bx" x="20" y="34" width="130" height="64" rx="8"/>
+<text class="t1" x="85" y="60" text-anchor="middle">Пользователи</text>
+<text class="t2" x="85" y="80" text-anchor="middle">браузер</text>
+<text class="t3" x="200" y="58" text-anchor="middle">44392</text>
+<line class="ln" x1="153" y1="66" x2="246" y2="66" marker-end="url(#ar4)"/>
+<rect class="bx-a" x="250" y="34" width="180" height="64" rx="8"/>
+<text class="t1" x="340" y="60" text-anchor="middle">Сервер Оркестратора</text>
+<text class="t2" x="340" y="80" text-anchor="middle">nginx и службы</text>
+<text class="t3" x="470" y="44" text-anchor="middle">5002, порт робота</text>
+<line class="ln" x1="434" y1="52" x2="506" y2="52" marker-end="url(#ar4)"/>
+<line class="ln" x1="506" y1="82" x2="434" y2="82" marker-end="url(#ar4)"/>
+<text class="t3" x="470" y="100" text-anchor="middle">44392</text>
+<rect class="bx-b" x="510" y="34" width="150" height="64" rx="8"/>
+<text class="t1" x="585" y="60" text-anchor="middle">Машины роботов</text>
+<text class="t2" x="585" y="80" text-anchor="middle">агент и роботы</text>
+<path class="ln" d="M300 102 L300 136 L230 136 L230 166" marker-end="url(#ar4)"/>
+<text class="t3" x="222" y="130" text-anchor="end">5432</text>
+<path class="ln" d="M380 102 L380 136 L450 136 L450 166" marker-end="url(#ar4)"/>
+<text class="t3" x="458" y="130">5672</text>
+<rect class="bx" x="140" y="170" width="180" height="56" rx="8"/>
+<text class="t1" x="230" y="192" text-anchor="middle">Сервер БД</text>
+<text class="t2" x="230" y="212" text-anchor="middle">если отдельно</text>
+<rect class="bx" x="360" y="170" width="180" height="56" rx="8"/>
+<text class="t1" x="450" y="192" text-anchor="middle">RabbitMQ</text>
+<text class="t2" x="450" y="212" text-anchor="middle">если отдельно</text>
+</svg>
+</figure>
+<div class="tbl-wrap"><table>
+  <tr><th>Откуда</th><th>Куда</th><th>Порт</th><th>Зачем</th></tr>
+  <tr><td>Компьютеры пользователей</td><td>Сервер Оркестратора</td><td><code>44392</code>, HTTPS</td><td>веб-интерфейс</td></tr>
+  <tr><td>Машины роботов</td><td>Сервер Оркестратора</td><td><code>44392</code>, HTTPS</td><td>обращения агента и роботов к Оркестратору</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Машины роботов</td><td><code>5002</code>, HTTPS</td><td>команды агенту</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Машины роботов</td><td>порт робота, HTTPS</td><td>прямые обращения к роботу; порт указан в карточке робота</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Сервер БД</td><td><code>5432</code></td><td>только если PostgreSQL на отдельном сервере</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>RabbitMQ</td><td><code>5672</code></td><td>только если RabbitMQ на отдельном сервере</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Машина с RDP2</td><td><code>5102</code>, HTTPS</td><td>только если RDP2 на отдельной машине</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Почтовый сервер</td><td>порт вашего SMTP-сервера</td><td>только если нужны письма с оповещениями</td></tr>
+  <tr><td>Ваш Prometheus</td><td>Сервер Оркестратора</td><td><code>10052</code></td><td>только если собираете метрики</td></tr>
+</table></div>
+<div class="warn" data-only="docker"><p><b>Docker публикует на сервере больше портов, чем нужно снаружи.</b> Кроме <code>44392</code> (веб-интерфейс) и <code>8081</code> (NuGet2), compose-файл открывает <code>5432</code> (PostgreSQL) и <code>15672</code> (консоль RabbitMQ). Если они не должны быть видны из сети — уберите их из <code>ports</code> в compose-файле или закройте файерволом.</p></div>
+
+<h2 id="reference">Справка: все порты</h2>
+<p>Значения из поставки по умолчанию, одинаковые для Windows и Linux. Если все службы стоят на одном сервере, открывать эти порты наружу не нужно: службы обращаются друг к другу внутри сервера<span data-only="docker">, а в Docker — внутри сети compose по именам контейнеров</span>.</p>
+<h3>Службы Оркестратора</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
   <tr><td>nginx (UI и прокси)</td><td><code>44392</code></td><td>HTTPS</td><td>Браузеры пользователей, роботы, агенты — единая внешняя точка входа</td></tr>
-  <tr><td>WebApi</td><td><code>5001</code></td><td>HTTP</td><td>nginx (<code>/api/</code>, <code>/events/</code> — WebSocket); службы RobotLogs, Queues, Licenses, States, Analytic, MCP</td></tr>
-  <tr><td>Queues</td><td><code>5088</code></td><td>HTTP</td><td>nginx (<code>/queues/</code>, <code>/api/robotnotificationevents</code>)</td></tr>
-  <tr><td>Licenses</td><td><code>5089</code></td><td>HTTP</td><td>nginx (<code>/licenses/</code>, <code>/api/robotlicenseresponses</code>)</td></tr>
-  <tr><td>RobotLogs</td><td><code>56748</code></td><td>HTTP</td><td>nginx (<code>/logs/</code>, POST/PUT на <code>/api/robotlogs</code>); WebApi</td></tr>
+  <tr><td>WebApi</td><td><code>5001</code></td><td>HTTP</td><td>nginx; службы RobotLogs, Queues, Licenses, States, Analytic, MCP</td></tr>
+  <tr><td>Queues</td><td><code>5088</code></td><td>HTTP</td><td>nginx</td></tr>
+  <tr><td>Licenses</td><td><code>5089</code></td><td>HTTP</td><td>nginx</td></tr>
+  <tr><td>RobotLogs</td><td><code>56748</code></td><td>HTTP</td><td>nginx; WebApi</td></tr>
   <tr><td>Analytic</td><td><code>56749</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
   <tr><td>States</td><td><code>56750</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
   <tr><td>Notifications</td><td><code>56751</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
   <tr><td>LogEventsWebhook</td><td><code>56770</code></td><td>HTTP</td><td>Только проверка состояния</td></tr>
   <tr><td>MachineInfo</td><td><code>5051</code></td><td>HTTP</td><td>WebApi (<code>License:MachineInfoUrl</code>)</td></tr>
-  <tr><td>NuGet2</td><td><code>8081</code></td><td>HTTP</td><td>nginx (<code>/nuget/</code>)</td></tr>
-  <tr><td>RDP2</td><td><code>5102</code></td><td>HTTPS, WebSocket</td><td>nginx (<code>/rdpstream/</code>, <code>/rdpsessions/</code>)</td></tr>
-  <tr><td>MCP Server</td><td><code>5080</code></td><td>HTTP</td><td>nginx (<code>/mcp</code>)</td></tr>
+  <tr><td>NuGet2</td><td><code>8081</code></td><td>HTTP</td><td>nginx</td></tr>
+  <tr><td>RDP2</td><td><code>5102</code></td><td>HTTPS, WebSocket</td><td>nginx</td></tr>
+  <tr><td>MCP Server</td><td><code>5080</code></td><td>HTTP</td><td>nginx</td></tr>
   <tr><td>Метрики Prometheus (каждая служба)</td><td><code>10052</code></td><td>HTTP</td><td>Ваш Prometheus. Параметр <code>Monitoring:Port</code></td></tr>
 </table></div>
-<p>Службы без маршрута в nginx (Analytic, States, Notifications, LogEventsWebhook) получают работу через RabbitMQ; их HTTP-порт нужен только для <code>/health</code>.</p>
-
-<h2>Агент и робот</h2>
+<p>Analytic, States, Notifications и LogEventsWebhook получают работу через RabbitMQ; их HTTP-порт нужен только для проверки состояния.</p>
+<h3>Агент и робот</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Кто слушает</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
   <tr><td>Агент на машине робота</td><td><code>5002</code></td><td>HTTPS</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code> (по умолчанию <code>5002</code>) и <code>Tenants:Agent:Https</code> (<code>true</code>)</td></tr>
   <tr><td>Робот</td><td>порт робота</td><td>HTTPS</td><td>WebApi обращается напрямую: <code>https://&lt;IP машины&gt;:&lt;порт робота&gt;/LTools.Robot/RobotService/api/…</code></td></tr>
 </table></div>
 <p>В обратную сторону агент и роботы ходят только на внешний адрес Оркестратора (nginx, <code>44392</code>). Этот адрес WebApi передаёт им из <code>RobotDeployment:OrchBaseUrl</code> и <code>RobotDeployment:RobotLogsBaseUrl</code>; агент получает его в заголовке <code>orchestrator-url</code>, если в его конфиге не задан <code>Orchestrator:BaseUrl</code>.</p>
-
-<h2>Инфраструктура</h2>
+<h3>Инфраструктура</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Сервис</th><th>Порт</th><th>Кто обращается</th></tr>
   <tr><td>PostgreSQL</td><td><code>5432</code></td><td>WebApi, RobotLogs, Analytic, Licenses, NuGet2</td></tr>
@@ -53,16 +96,11 @@
   <tr><td>SMTP</td><td><code>Email:FromSmtpPort</code> (в образе — <code>465</code>)</td><td>Notifications</td></tr>
 </table></div>
 
-<div data-only="docker">
-<h2>Docker</h2>
-<p>В <code>docker-compose.yml</code> на хост опубликованы только: <code>44392</code> (UI), <code>8081</code> (NuGet2), <code>5432</code> (PostgreSQL), <code>15672</code> (консоль RabbitMQ). Остальные службы общаются внутри сети compose по именам (<code>web-api:5001</code> и т. д.).</p>
-<div class="warn"><p>Если PostgreSQL и консоль RabbitMQ не должны быть видны из сети — уберите их из <code>ports</code> в compose или закройте файерволом.</p></div>
-</div>
-
 <h2>Что дальше</h2>
 <div class="next">
   <a href="service-accounts.html">Учётные записи и права служб<small>от кого будут работать службы и агент</small></a>
 </div>
+
 
 
 

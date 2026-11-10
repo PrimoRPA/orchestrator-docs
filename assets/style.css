@@ -213,3 +213,10 @@ body.has-switches .tab-bar { top: 86px; }
 .side li.grp > span { display: block; padding: 3px 8px; color: var(--fg); }
 /* Путеводитель: пометка, важен ли порядок шагов */
 .route .ord { margin-left: 10px; font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+/* Чек-лист с галочками */
+main ul.check { list-style: none; padding-left: 0; }
+main ul.check > li { margin: 6px 0; }
+main ul.check label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+main ul.check input { margin: 5px 0 0; flex: none; width: 15px; height: 15px; accent-color: var(--accent); }
+main ul.check input:checked + span { color: var(--muted); }
+main ul.check label a { cursor: pointer; }

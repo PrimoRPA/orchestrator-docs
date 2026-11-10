@@ -10,41 +10,45 @@
 <body data-root="../" data-page="deploy/planning-options">
 <main>
 <h1>Выбор варианта развертывания</h1>
-<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Здесь вы выберете способ установки, СУБД и число серверов: какие варианты поддерживает поставка 1.26.9 и чем они отличаются.</p>
-
-<h2>Варианты</h2>
-<div class="tbl-wrap"><table>
-  <tr><th>Вариант</th><th>Что в поставке</th><th>Особенности</th></tr>
-  <tr data-only="docker"><td><b>Docker Compose</b></td><td>Файл <code>docker-compose.yml</code>, образы служб на базе <code>ubuntu:24.04</code>, <code>nginx.conf</code>, сертификат <code>cert1.crt</code>/<code>cert1.rsa</code></td><td>В compose уже есть PostgreSQL 14 и RabbitMQ 3. Файлы хранятся в томах Docker. RDP2 в compose нет — ставится отдельно.</td></tr>
-  <tr data-only="linux"><td><b>Службы Linux</b> (systemd)</td><td>Архивы <code>*-linux.zip</code> с файлами юнитов; конфиг <code>nginx.linux.conf</code> и юнит <code>Primo.Orchestrator.Nginx.service</code></td><td>Каждая служба — в <code>/opt/Primo/&lt;Имя&gt;</code>. Для каждой есть два юнита: системный (от root) и пользовательский (<code>systemctl --user</code>, не от root).</td></tr>
-  <tr data-only="windows"><td><b>Службы Windows + nginx</b></td><td>Архивы без суффикса, <code>nginx.win.conf</code></td><td>Службы работают как службы Windows. nginx раздаёт UI и проксирует запросы.</td></tr>
-</table></div>
-
-<div class="note"><p>Во всех вариантах снаружи открыт один адрес — nginx на порту <code>44392</code> по HTTPS. Остальные службы слушают HTTP на своих портах и видны только nginx и друг другу. Подробно — <a href="../deploy/network.html">Порты и сетевой трафик</a>.</p></div>
-
-<h2>СУБД</h2>
-<p>Основная СУБД — PostgreSQL: она подходит для всех вариантов. <span data-only="windows">MS SQL Server — только при установке служб на Windows Server; на Linux и в Docker — только PostgreSQL.</span> Тип задаётся параметром <code>DBVendor</code> (по умолчанию <code>Postgres</code>).</p>
-
-<h2>Один сервер или несколько</h2>
-<p>Конфиги nginx в поставке рассчитаны на один сервер: все службы указаны как <code>127.0.0.1:&lt;порт&gt;</code>. Чтобы разнести службы:</p>
-<ul>
-  <li>в <code>nginx.conf</code> поменяйте адреса в блоках <code>upstream</code>;</li>
-  <li>в службах поменяйте адреса зависимостей: <code>RabbitMQ:Host</code>, <code>DbConnection:Items:&lt;БД&gt;:Hostname</code>, <code>Orchestrator:BaseUrl</code> (адрес WebApi), в WebApi — <code>License:MachineInfoUrl</code> и <code>RobotLogs:BaseUrl</code>.</li>
-</ul>
-<p>RDP2 удобно ставить на отдельную машину: в Docker-конфиге nginx его адрес задаётся явно, потому что RDP2 работает вне compose.</p>
+<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Здесь вы выберете способ установки, СУБД и число серверов. Ответы запишите в <a href="checklist.html#sheet">лист планирования</a>.</p>
 
 <h2>Как выбрать</h2>
 <ul>
-  <li data-only="docker">Нужен быстрый стенд или пилот на Linux — Docker.</li>
-  <li data-only="linux">Linux-сервер без Docker (Astra, Ubuntu, РЕД ОС) — службы Linux.</li>
-  <li data-only="windows">Windows-сервер — службы Windows с nginx. Вариант с IIS не поддерживается.</li>
+  <li>Нужен быстрый стенд или пилот на Linux — <b>Docker</b>.</li>
+  <li>Linux-сервер без Docker (Astra, Ubuntu, РЕД ОС) — <b>службы Linux</b>.</li>
+  <li>Windows-сервер — <b>службы Windows</b>. Вариант с IIS не поддерживается.</li>
+</ul>
+<p>Поставка рассчитана на один сервер — с него и начинайте, если нет своих требований к отказоустойчивости.</p>
+
+<h2>Чем варианты отличаются</h2>
+<div class="tbl-wrap"><table>
+  <tr><th></th><th>Docker</th><th>Службы Linux</th><th>Службы Windows</th></tr>
+  <tr><td>Как работают службы</td><td>контейнеры на базе Ubuntu 24.04, описаны в одном compose-файле</td><td>службы systemd — от root или от обычного пользователя</td><td>службы Windows</td></tr>
+  <tr><td>С чем придётся работать</td><td>Docker и <code>docker compose</code></td><td>systemd и nginx</td><td>службы Windows и nginx</td></tr>
+  <tr><td>СУБД</td><td>PostgreSQL 14 уже в compose-файле</td><td>PostgreSQL, ставится отдельно</td><td>PostgreSQL или MS SQL Server, ставится отдельно</td></tr>
+  <tr><td>RabbitMQ</td><td>уже в compose-файле</td><td>ставится отдельно</td><td>ставится отдельно</td></tr>
+  <tr><td>RDP2 (нужен, если роботы на Windows)</td><td>в compose-файле нет — ставится отдельно</td><td>ставится как служба</td><td>ставится как служба</td></tr>
+  <tr><td>Где лежат файлы</td><td>в томах Docker</td><td>в каталогах <code>/opt/Primo/&lt;служба&gt;</code></td><td>в каталогах служб</td></tr>
+</table></div>
+<p>Что входит в поставку каждого варианта и где это скачать — <a href="download.html">Дистрибутивы</a>.</p>
+<p>Во всех вариантах снаружи открыт один адрес — nginx на порту <code>44392</code> по HTTPS. Остальные службы видны только nginx и друг другу. Подробно — <a href="network.html">Порты и сетевой трафик</a>.</p>
+
+<h2>СУБД</h2>
+<p>PostgreSQL подходит для всех вариантов. MS SQL Server — только если службы стоят на Windows Server; на Linux и в Docker — только PostgreSQL.</p>
+
+<h2>Один сервер или несколько</h2>
+<ul>
+  <li><b>Один сервер.</b> Конфигурация из поставки: все службы на одной машине. С неё начинают.</li>
+  <li><b>RDP2 на отдельной машине.</b> Удобно, если роботов на Windows много: RDP-сессии занимают память и процессор. Расчёт — в <a href="hardware.html">Требованиях к железу</a>.</li>
+  <li><b>Несколько узлов.</b> Нужны для отказоустойчивости. Как разнести службы и что поменять в конфигах — <a href="../configure/scaling.html">Масштабирование и отказоустойчивость</a>.</li>
 </ul>
 
 <h2>Что дальше</h2>
 <div class="next">
   <a href="hardware.html">Требования к железу<small>сколько ресурсов нужно под выбранный вариант</small></a>
 </div>
+
 
 
 

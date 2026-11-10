@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "7.1.0", at: "10.11.2026 16:33" };
+const BUILD = { ver: "7.2.0", at: "10.11.2026 16:39" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -287,6 +287,19 @@ const TREE = [
       const target = el.matches("tr") ? el.cells[0] : (el.querySelector("h2, h3, summary") || el);
       if (el.matches("tr, li, span, p")) target.prepend(tag); else target.append(tag);
     });
+  });
+  // Чек-лист: галочки запоминаются в браузере читателя
+  document.querySelectorAll("main ul.check > li").forEach((li, i) => {
+    const key = "chk:" + page + ":" + i;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    try { cb.checked = localStorage.getItem(key) === "1"; } catch (e) {}
+    cb.onchange = () => { try { localStorage.setItem(key, cb.checked ? "1" : "0"); } catch (e) {} };
+    const lab = document.createElement("label");
+    lab.append(cb);
+    const sp = document.createElement("span");
+    while (li.firstChild) sp.append(li.firstChild);
+    lab.append(sp); li.append(lab);
   });
   const DEF = { platform: "linux", ver: "1.26.9" };
   const ap = document.querySelector("main .applies");
