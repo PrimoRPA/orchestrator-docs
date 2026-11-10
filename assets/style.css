@@ -172,15 +172,20 @@ main details[open] > summary { margin-bottom: 8px; }
 .route > li > .stage-t { font-weight: 600; font-size: 17px; }
 .auto-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
-/* Переключатель платформы */
-.applies { font-size: 13px; }
-.pswitch { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.pswitch button { font: inherit; font-size: 13px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
-.pswitch button:hover { border-color: var(--accent); }
-.pswitch button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+/* Переключатели «Версия» и «Платформа» */
+.switches { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 2px 0 18px; }
+.sw { display: inline-flex; align-items: center; gap: 8px; }
+.sw-l { font-size: 12px; color: var(--muted); }
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; }
+.seg button { font: inherit; font-size: 13px; line-height: 1; padding: 6px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.seg button:hover { color: var(--fg); }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--accent); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px var(--line); }
 body[data-platform="docker"] main [data-only]:not([data-only~="docker"]),
 body[data-platform="linux"] main [data-only]:not([data-only~="linux"]),
-body[data-platform="windows"] main [data-only]:not([data-only~="windows"]) { display: none !important; }
+body[data-platform="windows"] main [data-only]:not([data-only~="windows"]),
+body[data-ver="1.26.7"] main [data-ver]:not([data-ver~="1.26.7"]),
+body[data-ver="1.26.9"] main [data-ver]:not([data-ver~="1.26.9"]) { display: none !important; }
 .ptag { display: inline-block; font-size: 11px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; margin: 0 6px; vertical-align: middle; line-height: 18px; }
-body[data-platform] .ptag { display: none; }
-@media print { main [data-only] { display: revert !important; } }
+.ptag-ver { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+body[data-platform] .ptag-platform, body[data-ver] .ptag-ver { display: none; }
+@media print { main [data-only], main [data-ver] { display: revert !important; } .switches { display: none; } }

@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.6.0", at: "10.11.2026 12:30" };
+const BUILD = { ver: "4.7.0", at: "10.11.2026 12:35" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -277,51 +277,69 @@ const TREE = [
     });
   });
 
-  // Переключатель платформы: «Применимо» → Все · Docker · Linux · Windows Server; выбор общий для сайта
-  const PL = { Docker: "docker", Linux: "linux", Windows: "windows" };
-  const PL_NAME = { docker: "Docker", linux: "Linux", windows: "Windows Server" };
-  document.querySelectorAll("main [data-only]").forEach((el) => {
-    const tag = document.createElement("span");
-    tag.className = "ptag";
-    tag.textContent = el.dataset.only.split(" ").map((k) => PL_NAME[k]).join(" · ");
-    const target = el.matches("tr") ? el.cells[0] : (el.querySelector("h2, h3, summary") || el);
-    if (el.matches("tr") || el.matches("li") || el.matches("span")) target.prepend(tag);
-    else target.append(tag);
+  // Переключатели «Версия» и «Платформа» вместо строки «Применимо». Выбор общий для сайта, по умолчанию «Все».
+  // Разметка текста: data-only="docker|linux|windows" (можно несколько), data-ver="1.26.7|1.26.9".
+  const DIM = {
+    platform: { attr: "only", names: { docker: "Docker", linux: "Linux", windows: "Windows Server" }, from: { Docker: "docker", Linux: "linux", Windows: "windows" } },
+    ver: { attr: "ver", names: { "1.26.7": "1.26.7 LTS", "1.26.9": "1.26.9" }, from: { "1.26.9": "1.26.9" } },
+  };
+  Object.entries(DIM).forEach(([dim, d]) => {
+    document.querySelectorAll(`main [data-${d.attr}]`).forEach((el) => {
+      const tag = document.createElement("span");
+      tag.className = "ptag ptag-" + dim;
+      tag.textContent = el.dataset[d.attr].split(" ").map((k) => d.names[k] || k).join(" · ");
+      const target = el.matches("tr") ? el.cells[0] : (el.querySelector("h2, h3, summary") || el);
+      if (el.matches("tr, li, span, p")) target.prepend(tag); else target.append(tag);
+    });
   });
   const ap = document.querySelector("main .applies");
-  const plats = ap ? [...ap.querySelectorAll("span")].filter((s) => PL[s.textContent.trim()]) : [];
-  if (plats.length >= 2) {
-    const keys = plats.map((s) => PL[s.textContent.trim()]);
-    const bar = document.createElement("span");
-    bar.className = "pswitch";
-    bar.setAttribute("role", "group");
-    bar.setAttribute("aria-label", "Платформа");
-    const opts = [["all", "Все"], ...keys.map((k) => [k, PL_NAME[k]])];
-    const btns = opts.map(([k, t]) => {
-      const b = document.createElement("button");
-      b.type = "button"; b.dataset.p = k; b.textContent = t;
-      b.onclick = () => { try { localStorage.setItem("platform", k); } catch (e) {} applyPlatform(k); };
-      bar.append(b);
-      return b;
-    });
-    plats.forEach((s) => s.remove());
-    ap.append(bar);
-    const applyPlatform = (p) => {
-      const on = keys.includes(p) ? p : "all";
-      btns.forEach((b) => b.setAttribute("aria-pressed", b.dataset.p === on));
-      if (on === "all") delete document.body.dataset.platform; else document.body.dataset.platform = on;
-      document.querySelectorAll(".tabs").forEach((box) => {
-        const tabs = [...box.children].filter((n) => n.matches("section.tab"));
-        const tb = [...box.querySelectorAll(".tab-bar button")];
-        const fits = tabs.map((t) => on === "all" || (t.dataset.os || t.id) === on);
-        if (on !== "all" && !fits.some(Boolean)) { tb.forEach((b) => (b.hidden = false)); return; }
-        tb.forEach((b, i) => (b.hidden = !fits[i]));
-        const curTab = tabs.findIndex((t) => !t.hidden);
-        if (curTab >= 0 && !fits[curTab]) tb[fits.indexOf(true)].click();
+  if (ap) {
+    const spans = [...ap.querySelectorAll(":scope > span")];
+    const groups = [];
+    const plat = spans.filter((s) => DIM.platform.from[s.textContent.trim()]).map((s) => DIM.platform.from[s.textContent.trim()]);
+    const verSpan = spans.find((s) => DIM.ver.from[s.textContent.trim()]);
+    if (verSpan) groups.push(["ver", "Версия", ["1.26.7", "1.26.9"]]);
+    if (plat.length >= 2) groups.push(["platform", "Платформа", plat]);
+    if (groups.length) {
+      const box = document.createElement("div");
+      box.className = "switches";
+      const apply = {};
+      groups.forEach(([dim, label, keys]) => {
+        const d = DIM[dim];
+        const wrap = document.createElement("span");
+        wrap.className = "sw";
+        wrap.innerHTML = `<span class="sw-l">${label}</span>`;
+        const seg = document.createElement("span");
+        seg.className = "seg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", label);
+        const btns = [["all", "Все"], ...keys.map((k) => [k, d.names[k]])].map(([k, t]) => {
+          const bt = document.createElement("button");
+          bt.type = "button"; bt.dataset.k = k; bt.textContent = t;
+          bt.onclick = () => { try { localStorage.setItem("sw:" + dim, k); } catch (e) {} apply[dim](k); };
+          seg.append(bt); return bt;
+        });
+        wrap.append(seg); box.append(wrap);
+        apply[dim] = (p) => {
+          const on = keys.includes(p) ? p : "all";
+          btns.forEach((x) => x.setAttribute("aria-pressed", x.dataset.k === on));
+          if (on === "all") delete document.body.dataset[dim]; else document.body.dataset[dim] = on;
+          if (dim !== "platform") return;
+          document.querySelectorAll(".tabs").forEach((tb) => {
+            const tabs = [...tb.children].filter((n) => n.matches("section.tab"));
+            const bs = [...tb.querySelectorAll(".tab-bar button")];
+            const fits = tabs.map((t) => on === "all" || (t.dataset.os || t.id) === on);
+            if (on !== "all" && !fits.some(Boolean)) { bs.forEach((x) => (x.hidden = false)); return; }
+            bs.forEach((x, i) => (x.hidden = !fits[i]));
+            const curTab = tabs.findIndex((t) => !t.hidden);
+            if (curTab >= 0 && !fits[curTab]) bs[fits.indexOf(true)].click();
+          });
+        };
       });
-    };
-    let saved = "all";
-    try { saved = localStorage.getItem("platform") || "all"; } catch (e) {}
-    applyPlatform(saved);
+      ap.replaceWith(box);
+      Object.keys(apply).forEach((dim) => {
+        let saved = "all";
+        try { saved = localStorage.getItem("sw:" + dim) || (dim === "platform" && localStorage.getItem("platform")) || "all"; } catch (e) {}
+        apply[dim](saved);
+      });
+    }
   }
 })();
