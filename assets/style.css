@@ -18,7 +18,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.6 system
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 14px;
+.top { position: sticky; top: 0; z-index: 5; height: 48px; box-sizing: border-box; display: flex; align-items: center; gap: 14px;
   padding: 10px 20px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .brand { color: var(--fg); font-size: 16px; }
 .draft { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px;
@@ -29,7 +29,7 @@ a:hover { text-decoration: underline; }
 .menu-btn { display: none; font-size: 20px; background: none; border: 0; color: var(--fg); cursor: pointer; }
 
 .layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); max-width: 1280px; margin: 0 auto; }
-.side { position: sticky; top: 53px; height: calc(100vh - 53px); overflow: auto; padding: 16px 12px 40px;
+.side { position: sticky; top: 48px; height: calc(100vh - 48px); overflow: auto; padding: 16px 12px 40px;
   border-right: 1px solid var(--line); font-size: 14px; }
 .side details { margin-bottom: 4px; }
 .side summary { cursor: pointer; font-weight: 600; padding: 5px 8px; border-radius: 6px; list-style: none; }
@@ -101,7 +101,7 @@ ol.sections span { display: block; font-size: 13px; color: var(--muted); }
 
 @media (max-width: 860px) {
   .layout { grid-template-columns: 1fr; }
-  .side { display: none; position: fixed; inset: 53px 0 0 0; background: var(--bg); z-index: 4; height: auto; }
+  .side { display: none; position: fixed; inset: 48px 0 0 0; background: var(--bg); z-index: 4; height: auto; }
   body.nav-open .side { display: block; }
   .menu-btn { display: block; }
   .ver { display: none; }
@@ -112,7 +112,7 @@ ol.sections span { display: block; font-size: 13px; color: var(--muted); }
 
 /* Вкладки */
 .tabs { border: 1px solid var(--line); border-radius: 12px; padding: 0 20px 8px; margin: 16px 0 6px; background: var(--bg); }
-.tab-bar { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 0 -4px 12px; position: sticky; top: 53px; background: inherit; z-index: 2; }
+.tab-bar { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 0 -4px 12px; position: sticky; top: 48px; background: inherit; z-index: 2; }
 .tab-bar button { font: inherit; font-size: 15px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 14px 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 .tab-bar button:hover { color: var(--fg); }
 .tab-bar button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
