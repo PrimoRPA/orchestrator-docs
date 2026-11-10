@@ -18,31 +18,31 @@
 <figure class="diagram">
 <svg viewBox="0 0 680 250" role="img" aria-labelledby="n1t n1d"><title id="n1t">Сетевой трафик Оркестратора</title><desc id="n1d">Пользователи и машины роботов обращаются к серверу Оркестратора на порт 44392. Сервер обращается к агенту на машине робота на порт 5002 и к роботу на его порт, к базе данных на порт 5432 и к RabbitMQ на порт 5672.</desc>
 <defs><marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect class="bx" x="20" y="34" width="130" height="64" rx="8"/>
-<text class="t1" x="85" y="60" text-anchor="middle">Пользователи</text>
-<text class="t2" x="85" y="80" text-anchor="middle">браузер</text>
-<text class="t3" x="200" y="58" text-anchor="middle">44392</text>
-<line class="ln" x1="153" y1="66" x2="246" y2="66" marker-end="url(#ar4)"/>
-<rect class="bx-a" x="250" y="34" width="180" height="64" rx="8"/>
-<text class="t1" x="340" y="60" text-anchor="middle">Сервер Оркестратора</text>
-<text class="t2" x="340" y="80" text-anchor="middle">nginx и службы</text>
-<text class="t3" x="470" y="44" text-anchor="middle">5002, порт робота</text>
-<line class="ln" x1="434" y1="52" x2="506" y2="52" marker-end="url(#ar4)"/>
-<line class="ln" x1="506" y1="82" x2="434" y2="82" marker-end="url(#ar4)"/>
-<text class="t3" x="470" y="100" text-anchor="middle">44392</text>
-<rect class="bx-b" x="510" y="34" width="150" height="64" rx="8"/>
-<text class="t1" x="585" y="60" text-anchor="middle">Машины роботов</text>
-<text class="t2" x="585" y="80" text-anchor="middle">агент и роботы</text>
-<path class="ln" d="M300 102 L300 136 L230 136 L230 166" marker-end="url(#ar4)"/>
-<text class="t3" x="222" y="130" text-anchor="end">5432</text>
-<path class="ln" d="M380 102 L380 136 L450 136 L450 166" marker-end="url(#ar4)"/>
-<text class="t3" x="458" y="130">5672</text>
-<rect class="bx" x="140" y="170" width="180" height="56" rx="8"/>
-<text class="t1" x="230" y="192" text-anchor="middle">Сервер БД</text>
-<text class="t2" x="230" y="212" text-anchor="middle">если отдельно</text>
-<rect class="bx" x="360" y="170" width="180" height="56" rx="8"/>
-<text class="t1" x="450" y="192" text-anchor="middle">RabbitMQ</text>
-<text class="t2" x="450" y="212" text-anchor="middle">если отдельно</text>
+<rect class="bx" x="20" y="34" width="120" height="64" rx="8"/>
+<text class="t1" x="80" y="60" text-anchor="middle">Пользователи</text>
+<text class="t2" x="80" y="80" text-anchor="middle">браузер</text>
+<text class="t3" x="185" y="58" text-anchor="middle">44392</text>
+<line class="ln" x1="143" y1="66" x2="226" y2="66" marker-end="url(#ar4)"/>
+<rect class="bx-a" x="230" y="34" width="170" height="64" rx="8"/>
+<text class="t1" x="315" y="60" text-anchor="middle">Сервер Оркестратора</text>
+<text class="t2" x="315" y="80" text-anchor="middle">nginx и службы</text>
+<text class="t3" x="460" y="44" text-anchor="middle">5002, порт робота</text>
+<line class="ln" x1="404" y1="52" x2="516" y2="52" marker-end="url(#ar4)"/>
+<line class="ln" x1="516" y1="82" x2="404" y2="82" marker-end="url(#ar4)"/>
+<text class="t3" x="460" y="100" text-anchor="middle">44392</text>
+<rect class="bx-b" x="520" y="34" width="140" height="64" rx="8"/>
+<text class="t1" x="590" y="60" text-anchor="middle">Машины роботов</text>
+<text class="t2" x="590" y="80" text-anchor="middle">агент и роботы</text>
+<path class="ln" d="M280 102 L280 136 L210 136 L210 166" marker-end="url(#ar4)"/>
+<text class="t3" x="202" y="130" text-anchor="end">5432</text>
+<path class="ln" d="M350 102 L350 136 L420 136 L420 166" marker-end="url(#ar4)"/>
+<text class="t3" x="428" y="130">5672</text>
+<rect class="bx" x="120" y="170" width="180" height="56" rx="8"/>
+<text class="t1" x="210" y="192" text-anchor="middle">Сервер БД</text>
+<text class="t2" x="210" y="212" text-anchor="middle">если отдельно</text>
+<rect class="bx" x="330" y="170" width="180" height="56" rx="8"/>
+<text class="t1" x="420" y="192" text-anchor="middle">RabbitMQ</text>
+<text class="t2" x="420" y="212" text-anchor="middle">если отдельно</text>
 </svg>
 </figure>
 <div class="tbl-wrap"><table>
