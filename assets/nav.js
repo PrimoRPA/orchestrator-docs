@@ -1,11 +1,11 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 const TREE = [
-  { id: "start", title: "Начало работы", who: "для всех", items: [
+  { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
     ["overview", "Общие сведения"],
     ["where-to-start", "Путеводитель"],
   ]},
-  { id: "deploy", title: "Развертывание", who: "сисадмину", items: [
+  { id: "deploy", title: "Развертывание", task: "поставить с нуля", items: [
     ["planning", "Планирование установки", [
       ["know", "Что нужно знать"],
       ["planning-options", "Выбор варианта развертывания"],
@@ -22,14 +22,14 @@ const TREE = [
     ["first-run", "Первый запуск"],
     ["verify", "Проверка установки"],
   ]},
-  { id: "upgrade", title: "Обновление", who: "сисадмину", items: [
+  { id: "upgrade", title: "Обновление", task: "перейти на новую версию", items: [
     ["before", "Перед обновлением: лицензия и бэкап"],
     ["config-changes", "Изменения в конфигах между LTS"],
     ["order", "Порядок обновления: Windows, Linux, Docker"],
     ["from-root", "Переход с root на работу без root"],
     ["migrate", "Перенос на другой сервер или СУБД"],
   ]},
-  { id: "configure", title: "Настройка", who: "сисадмину", items: [
+  { id: "configure", title: "Настройка", task: "настроить под себя", items: [
     ["access", "Вход и доступ"],
     ["security", "Безопасность"],
     ["robots-rdp", "Запуск роботов и RDP-сессии"],
@@ -39,14 +39,14 @@ const TREE = [
     ["integrations", "Интеграции"],
     ["scaling", "Масштабирование и отказоустойчивость"],
   ]},
-  { id: "operate", title: "Сопровождение", who: "сисадмину и поддержке", items: [
+  { id: "operate", title: "Сопровождение", task: "следить и обслуживать", items: [
     ["monitoring", "Мониторинг и метрики"],
     ["events", "События и их коды"],
     ["db-maintenance", "Обслуживание БД"],
     ["backup", "Резервное копирование и восстановление"],
     ["service-logs", "Журналы служб"],
   ]},
-  { id: "work", title: "Работа в Оркестраторе", who: "администратору и пользователю", items: [
+  { id: "work", title: "Работа в Оркестраторе", task: "работать в интерфейсе", items: [
     ["quickstart", "Быстрый старт"],
     ["robots", "Роботы и машины"],
     ["projects", "RPA-проекты"],
@@ -57,7 +57,7 @@ const TREE = [
     ["administration", "Администрирование"],
     ["ui2-to-ui4", "Где это теперь: UI2 → UI4"],
   ]},
-  { id: "troubleshoot", title: "Неполадки", who: "всем, по симптомам", items: [
+  { id: "troubleshoot", title: "Неполадки", task: "разобраться со сбоем", items: [
     ["job-not-started", "Задание не запускается по расписанию или триггеру"],
     ["email-trigger", "Не срабатывает триггер по почте"],
     ["project-queue", "Проект висит в очереди и не уходит на робота"],
@@ -71,7 +71,7 @@ const TREE = [
     ["login", "Не получается войти через AD, SSO или Keycloak"],
     ["access", "Пользователь не видит папки, проекты или разделы"],
   ]},
-  { id: "reference", title: "Справочник", who: "тем, кто знает, что ищет", items: [
+  { id: "reference", title: "Справочник", task: "найти параметр, порт, файл", items: [
     ["concepts", "Основные понятия"],
     ["compatibility", "Совместимость продуктов и платформ"],
     ["lifecycle", "Жизненный цикл версий и LTS"],
@@ -165,7 +165,7 @@ const TREE = [
   const secBox = document.getElementById("sections");
   if (secBox) {
     secBox.innerHTML = "<ol class='sections'>" + TREE.map((s) =>
-      `<li><a href="${href(s.id + "/")}">${s.title}</a><span>${s.who}</span></li>`).join("") + "</ol>";
+      `<li><a href="${href(s.id + "/")}">${s.title}</a><span>${s.task}</span></li>`).join("") + "</ol>";
   }
 
   // Вкладки: <div class="tabs" data-key="…" [data-detect="1"]><section class="tab" id data-title data-os>
