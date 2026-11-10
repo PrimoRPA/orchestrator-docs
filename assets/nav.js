@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.5.0", at: "10.11.2026 12:22" };
+const BUILD = { ver: "4.5.1", at: "10.11.2026 12:23" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -131,15 +131,22 @@ const TREE = [
   const list = (sec, items) => "<ul>" + items.map(([slug, title, kids]) =>
     li(`${sec.id}/${slug}`, title) + (kids ? `<li class="kids">${list(sec, kids)}</li>` : "")
   ).join("") + "</ul>";
+  // Какие разделы меню открыты — помним между страницами (пользователь мог оставить их открытыми специально)
+  let openSecs = [];
+  try { openSecs = JSON.parse(localStorage.getItem("nav:open") || "[]"); } catch (e) { openSecs = []; }
   nav.innerHTML = TREE.map((sec, i) => {
-    const open = cur.sec && cur.sec.id === sec.id;
-    return `<details ${open ? "open" : ""}>
+    const open = (cur.sec && cur.sec.id === sec.id) || openSecs.includes(sec.id);
+    return `<details data-sec="${sec.id}" ${open ? "open" : ""}>
       <summary><span class="n">${i + 1}</span>${sec.title}</summary>
       ${sec.id === "start" ? "" : `<a class="sec-link ${page === sec.id + "/" ? "cur" : ""}" href="${href(sec.id + "/")}">Обзор раздела</a>`}
       ${list(sec, sec.items)}
     </details>`;
   }).join("");
 
+  nav.querySelectorAll("details").forEach((d) => d.addEventListener("toggle", () => {
+    const ids = [...nav.querySelectorAll("details[open]")].map((x) => x.dataset.sec);
+    try { localStorage.setItem("nav:open", JSON.stringify(ids)); } catch (e) {}
+  }));
   const main = document.querySelector("main");
   const wrap = document.createElement("div");
   wrap.className = "layout";
