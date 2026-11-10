@@ -45,22 +45,59 @@
       <li><a href="../upgrade/order.html">Порядок обновления</a> <span>— службы, агенты, роботы</span></li>
       <li><a href="../deploy/verify.html">Проверка установки</a> <span>— всё работает на новой версии</span></li>
     </ol>
-    <p>Переезд на другой сервер или СУБД — <a href="../upgrade/migrate.html">Перенос</a>.</p>
+  </li>
+  <li><a href="../upgrade/migrate.html">Переехать на другой сервер или СУБД</a>
+    <ol class="substeps">
+      <li><a href="../upgrade/before.html">Перед обновлением</a> <span>— лицензия и бэкап</span></li>
+      <li><a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a> <span>— что перенести и что будет с лицензиями</span></li>
+      <li><a href="../deploy/verify.html">Проверка установки</a> <span>— всё работает на новом месте</span></li>
+    </ol>
   </li>
   <li><a href="../configure/index.html">Настроить под свою организацию</a>
-    <p>В любом порядке: <a href="../configure/access.html">вход и доступ</a>, <a href="../configure/security.html">безопасность</a>, <a href="../configure/robots-rdp.html">запуск роботов</a>, <a href="../configure/project-queue.html">очередь проектов</a>, <a href="../configure/notifications.html">почта</a> и <a href="../configure/index.html">другие страницы раздела</a>.</p>
+    <ol class="substeps">
+      <li><a href="../configure/access.html">Вход и доступ</a> <span>— AD, SSO, Keycloak, права и роли</span></li>
+      <li><a href="../configure/security.html">Безопасность</a> <span>— пароли в конфигах, Vault, сертификаты</span></li>
+      <li><a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a> <span>— как запускаются роботы и живут сессии</span></li>
+      <li><a href="../configure/project-queue.html">Очередь проектов</a> <span>— кто первым получит робота</span></li>
+      <li><a href="../configure/notifications.html">Почта и оповещения</a> <span>— SMTP, оповещения, почтовые триггеры</span></li>
+      <li><a href="../configure/storage.html">Хранилища</a> <span>— файлы, S3, общие папки</span></li>
+      <li><a href="../configure/integrations.html">Интеграции</a> <span>— вебхуки, аналитика, внешние системы</span></li>
+      <li><a href="../configure/scaling.html">Масштабирование и отказоустойчивость</a> <span>— несколько узлов, кластер</span></li>
+    </ol>
   </li>
   <li><a href="../work/index.html">Работать в интерфейсе</a>
-    <p>Начните с <a href="../work/quickstart.html">Быстрого старта</a>, дальше — по нужным разделам: <a href="../work/robots.html">роботы</a>, <a href="../work/projects.html">RPA-проекты</a>, <a href="../work/jobs-triggers.html">задания и триггеры</a>, <a href="../work/logs.html">журналы</a>. Привыкли к старому интерфейсу — <a href="../work/ui2-to-ui4.html">UI2 → UI4</a>.</p>
+    <ol class="substeps">
+      <li><a href="../work/quickstart.html">Быстрый старт</a> <span>— от проекта до запуска на роботе</span></li>
+      <li><a href="../work/robots.html">Роботы и машины</a> <span>— машины, роботы, развертывание</span></li>
+      <li><a href="../work/projects.html">RPA-проекты</a> <span>— загрузка, версии, публикация</span></li>
+      <li><a href="../work/jobs-triggers.html">Задания и триггеры</a> <span>— расписания и запуск по событию</span></li>
+      <li><a href="../work/logs.html">Журналы</a> <span>— что произошло и почему</span></li>
+      <li><a href="../work/ui2-to-ui4.html">Где это теперь: UI2 → UI4</a> <span>— если привыкли к старому интерфейсу</span></li>
+    </ol>
   </li>
   <li><a href="../operate/index.html">Следить за здоровьем системы</a>
-    <p>Постоянно: <a href="../operate/monitoring.html">мониторинг</a>, <a href="../operate/service-logs.html">журналы служб</a>, <a href="../operate/events.html">события</a>. Регулярно: <a href="../operate/db-maintenance.html">обслуживание БД</a>, <a href="../operate/backup.html">резервное копирование</a>.</p>
+    <ol class="substeps">
+      <li><a href="../operate/monitoring.html">Мониторинг и метрики</a> <span>— узнавать о сбоях раньше пользователей</span></li>
+      <li><a href="../operate/service-logs.html">Журналы служб</a> <span>— где искать технические журналы</span></li>
+      <li><a href="../operate/events.html">События и их коды</a> <span>— что значит запись в журнале</span></li>
+      <li><a href="../operate/db-maintenance.html">Обслуживание БД</a> <span>— что чистится само, что вручную</span></li>
+      <li><a href="../operate/backup.html">Резервное копирование</a> <span>— что копировать и как восстановить</span></li>
+    </ol>
   </li>
   <li><a href="../troubleshoot/index.html">Разобраться со сбоем</a>
-    <p>Найдите свой симптом в <a href="../troubleshoot/index.html">Неполадках</a>.</p>
+    <ol class="substeps">
+      <li><a href="../troubleshoot/index.html">Неполадки</a> <span>— найдите свой симптом</span></li>
+      <li><a href="../operate/service-logs.html">Журналы служб</a> <span>— не нашли — соберите журналы для поддержки</span></li>
+    </ol>
   </li>
   <li><a href="../reference/index.html">Найти параметр, порт или файл</a>
-    <p><a href="../reference/config.html">Параметры конфигурации</a>, <a href="../reference/ports.html">порты</a>, <a href="../reference/components.html">компоненты и службы</a>, <a href="../reference/delivery.html">комплект поставки</a>, <a href="../reference/glossary.html">глоссарий</a>.</p>
+    <ol class="substeps">
+      <li><a href="../reference/config.html">Параметры конфигурации</a> <span>— ключи всех служб</span></li>
+      <li><a href="../reference/ports.html">Порты</a> <span>— кто слушает и кто подключается</span></li>
+      <li><a href="../reference/components.html">Компоненты и службы</a> <span>— службы и их зависимости</span></li>
+      <li><a href="../reference/delivery.html">Комплект поставки</a> <span>— какие архивы и где лежат</span></li>
+      <li><a href="../reference/glossary.html">Глоссарий</a> <span>— термины UI4 и кода</span></li>
+    </ol>
   </li>
 </ol>
 
