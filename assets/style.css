@@ -169,5 +169,5 @@ main details[open] > summary { margin-bottom: 8px; }
 .substeps > li::before { content: counter(sub); position: absolute; left: 0; top: 2px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: var(--bg); }
 .substeps > li:not(:last-child)::after { content: ""; position: absolute; left: 11px; top: 26px; bottom: 2px; border-left: 1px dashed var(--line); }
 .substeps > li > a { font-weight: 500; }
-.substeps > li > span { display: block; color: var(--muted); font-size: 14px; }
+.substeps > li > span { color: var(--muted); }
 .route > li > p { margin: 4px 0 0; }
