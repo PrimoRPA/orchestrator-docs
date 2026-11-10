@@ -27,8 +27,7 @@
 <p>Оркестратор — набор служб. Большинство нужно всегда, несколько ставятся только под конкретную задачу. В Docker-поставке все обязательные службы уже есть в compose.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Нужно всегда</th><th>Зачем</th></tr>
-  <tr><td>PostgreSQL</td><td>базы данных Оркестратора</td></tr>
-  <tr data-only="windows"><td>MS SQL Server — вместо PostgreSQL</td><td>базы данных Оркестратора, если в организации принят MS SQL</td></tr>
+  <tr><td>PostgreSQL<span data-only="windows"> / MS SQL Server</span></td><td>базы данных Оркестратора</td></tr>
   <tr><td>RabbitMQ</td><td>события между службами и очередь проектов</td></tr>
   <tr><td>nginx с UI4</td><td>веб-интерфейс; единственный адрес, открытый наружу</td></tr>
   <tr><td>WebApi</td><td>основная служба: проекты, роботы, задания, пользователи, команды агентам</td></tr>

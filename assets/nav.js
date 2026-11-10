@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.7.0", at: "10.11.2026 12:35" };
+const BUILD = { ver: "4.7.1", at: "10.11.2026 12:37" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -277,7 +277,7 @@ const TREE = [
     });
   });
 
-  // Переключатели «Версия» и «Платформа» вместо строки «Применимо». Выбор общий для сайта, по умолчанию «Все».
+  // Переключатели «Версия» и «Платформа» вместо строки «Применимо». Выбор общий для сайта, по умолчанию Linux и 1.26.9.
   // Разметка текста: data-only="docker|linux|windows" (можно несколько), data-ver="1.26.7|1.26.9".
   const DIM = {
     platform: { attr: "only", names: { docker: "Docker", linux: "Linux", windows: "Windows Server" }, from: { Docker: "docker", Linux: "linux", Windows: "windows" } },
@@ -292,11 +292,12 @@ const TREE = [
       if (el.matches("tr, li, span, p")) target.prepend(tag); else target.append(tag);
     });
   });
+  const DEF = { platform: "linux", ver: "1.26.9" };
   const ap = document.querySelector("main .applies");
   if (ap) {
     const spans = [...ap.querySelectorAll(":scope > span")];
     const groups = [];
-    const plat = spans.filter((s) => DIM.platform.from[s.textContent.trim()]).map((s) => DIM.platform.from[s.textContent.trim()]);
+    const plat = ["linux", "windows", "docker"].filter((k) => spans.some((s) => DIM.platform.from[s.textContent.trim()] === k));
     const verSpan = spans.find((s) => DIM.ver.from[s.textContent.trim()]);
     if (verSpan) groups.push(["ver", "Версия", ["1.26.7", "1.26.9"]]);
     if (plat.length >= 2) groups.push(["platform", "Платформа", plat]);
@@ -311,7 +312,7 @@ const TREE = [
         wrap.innerHTML = `<span class="sw-l">${label}</span>`;
         const seg = document.createElement("span");
         seg.className = "seg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", label);
-        const btns = [["all", "Все"], ...keys.map((k) => [k, d.names[k]])].map(([k, t]) => {
+        const btns = keys.map((k) => [k, d.names[k]]).map(([k, t]) => {
           const bt = document.createElement("button");
           bt.type = "button"; bt.dataset.k = k; bt.textContent = t;
           bt.onclick = () => { try { localStorage.setItem("sw:" + dim, k); } catch (e) {} apply[dim](k); };
@@ -319,15 +320,15 @@ const TREE = [
         });
         wrap.append(seg); box.append(wrap);
         apply[dim] = (p) => {
-          const on = keys.includes(p) ? p : "all";
+          const on = keys.includes(p) ? p : keys.includes(DEF[dim]) ? DEF[dim] : keys[0];
           btns.forEach((x) => x.setAttribute("aria-pressed", x.dataset.k === on));
-          if (on === "all") delete document.body.dataset[dim]; else document.body.dataset[dim] = on;
+          document.body.dataset[dim] = on;
           if (dim !== "platform") return;
           document.querySelectorAll(".tabs").forEach((tb) => {
             const tabs = [...tb.children].filter((n) => n.matches("section.tab"));
             const bs = [...tb.querySelectorAll(".tab-bar button")];
-            const fits = tabs.map((t) => on === "all" || (t.dataset.os || t.id) === on);
-            if (on !== "all" && !fits.some(Boolean)) { bs.forEach((x) => (x.hidden = false)); return; }
+            const fits = tabs.map((t) => (t.dataset.os || t.id) === on);
+            if (!fits.some(Boolean)) { bs.forEach((x) => (x.hidden = false)); return; }
             bs.forEach((x, i) => (x.hidden = !fits[i]));
             const curTab = tabs.findIndex((t) => !t.hidden);
             if (curTab >= 0 && !fits[curTab]) bs[fits.indexOf(true)].click();
@@ -336,8 +337,8 @@ const TREE = [
       });
       ap.replaceWith(box);
       Object.keys(apply).forEach((dim) => {
-        let saved = "all";
-        try { saved = localStorage.getItem("sw:" + dim) || (dim === "platform" && localStorage.getItem("platform")) || "all"; } catch (e) {}
+        let saved = DEF[dim];
+        try { saved = localStorage.getItem("sw:" + dim) || DEF[dim]; } catch (e) {}
         apply[dim](saved);
       });
     }
