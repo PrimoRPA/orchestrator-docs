@@ -60,7 +60,7 @@ pre { font-family: var(--mono); font-size: 13px; background: var(--soft); border
   border-radius: 8px; padding: 12px 14px; overflow: auto; line-height: 1.45; }
 pre code { border: 0; padding: 0; background: none; }
 
-table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 15px; }
 th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--line); }
 th { background: var(--soft); font-weight: 600; }
 .tbl-wrap { overflow-x: auto; }
@@ -107,9 +107,8 @@ ol.sections span { display: block; font-size: 13px; color: var(--muted); }
   .ver { display: none; }
   main { padding: 16px; }
 }
-.top .news { font-size: 13px; color: var(--accent, inherit); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
-.top .news:hover { background: var(--soft); }
-@media (max-width: 760px) { .top .news { display: none; } }
+.top .build { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .top .build { display: none; } }
 
 /* Вкладки */
 .tabs { border: 1px solid var(--line); border-radius: 12px; padding: 0 20px 8px; margin: 16px 0 6px; background: var(--bg); }
@@ -167,9 +166,9 @@ main details[open] > summary { margin-bottom: 8px; }
 /* Путеводитель: список сценариев */
 .scenarios { list-style: none; padding: 0; margin: 12px 0 28px; border-top: 1px solid var(--line); }
 .scenarios li { border-bottom: 1px solid var(--line); }
-.scenarios a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 8px; color: var(--fg); text-decoration: none; font-size: 17px; }
+.scenarios a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 10px 10px; color: var(--fg); text-decoration: none; font-size: 15px; }
 .scenarios a:hover { background: var(--soft); text-decoration: none; }
-.scenarios b { font-weight: 600; }
+.scenarios b { font-weight: 500; }
 .scenarios span { color: var(--accent); font-size: 15px; white-space: nowrap; }
 .scenarios span::after { content: " →"; }
 @media (max-width: 640px) { .scenarios a { flex-direction: column; gap: 2px; } .scenarios span { white-space: normal; } }

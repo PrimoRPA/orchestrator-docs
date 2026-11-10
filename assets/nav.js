@@ -1,5 +1,8 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
+// Версия черновика и время сборки — проставляет скрипт публикации.
+const BUILD = { ver: "v9", at: "10.11.2026 09:49" };
+
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
     ["overview", "Общие сведения"],
@@ -110,9 +113,9 @@ const TREE = [
   const header = document.createElement("header");
   header.className = "top";
   header.innerHTML = `
-    <a class="brand" href="${root}home.html">Primo RPA <b>Оркестратор</b></a>
+    <a class="brand" href="${root}index.html">Primo RPA <b>Оркестратор</b></a>
     <span class="draft">черновик</span>
-    <a class="news" href="${root}index.html">История черновика</a>
+    <span class="build" title="Версия черновика и время последней сборки">${BUILD.ver} · ${BUILD.at}</span>
     <label class="ver">Версия
       <select><option>актуальная (1.26.9)</option><option>1.26.7 LTS</option><option>1.25.7 LTS</option></select>
     </label>
@@ -147,7 +150,7 @@ const TREE = [
   if (cur.sec) {
     const bc = document.createElement("div");
     bc.className = "crumbs";
-    let html = `<a href="${root}home.html">Оркестратор</a> › <a href="${href(cur.sec.id + "/")}">${cur.sec.title}</a>`;
+    let html = `<a href="${root}index.html">Оркестратор</a> › <a href="${href(cur.sec.id + "/")}">${cur.sec.title}</a>`;
     if (cur.parent) html += ` › <a href="${href(cur.parent.path)}">${cur.parent.title}</a>`;
     bc.innerHTML = html;
     main.prepend(bc);
