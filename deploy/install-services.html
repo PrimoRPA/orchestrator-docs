@@ -83,7 +83,7 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
-  <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
+  <li>PostgreSQL и RabbitMQ — на этом или отдельном сервере.</li>
   <li>Учётная запись с <code>sudo</code> на сервере.</li>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>
@@ -343,7 +343,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
-  <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
+  <li>PostgreSQL и RabbitMQ — на этом или отдельном сервере.</li>
   <li>Учётная запись с <code>sudo</code> на сервере.</li>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>
@@ -604,7 +604,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <li>Архивы служб <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-linux.zip</code> из таблицы выше и <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Архивы self-contained: .NET ставить не нужно. В каждом архиве есть <code>appsettings.ProdLinux.json</code> и два юнита: <code>*.service</code> (от root) и <code>*.user.service</code> (без root).</li>
   <li>Архив UI4, конфиг <code>nginx.linux.conf</code>, юниты <code>Primo.Orchestrator.Nginx.user.service</code> и <code>Primo.Orchestrator.Nginx.service</code>.</li>
   <li>Сертификат и ключ на внешнее имя Оркестратора — файлы <code>cert1.crt</code> и <code>cert1.rsa</code>.</li>
-  <li>PostgreSQL (или MS SQL Server) и RabbitMQ — на этом или отдельном сервере.</li>
+  <li>PostgreSQL и RabbitMQ — на этом или отдельном сервере.</li>
   <li>Учётная запись с <code>sudo</code> на сервере.</li>
   <li>Внешний адрес Оркестратора (DNS-имя или IP), ниже — <code>&lt;адрес&gt;</code>.</li>
 </ul>

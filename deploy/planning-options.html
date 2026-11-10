@@ -24,7 +24,7 @@
 <div class="note"><p>Во всех вариантах снаружи открыт один адрес — nginx на порту <code>44392</code> по HTTPS. Остальные службы слушают HTTP на своих портах и видны только nginx и друг другу. Подробно — <a href="../deploy/network.html">Порты и сетевой трафик</a>.</p></div>
 
 <h2>СУБД</h2>
-<p>В решении есть миграции для PostgreSQL и для MS SQL Server — поддерживаются обе. Тип задаётся параметром <code>DBVendor</code> (по умолчанию <code>Postgres</code>). Docker-образы настроены только на PostgreSQL.</p>
+<p>Основная СУБД — PostgreSQL: она подходит для всех вариантов. MS SQL Server — только при установке служб на Windows Server; на Linux и в Docker — только PostgreSQL. Тип задаётся параметром <code>DBVendor</code> (по умолчанию <code>Postgres</code>).</p>
 
 <h2>Один сервер или несколько</h2>
 <p>Конфиги nginx в поставке рассчитаны на один сервер: все службы указаны как <code>127.0.0.1:&lt;порт&gt;</code>. Чтобы разнести службы:</p>
@@ -48,7 +48,7 @@
 
 <div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в выгрузке есть, но конвейер сборки сейчас собирает только ubuntu-вариант (<code>BASE_IMAGE: ubuntu</code>, выбор astra закомментирован), а в astra-compose нет служб Queues и Licenses — уточнить, поставляется ли Docker на Astra в 1.26.9.</p></div>
 <div class="todo"><p>Kubernetes: в <code>k8s/helm/</code> есть Helm-чарты, но они для внутреннего стенда разработки (тестовые адреса и значения). Поставки для Kubernetes заказчику в коде не найдено — не обещать в доках, пока не подтвердят.</p></div>
-<div class="todo"><p>Старое руководство 1.25.7 рекомендовало для Windows MS SQL, для Linux — PostgreSQL, и помечало PostgreSQL на Windows как «без гарантии поддержки». В коде это не отражено — сверить актуальную политику.</p></div>
+<div class="todo"><p>Старое руководство 1.25.7 помечало PostgreSQL на Windows как «без гарантии поддержки» — уточнить, поддерживается ли он сейчас на Windows Server.</p></div>
 
 </main>
 <script src="../assets/nav.js"></script>

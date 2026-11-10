@@ -16,7 +16,7 @@
   <li><span class="stage-t">Серверная часть — выберите один путь</span>
     <ol class="substeps">
       <li><a href="install-docker.html">Установка в Docker</a> <span>— всё одним docker-compose.yml, только PostgreSQL, без RDP2</span></li>
-      <li><a href="install-services.html">Установка служб</a> <span>— Astra Linux, РЕД ОС, Ubuntu, Windows Server; PostgreSQL или MS SQL</span></li>
+      <li><a href="install-services.html">Установка служб</a> <span>— Astra Linux, РЕД ОС, Ubuntu, Windows Server; на Windows — PostgreSQL или MS SQL</span></li>
     </ol>
   </li>
   <li><span class="stage-t">Машины роботов</span>
@@ -30,7 +30,7 @@
 <h2>В каком порядке поднимаются компоненты</h2>
 <p>Порядок одинаковый для всех путей — он задан зависимостями служб (так же они описаны в <code>depends_on</code> поставочного compose). В Docker его соблюдает сам compose.</p>
 <ol class="steps">
-  <li>СУБД (PostgreSQL или MS SQL Server) и RabbitMQ. <span class="check">к ним можно подключиться с сервера Оркестратора по портам <code>5432</code> и <code>5672</code></span></li>
+  <li>СУБД (PostgreSQL; на Windows Server можно MS SQL Server) и RabbitMQ. <span class="check">к ним можно подключиться с сервера Оркестратора по портам <code>5432</code> и <code>5672</code></span></li>
   <li>MachineInfo. <span class="check"><code>/health</code> на порту <code>5051</code> отвечает <code>Healthy</code></span></li>
   <li>WebApi. При старте он применяет миграции к БД <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>. <span class="check"><code>/health</code> на порту <code>5001</code> отвечает <code>Healthy</code>, в журнале нет ошибок миграций</span></li>
   <li>Остальные службы: RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2. <span class="check">каждая отвечает на <code>/health</code></span></li>
