@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "6.2.0", at: "10.11.2026 16:03" };
+const BUILD = { ver: "7.0.0", at: "10.11.2026 16:20" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -17,7 +17,7 @@ const TREE = [
       ["service-accounts", "Учётные записи и права служб"],
       ["download", "Дистрибутивы"],
       ["checklist", "Что подготовить"],
-    ]],
+    ], "group"],
     ["install", "Установка", [
       ["install-docker", "Установка в Docker"],
       ["install-services", "Установка служб"],
@@ -97,9 +97,9 @@ const TREE = [
 
   // Плоский список страниц для «назад/вперёд»
   const flat = [{ path: "", title: "Главная" }];
-  const walk = (sec, items, parent) => items.forEach(([slug, title, kids]) => {
-    const node = { path: `${sec.id}/${slug}`, title, sec, parent };
-    flat.push(node);
+  const walk = (sec, items, parent) => items.forEach(([slug, title, kids, kind]) => {
+    const node = { path: `${sec.id}/${slug}`, title, sec, parent, group: kind === "group" };
+    if (!node.group) flat.push(node);
     if (kids) walk(sec, kids, node);
   });
   TREE.forEach((sec) => {
@@ -124,8 +124,8 @@ const TREE = [
   nav.className = "side";
   const li = (path, title, extra = "") =>
     `<li class="${path === page ? "cur" : ""} ${extra}"><a href="${href(path)}">${title}</a></li>`;
-  const list = (sec, items) => "<ul>" + items.map(([slug, title, kids]) =>
-    li(`${sec.id}/${slug}`, title) + (kids ? `<li class="kids">${list(sec, kids)}</li>` : "")
+  const list = (sec, items) => "<ul>" + items.map(([slug, title, kids, kind]) =>
+    (kind === "group" ? `<li class="grp"><span>${title}</span></li>` : li(`${sec.id}/${slug}`, title)) + (kids ? `<li class="kids">${list(sec, kids)}</li>` : "")
   ).join("") + "</ul>";
   // Какие разделы меню открыты — помним между страницами (пользователь мог оставить их открытыми специально)
   let openSecs = [];
@@ -155,7 +155,7 @@ const TREE = [
     const bc = document.createElement("div");
     bc.className = "crumbs";
     let html = `<a href="${root}index.html">Оркестратор</a> › <a href="${href(cur.sec.id + "/")}">${cur.sec.title}</a>`;
-    if (cur.parent) html += ` › <a href="${href(cur.parent.path)}">${cur.parent.title}</a>`;
+    if (cur.parent) html += cur.parent.group ? ` › ${cur.parent.title}` : ` › <a href="${href(cur.parent.path)}">${cur.parent.title}</a>`;
     bc.innerHTML = html;
     main.prepend(bc);
   }
