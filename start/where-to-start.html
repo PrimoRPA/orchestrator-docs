@@ -10,6 +10,7 @@
 <body data-root="../" data-page="start/where-to-start">
 <main>
 <h1>Путеводитель</h1>
+<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Впервые открыли документацию Оркестратора? Найдите свою задачу — под ней разделы документации, которые нужно прочитать, по порядку.</p>
 
 <ol class="route">
@@ -32,7 +33,9 @@
   </li>
   <li><a href="../deploy/install.html">Поставить Оркестратор с нуля</a>
     <ol class="substeps">
-      <li><a href="../deploy/install.html">Установка</a> <span>— Docker или службы</span></li>
+      <li data-only="docker"><a href="../deploy/install-docker.html">Установка в Docker</a> <span>— всё одним compose-файлом</span></li>
+      <li data-only="linux"><a href="../deploy/install-services.html#astra">Установка служб</a> <span>— Astra Linux, РЕД ОС или Ubuntu</span></li>
+      <li data-only="windows"><a href="../deploy/install-services.html#windows">Установка служб</a> <span>— Windows Server</span></li>
       <li><a href="../deploy/agent.html">Машины роботов и агент</a> <span>— агент на каждую машину робота</span></li>
       <li><a href="../deploy/first-run.html">Первый запуск</a> <span>— лицензия, дистрибутив робота, первый робот</span></li>
       <li><a href="../deploy/verify.html">Проверка установки</a> <span>— тестовый проект выполнился</span></li>
