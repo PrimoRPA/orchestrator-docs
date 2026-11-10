@@ -163,3 +163,13 @@ main details[open] > summary { margin-bottom: 8px; }
 .diagram .t2 { fill: var(--muted); font-size: 12px; }
 .diagram .ln { stroke: var(--muted); stroke-width: 1.2; fill: none; }
 .diagram figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+/* Путеводитель: список сценариев */
+.scenarios { list-style: none; padding: 0; margin: 12px 0 28px; border-top: 1px solid var(--line); }
+.scenarios li { border-bottom: 1px solid var(--line); }
+.scenarios a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 8px; color: var(--fg); text-decoration: none; font-size: 17px; }
+.scenarios a:hover { background: var(--soft); text-decoration: none; }
+.scenarios b { font-weight: 600; }
+.scenarios span { color: var(--accent); font-size: 15px; white-space: nowrap; }
+.scenarios span::after { content: " →"; }
+@media (max-width: 640px) { .scenarios a { flex-direction: column; gap: 2px; } .scenarios span { white-space: normal; } }

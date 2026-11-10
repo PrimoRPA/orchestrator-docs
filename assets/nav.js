@@ -3,7 +3,7 @@
 const TREE = [
   { id: "start", title: "Начало работы", who: "для всех", items: [
     ["overview", "Общие сведения"],
-    ["where-to-start", "Маршрут по задачам"],
+    ["where-to-start", "Путеводитель"],
   ]},
   { id: "deploy", title: "Развертывание", who: "сисадмину", items: [
     ["planning", "Планирование установки", [
