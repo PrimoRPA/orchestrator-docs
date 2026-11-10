@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.7.1", at: "10.11.2026 12:37" };
+const BUILD = { ver: "4.7.2", at: "10.11.2026 12:38" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -117,9 +117,6 @@ const TREE = [
     <a class="brand" href="${root}index.html">Primo RPA <b>Оркестратор</b></a>
     <span class="draft">черновик</span>
     <span class="build" title="Версия черновика и время последней сборки">${BUILD.ver} · ${BUILD.at}</span>
-    <label class="ver">Версия
-      <select><option>актуальная (1.26.9)</option><option>1.26.7 LTS</option><option>1.25.7 LTS</option></select>
-    </label>
     <button class="menu-btn" aria-label="Меню">☰</button>`;
   body.prepend(header);
 
