@@ -170,3 +170,4 @@ main details[open] > summary { margin-bottom: 8px; }
 .substeps > li > span { color: var(--muted); }
 .route > li > p { margin: 4px 0 0; }
 .route > li > .stage-t { font-weight: 600; font-size: 17px; }
+.auto-note { color: var(--muted); font-size: 13px; margin-top: 4px; }
