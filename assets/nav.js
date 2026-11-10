@@ -1,11 +1,10 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "8.1.0", at: "10.11.2026 17:01" };
+const BUILD = { ver: "9.0.0", at: "10.11.2026 17:13" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
-    ["how-to-use", "Как читать документацию"],
     ["overview", "Общие сведения"],
     ["concepts", "Основные понятия"],
   ]},
@@ -131,7 +130,9 @@ const TREE = [
   // Какие разделы меню открыты — помним между страницами (пользователь мог оставить их открытыми специально)
   let openSecs = [];
   try { openSecs = JSON.parse(localStorage.getItem("nav:open") || "[]"); } catch (e) { openSecs = []; }
-  nav.innerHTML = TREE.map((sec, i) => {
+  // Первый пункт меню — вне разделов: как читать документацию
+  const HOWTO = "start/how-to-use";
+  nav.innerHTML = `<a class="top-link ${page === HOWTO ? "cur" : ""}" href="${href(HOWTO)}">Как читать документацию</a>` + TREE.map((sec, i) => {
     const open = (cur.sec && cur.sec.id === sec.id) || openSecs.includes(sec.id);
     return `<details data-sec="${sec.id}" ${open ? "open" : ""}>
       <summary><span class="n">${i + 1}</span>${sec.title}</summary>

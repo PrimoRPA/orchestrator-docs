@@ -239,3 +239,5 @@ main ul.ticks label a { cursor: pointer; }
 .demo-menu span.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .demo-date { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; }
 @media (max-width: 760px) { .legend { grid-template-columns: 1fr; } .legend .demo { border-bottom: 0; padding-bottom: 0; } }
+/* Первый пункт меню вне разделов */
+.side .top-link { display: block; font-weight: 600; padding: 5px 8px 5px 28px; border-radius: 6px; color: var(--fg); margin-bottom: 4px; }
