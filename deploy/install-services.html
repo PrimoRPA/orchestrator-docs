@@ -72,7 +72,7 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
   <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
   <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>RDP2 (обязательна, если роботы работают на Windows)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
   <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>
@@ -332,7 +332,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
   <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
   <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>RDP2 (обязательна, если роботы работают на Windows)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
   <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>
@@ -593,7 +593,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
   <tr><td>Licenses</td><td><code>licenses</code></td><td><code>/opt/Primo/Licenses</code></td><td><code>Primo.Orchestrator.Licenses</code></td><td><code>5089</code></td></tr>
   <tr><td>LogEventsWebhook</td><td><code>logeventswebhook</code></td><td><code>/opt/Primo/LogEventsWebhook</code></td><td><code>Primo.Orchestrator.LogEventsWebhook</code></td><td><code>56770</code></td></tr>
   <tr><td>NuGet2</td><td><code>nuget2</code></td><td><code>/opt/Primo/NuGet2</code> (исполняемый файл <code>BaGet</code>)</td><td><code>Primo.Orchestrator.NuGet</code></td><td><code>8081</code></td></tr>
-  <tr><td>RDP2 (если нужны RDP-сессии)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
+  <tr><td>RDP2 (обязательна, если роботы работают на Windows)</td><td><code>rdp2</code></td><td><code>/opt/Primo/RDP2</code></td><td><code>Primo.Orchestrator.RDP2</code></td><td><code>5102</code> (HTTPS)</td></tr>
   <tr><td>ArcSight (если нужна выгрузка событий в SIEM)</td><td><code>arcsight</code></td><td><code>/opt/Primo/ArcSight</code></td><td><code>Primo.Orchestrator.ArcSight</code></td><td>—</td></tr>
   <tr><td>nginx + UI4</td><td>архив UI4, <code>nginx.linux.conf</code></td><td><code>/opt/Primo/nginx</code></td><td><code>Primo.Orchestrator.Nginx</code></td><td><code>44392</code> (HTTPS)</td></tr>
 </table></div>

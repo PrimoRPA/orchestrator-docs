@@ -35,7 +35,7 @@
   <li>WebApi. При старте он применяет миграции к БД <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>. <span class="check"><code>/health</code> на порту <code>5001</code> отвечает <code>Healthy</code>, в журнале нет ошибок миграций</span></li>
   <li>Остальные службы: RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2. <span class="check">каждая отвечает на <code>/health</code></span></li>
   <li>nginx с UI4 и сертификатом. <span class="check">UI открывается по <code>https://&lt;адрес&gt;:44392</code></span></li>
-  <li>RDP2 — если нужны RDP-сессии.</li>
+  <li>RDP2 — обязательна, если роботы работают на Windows.</li>
   <li>Агенты на машинах роботов.</li>
 </ol>
 
