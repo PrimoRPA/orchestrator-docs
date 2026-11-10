@@ -10,7 +10,7 @@
 <body data-root="../" data-page="troubleshoot/ui-not-opening">
 <main>
 <h1>Интерфейс не открывается или падает WebApi</h1>
-<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">UI4 — статические файлы, их отдаёт nginx. Все запросы к API идут на тот же адрес по пути <code>/api/</code>, nginx проксирует их в WebApi. WebApi зависит от БД и RabbitMQ. Проверяйте по цепочке: nginx → файлы UI → WebApi → БД и RabbitMQ.</p>
 
 <h2>Симптомы</h2>

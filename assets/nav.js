@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "4.9.11", at: "10.11.2026 13:42" };
+const BUILD = { ver: "4.10.0", at: "10.11.2026 13:55" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -296,8 +296,10 @@ const TREE = [
     const groups = [];
     const plat = ["linux", "windows", "docker"].filter((k) => spans.some((s) => DIM.platform.from[s.textContent.trim()] === k));
     const verSpan = spans.find((s) => DIM.ver.from[s.textContent.trim()]);
-    if (verSpan) groups.push(["ver", "Версия:", ["1.26.7", "1.26.9"]]);
-    if (plat.length >= 1) groups.push(["platform", "Платформа:", plat]);
+    // data-sw проставляет сборка: какие переключатели на этой странице что-то меняют
+    const want = (ap.dataset.sw || "").split(" ");
+    if (verSpan && want.includes("ver")) groups.push(["ver", "Версия:", ["1.26.7", "1.26.9"]]);
+    if (plat.length >= 1 && want.includes("platform")) groups.push(["platform", "Платформа:", plat]);
     if (!groups.length) ap.classList.add("static");
     if (groups.length) {
       const box = document.createElement("div");

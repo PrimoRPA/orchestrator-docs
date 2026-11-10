@@ -10,7 +10,7 @@
 <body data-root="../" data-page="troubleshoot/logs-empty">
 <main>
 <h1>Журнал робота пустой или не открывается</h1>
-<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Журнал робота хранит служба RobotLogs. Робот отправляет записи в RobotLogs по HTTP, RobotLogs копит их в буфере и пишет в БД журналов. UI4 читает журнал через WebApi, а WebApi — из RobotLogs по HTTP. Обрыв в любом звене даёт пустой журнал.</p>
 
 <h2>Симптомы</h2>

@@ -10,7 +10,7 @@
 <body data-root="../" data-page="reference/ports">
 <main>
 <h1>Порты</h1>
-<div class="applies">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Порты служб Оркестратора и внешних компонентов: кто слушает, по какому протоколу и кто подключается. Значения взяты из конфигов nginx, Dockerfile, шаблона docker-compose и кода.</p>
 
 <p>Порт службы задаётся адресом точки Kestrel: <code>Kestrel:EndPoints:InternalHttp:Url</code> (HTTP) или <code>Kestrel:EndPoints:ExternalHttps:Url</code> (HTTPS). Номера ниже — те, на которые настроены поставляемые nginx-конфиги и Docker-образы для Ubuntu. Если вы меняете порт службы, поменяйте и <code>upstream</code> в nginx.</p>
