@@ -57,7 +57,6 @@ journalctl -u Primo.Orchestrator.RobotLogs -f</code></pre>
   <p><b>Syslog.</b> Отдельного вывода в syslog в коде нет; только journald через systemd.</p>
 </div>
 
-<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/Serilog/ConfigurationExtensions.cs</code>, <code>LoggerLevelSwitchManager.cs</code>; <code>Orchestrator/LTools.Orchestrator/Controllers/LoggersController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Program.cs</code>, <code>Startup.cs</code> (<code>UseHttpLogging</code>, <code>UseSerilogRequestLogging</code>); <code>Orchestrator/*/Primo.Orchestrator.*.service</code>; <code>k8s/*.Dockerfile</code>; <code>k8s/agent/install.sh</code>; <code>k8s/docker/ui/*.Dockerfile</code>; <code>Orchestrator/*/LTools.Orchestrator.*.csproj</code>, <code>Directory.Packages.props</code>. Старая документация: руководство 1.25.7, раздел «Введение» (Logstash).</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

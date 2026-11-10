@@ -109,7 +109,6 @@
 <p>При нескольких экземплярах WebApi без S3 каждый узел проверяет наличие файла дистрибутива у себя (событие <code>1204</code> при рассогласовании). Нужна ли общая сетевая папка для <code>TargetFilePath</code>, в коде не сказано — уточнить.</p>
 <p>Миграции уже загруженных архивов проектов из БД в S3 в коде не найдено.</p></div>
 
-<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/FileStore.cs</code>, <code>RpaProjectArchiveUpload.cs</code>, <code>RobotDistrUpload.cs</code>, <code>AgentDistrUpload.cs</code>, <code>ScreenFileUpload.cs</code>, <code>Folders.cs</code>, <code>LogsDump.cs</code>; <code>WebApi/Startup.cs</code> (S3, <code>CreateFolders</code>); <code>Bl/Distrs/S3Buckets.cs</code>, <code>Bl/Distrs/RobotDistrsStateService.cs</code>; <code>Controllers/RpaProjectsController.cs</code>; <code>LTools.Orchestrator.Storages/Minio/Option.cs</code>, <code>Ceph/Option.cs</code>, <code>ServiceCollectionExtensions.cs</code>, <code>FakeStorage.cs</code>; <code>LTools.Orchestrator.RobotLogs/Options/ScreenFileUpload.cs</code>, <code>RobotLogs/Startup.cs</code>, <code>RobotLogs/Bl/ScreenFiles/S3Buckets.cs</code>; <code>LTools.Enums/FileStoreType.cs</code>, <code>RpaProjectArchiveStoreType.cs</code>; <code>WebApi/Readme.txt</code> (1.26.9); <code>docker/astra/web-api.Dockerfile</code>. Руководство 1.25.7: «Интеграция с S3-хранилищем», «Общие папки», «Настройка папки для дампа секций журналов».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

@@ -69,7 +69,6 @@
 <div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в 1.26.9 конвейером не собираются; их compose старее (порт <code>5080</code> по HTTP, без Queues/Licenses/MCP). Не описывать, пока не подтвердят поставку. Helm-чарты в <code>k8s/helm</code> — для внутреннего стенда.</p></div>
 <div class="todo"><p>Можно ли менять <code>CustomerBinding__Key</code> после выдачи лицензии — в коде не видно; уточнить у разработки.</p></div>
 
-<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>Kestrel__EndPoints__*__Url</code>, <code>FileStore__Type</code>, <code>*DistrUpload__TargetFilePath</code>); <code>nginx/nginx.docker.conf</code>; <code>azure/docker.ps1</code>, <code>azure-pipelines-docker.yml</code>; <code>Orchestrator/LTools.Enums/FileStoreType.cs</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/BL/CustomerBinding.cs</code>; <code>docker/astra/</code>, <code>k8s/</code>; старый сайт, <code>install/installation-docker.mdx</code>.</div>
 
 <h2>Что дальше</h2>
 <div class="next">
@@ -77,7 +76,6 @@
   <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
 
-<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code> (<code>depends_on</code>, <code>healthcheck</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Program.cs</code> (<code>ConfigurationBuilder</code>, <code>ASPNETCORE_ENVIRONMENT</code>, <code>--migration</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>UpdateDatabase</code>, <code>UpdateDBMigrationMode</code>); руководство 1.25.7, раздел «Установка компонентов Оркестратора».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

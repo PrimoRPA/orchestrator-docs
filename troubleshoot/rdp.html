@@ -69,7 +69,6 @@
 <div class="todo"><p><code>RDP:EnabledLogOffDisconnectedRDPUsers</code>: в классе <code>true</code>, но Startup читает со значением по умолчанию <code>false</code>. Без явного ключа завершение отключённых сессий выключено. Аналогично <code>LogOffDisconnectedRDPUsersService</code>: в классе <code>Opt2</code>, в Startup — <code>Legacy</code>.</p></div>
 <div class="todo"><p>Строки «rdp-timeout» в коде Оркестратора нет: это, вероятно, сообщение Студии или робота. Теневой сессии и xrdp для Linux в коде нет.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.RDP2/Startup.cs</code>, <code>Options/Orchestrator.cs</code>, <code>Bl/Services/RdpSessionService.cs</code>, <code>Bl/Client/{ErrorType,RdpConnectionSettings}.cs</code>, <code>Readme.txt</code>, <code>Primo.Orchestrator.RDP2.service</code>; <code>LTools.Orchestrator.WebApi/Options/RDP.cs</code>, <code>Controllers/RdpSessionsController.cs</code>, <code>Startup.cs</code>, <code>Bl/Robots/CommandBus/StartRobotCommandBusService.cs</code>; <code>LTools.Orchestrator.Agent.Runner/XServers/XvncProcess.cs</code>; <code>nginx/nginx.linux.conf</code>; <code>ui4: src/entities/robot/ui/stream-modal/StreamModal.tsx</code>, <code>src/shared/lib/translations/ru/{machines,robots,home}.json</code>; старые статьи <code>orchestrator-admin-ui4/rdp2-machines.mdx</code>, <code>orchestrator-user-ui4/robots/view-rdp-session.mdx</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

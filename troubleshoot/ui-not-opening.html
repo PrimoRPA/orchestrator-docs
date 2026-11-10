@@ -90,7 +90,6 @@
 <div class="todo"><p>В <code>docker/ubuntu/web-api.Dockerfile</code> Kestrel слушает <code>http://*:5001</code>, а HEALTHCHECK проверяет <code>localhost:8080/health</code> и открыт порт 8080. Проверка здоровья контейнера, вероятно, всегда неуспешна. Передать разработке.</p></div>
 <div class="todo"><p>Путь к сертификату Kestrel (если WebApi отдаёт HTTPS сам) в коде по умолчанию не задан. Уточнить, что ставит инсталлятор.</p></div>
 
-<div class="src">Источники: <code>backend: nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/readme-nginx.linux.md</code>, <code>nginx/Primo.Orchestrator.Nginx.user.service</code>, <code>k8s/ui-nginx.conf.template</code>, <code>k8s/ui-docker-entrypoint.sh</code>, <code>docker/ubuntu/web-api.Dockerfile</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/Program.cs</code>, <code>Startup.cs</code> (CORS), <code>Primo.Orchestrator.WebApi.service</code>, <code>LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>, <code>LTools.Orchestrator/Swagger/SwaggerSetupExtensions.cs</code>, <code>LTools.Shared/RabbitMQ/RabbitMQPersistentConnection.cs</code>, <code>LTools.Orchestrator/Security/CollectConfigStatusService.cs</code>, <code>LTools.Orchestrator.Dal/ApplicationDbContext.cs</code>; <code>ui4: src/shared/lib/fetch.ts</code>, <code>vite.config.ts</code>, <code>index.html</code>, <code>src/shared/lib/translations/ru/home.json</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

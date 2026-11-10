@@ -95,7 +95,6 @@
 <div class="todo"><p>Старое руководство говорит, что параметры оповещений настраиваются в <code>appsettings.json</code> службы States, и перечисляет только <code>UserExpired</code> и <code>LicenseExpired</code>. Пороги <code>SLA</code> и флаг <code>SLAFromDb</code> в нём не описаны; где в UI4 редактировать SLA из БД, не найдено.</p>
 <p>В Docker-образе States <code>UserExpired:StartBefore=3</code> и <code>NotificationInterval=1</code> (минуты) — похоже на тестовые значения. Сверить с разработкой.</p></div>
 
-<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.Notifications/Options/Email.cs</code>, <code>Options/RabbitMQ.cs</code>, <code>Bl/SendEmailService.cs</code>, <code>Bl/EmailQueue/EmailQueueService.cs</code>; <code>LTools.Orchestrator.States/Options/UserExpired.cs</code>, <code>LicenseExpired.cs</code>, <code>SLA.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.WebApi/Options/Email.cs</code>, <code>Options/Tenants.cs</code>, <code>Options/Triggers.cs</code>; <code>WebApi/Controllers/SystemEventTypesController.cs</code>; <code>docker/astra/notifications.Dockerfile</code>, <code>docker/astra/states.Dockerfile</code>; UI4: <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>translations/ru/common.json</code>, <code>subscriptions.json</code>, <code>notifications.json</code>, <code>email.json</code>. Руководство 1.25.7: «Настройка параметров оповещения», «Мультитенантность» (IncomingEmail).</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>
