@@ -193,7 +193,7 @@ body[data-platform] .ptag-platform, body[data-ver] .ptag-ver { display: none; }
 /* Строка «Применимо» занимает то же место, что и переключатели, — страница не сдвигается, пока они рисуются */
 .applies, .switches { box-sizing: border-box; min-height: 38px; }
 .applies { margin: 0 0 22px; padding: 0 0 2px; border-bottom: 1px solid var(--line); visibility: hidden; }
-.applies.static, .applies[data-sw=""] { display: none; }
+
 /* Липкая строка версии и платформы */
 .switches { position: sticky; top: 48px; z-index: 3; background: var(--bg); }
 body.has-switches .tab-bar { top: 86px; }
@@ -206,3 +206,6 @@ body.has-switches .tab-bar { top: 86px; }
 .route details[open] > summary::after { content: "▾"; }
 .route details > summary:hover { text-decoration: underline; }
 .substeps.plain > li::before { content: ""; width: 8px; height: 8px; left: 9px; top: 9px; background: var(--accent); opacity: .45; }
+/* Версия и платформа без выбора — обычный текст на месте переключателя */
+.sw-all { font-size: 14px; font-weight: 500; padding: 6px 0 8px; color: var(--fg); }
+.switches.sw-static { position: static; }

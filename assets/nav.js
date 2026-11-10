@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "5.0.2", at: "10.11.2026 15:10" };
+const BUILD = { ver: "5.1.0", at: "10.11.2026 15:14" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -298,10 +298,11 @@ const TREE = [
     const verSpan = spans.find((s) => DIM.ver.from[s.textContent.trim()]);
     // data-sw проставляет сборка: какие переключатели на этой странице что-то меняют
     const want = (ap.dataset.sw || "").split(" ");
-    if (verSpan && want.includes("ver")) groups.push(["ver", "Версия:", ["1.26.7", "1.26.9"]]);
-    if (plat.length >= 1 && want.includes("platform")) groups.push(["platform", "Платформа:", plat]);
-    if (!groups.length) ap.classList.add("static");
-    if (groups.length) {
+    // Строка одинакова на всех страницах: где выбор что-то меняет — переключатель, где нет — просто текст
+    groups.push(["ver", "Версия:", want.includes("ver") ? ["1.26.7", "1.26.9"] : null]);
+    groups.push(["platform", "Платформа:", want.includes("platform") && plat.length > 1 ? plat
+      : (plat.length === 3 || !plat.length ? null : plat.map((k) => DIM.platform.names[k]).join(" · "))]);
+    {
       const box = document.createElement("div");
       box.className = "switches";
       const apply = {};
@@ -310,6 +311,11 @@ const TREE = [
         const wrap = document.createElement("span");
         wrap.className = "sw";
         wrap.innerHTML = `<span class="sw-l">${label}</span>`;
+        if (!Array.isArray(keys)) {
+          const st = document.createElement("span");
+          st.className = "sw-all"; st.textContent = keys || "все";
+          wrap.append(st); box.append(wrap); return;
+        }
         const seg = document.createElement("span");
         seg.className = "seg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", label);
         const btns = keys.map((k) => [k, d.names[k]]).map(([k, t]) => {
@@ -336,8 +342,8 @@ const TREE = [
         };
       });
       ap.replaceWith(box);
-      // Липкая строка: версия и платформа остаются видны при прокрутке
-      document.body.classList.add("has-switches");
+      // Липкая строка — только если есть что переключать
+      if (Object.keys(apply).length) document.body.classList.add("has-switches"); else box.classList.add("sw-static");
       Object.keys(apply).forEach((dim) => {
         let saved = DEF[dim];
         try { saved = localStorage.getItem("sw:" + dim) || DEF[dim]; } catch (e) {}
