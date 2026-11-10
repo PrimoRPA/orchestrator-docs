@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "3.0.0", at: "10.11.2026 12:10" };
+const BUILD = { ver: "3.0.1", at: "10.11.2026 12:12" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -241,4 +241,31 @@ const TREE = [
   });
 
   document.title = (cur.title && cur.path ? cur.title + " — " : "") + "Оркестратор: документация";
+
+  // Таблицы с одинаковой шапкой на странице — одинаковые ширины колонок
+  const groups = {};
+  document.querySelectorAll("main table").forEach((t) => {
+    const head = t.rows[0];
+    if (!head || !head.querySelector("th")) return;
+    const key = [...head.cells].map((c) => c.textContent.trim()).join("|");
+    (groups[key] = groups[key] || []).push(t);
+  });
+  Object.values(groups).filter((g) => g.length > 1).forEach((g) => {
+    const n = g[0].rows[0].cells.length;
+    const w = new Array(n).fill(0);
+    g.forEach((t) => {
+      const cells = [...t.rows[0].cells];
+      const total = t.offsetWidth;
+      if (!total) return;
+      cells.forEach((c, i) => { w[i] = Math.max(w[i], c.offsetWidth / total); });
+    });
+    const sum = w.reduce((a, b) => a + b, 0);
+    if (!sum) return;
+    g.forEach((t) => {
+      t.style.tableLayout = "fixed";
+      const cg = document.createElement("colgroup");
+      w.forEach((x) => { const col = document.createElement("col"); col.style.width = (100 * x / sum).toFixed(1) + "%"; cg.append(col); });
+      t.prepend(cg);
+    });
+  });
 })();
