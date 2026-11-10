@@ -168,16 +168,6 @@ const TREE = [
       `<li><a href="${href(s.id + "/")}">${s.title}</a><span>${s.who}</span></li>`).join("") + "</ol>";
   }
 
-  // Назад / вперёд
-  if (idx >= 0) {
-    const pn = document.createElement("div");
-    pn.className = "pager";
-    const prev = flat[idx - 1], next = flat[idx + 1];
-    pn.innerHTML =
-      (prev ? `<a class="prev" href="${href(prev.path || "home")}"><small>Назад</small>${prev.title}</a>` : "<span></span>") +
-      (next ? `<a class="next" href="${href(next.path)}"><small>Дальше</small>${next.title}</a>` : "");
-    main.append(pn);
-  }
   // Вкладки: <div class="tabs" data-key="…" [data-detect="1"]><section class="tab" id data-title data-os>
   const osNames = { windows: "Windows", linux: "Linux", macos: "macOS" };
   const detectOs = () => {
