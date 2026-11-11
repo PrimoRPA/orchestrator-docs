@@ -28,7 +28,7 @@
 <p>После 5 неудачных попыток входа пользователь блокируется на 300 секунд (<code>Security:Lockout:MaxFailedAccessAttempts</code>, <code>Security:Lockout:DefaultLockoutTimeSpan</code>).</p>
 
 <h2>Роли</h2>
-<p><b>Добавить роль</b>: <b>Имя</b>, <b>Описание</b>, <b>Роль студии</b> и матрица прав. Строки матрицы сгруппированы: Роботы, Rpa-проекты, Задания, Журналы, Настройка, Личные папки. Колонки — Просмотр, Создание, Редактирование, Удаление, Управление. Одна ячейка может включать несколько прав API: например, просмотр роботов даёт ещё и просмотр журнала робота и дистрибутивов.</p>
+<p><b>Добавить роль</b>: <b>Имя</b>, <b>Описание</b>, <b>Роль студии</b> и матрица прав. Строки матрицы сгруппированы: Роботы, Rpa-проекты, Задания, Журналы, Настройка, Личные папки, DPA. Колонки — Просмотр, Создание, Редактирование, Удаление, Управление. Одна ячейка может включать несколько прав API: например, просмотр роботов даёт ещё и просмотр журнала робота и дистрибутивов.</p>
 <p>Доменные пользователи и пользователи Keycloak получают роли через привязку: к роли привязываются <b>Группы AD</b> или роли Keycloak. Подробнее — <a href="../configure/access.html">Вход и доступ</a>.</p>
 <p>Встроенные системные роли: Administrator, TenantAdministrator, Robot, Studio, Agent, RobotLogsService, RdpService, Integration, orchestrator, AnalyticService, Citizen, OnlyOrchProject, LimitedRobotRunner.</p>
 <p>Доступ к объектам в общих папках задаётся отдельно от роли. Уровни: только чтение, использование, редактирование, удаление; каждый следующий включает предыдущий.</p>
@@ -49,7 +49,9 @@
 <h2>Подписки на события</h2>
 <p><b>Добавить подписку</b>: <b>Наименование</b>, <b>Email</b>, <b>Подписка активна</b>, <b>Системные события</b>, <b>Оркестраторные события</b> и <b>Фильтр по сущностям</b> (Робот, Проект, Задание, Машина). Системные события: недоступность агента, рост очереди проектов, истечение срока лицензии. Одно и то же событие дважды в подписку не добавить. Письма уходят через службу Notifications; очередь писем — <b>Настройки → Администрирование → Уведомления</b>, там же <b>Очистить очередь</b>.</p>
 
+<div class="todo"><p>Срока действия пароля в политике нет: в коде есть только событие <code>LoginUserExpired</code> (2008). Уточнить, откуда берётся колонка «Пароль действителен до» у пользователя.</p></div>
 
+<div class="src">Источники: <code>ui4: src/features/setting/components/tabsAdmin.tsx</code>, <code>tabs.tsx</code>, <code>src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/shared/lib/translations/ru/{users,roles,licenses,calendars,passwordPolicies,subscriptions,notifications,common}.json</code>; <code>backend: Orchestrator/LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>, <code>PasswordPolicy.cs</code>, <code>Subscription.cs</code>, <code>LTools.Orchestrator.WebApi/Bl/Permissions/PermissionService.cs</code>, <code>Options/SecurityPassword.cs</code>, <code>Options/ProductionCalendar.cs</code>, <code>Validators/BaseProductionCalendar2Validator.cs</code>, <code>Validators/BasePasswordPolicyValidator.cs</code>, <code>LTools.Orchestrator.IdentityDal/SeedData.cs</code>, <code>LTools.Enums/{FolderAccessType,LicenseType,SystemEventType,SubscriptionEntityType}.cs</code>; старые статьи <code>orchestrator-admin-ui4/*</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

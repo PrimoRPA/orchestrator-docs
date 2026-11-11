@@ -13,6 +13,7 @@
 <p class="lead">Какие версии Студии, робота, Robot Runner и агента работают с какой версией Оркестратора, а также ОС, СУБД и .NET. Что такое LTS — на странице <a href="lifecycle.html">«Жизненный цикл версий»</a>.</p>
 
 <h2>Версии продуктов между собой</h2>
+<div class="todo"><p>Матрицу заполнить по анализу совместимости, который готовит команда продукта, и проверить тестированием через UI, а не только через API.</p></div>
 <p>Кода Студии, Студии Linux, робота и Robot Runner в выгрузке нет. Ниже подтверждено только то, что видно в коде Оркестратора; остальные клетки — «уточнить».</p>
 <div class="tbl-wrap"><table>
   <tr><th>Оркестратор</th><th>Студия (Windows)</th><th>Студия Linux</th><th>Робот</th><th>Robot Runner</th><th>Агент</th></tr>
@@ -95,7 +96,18 @@
 </table></div>
 <p>Границы взяты из Readme служб; отдельные службы переходили позже (например, LogEventsWebhook — на .NET 8 в 1.24.10). В 1.26.9 целевая платформа — <code>net10.0</code>, SDK — <code>10.0.300</code>.</p>
 
+<div class="todo">
+<p>Код проверен только для ветки <code>releases/v1.26.9.0</code>. Пороги версии робота, методы API и проверку версии Студии в 1.25.7 LTS и 1.26.7 LTS сверить по их веткам.</p>
+<p>Robot Runner: уточнить у продукта, каким API Оркестратора он пользуется и относится ли к нему роль <code>LimitedRobotRunner</code>.</p>
+<p>Может ли агент старой версии работать с сервером 1.26.9 без обновления — в коде явной проверки нет, уточнить тестированием.</p>
+<p>С какими версиями Студии работает фид NuGet2 (протокол v3) — уточнить у продукта.</p>
+<p>Список поддерживаемых ОС из старых доков (Windows Server 2022; Astra Linux 1.8 и 1.7, РЕД ОС 8, Ubuntu 24.04 — для сервера и машин роботов) в коде не подтверждается. В коде видны только базовые образы Docker и дистрибутивы с готовыми командами сессии. Старое руководство упоминает Windows Server 2016/2019 и CentOS — уточнить актуальность.</p>
+<p>Версии PostgreSQL и MS SQL Server, а также версия RabbitMQ в коде не зафиксированы (кроме образов в compose). Старые доки дают только «PostgreSQL, в т.ч. Postgres Pro; Microsoft SQL Server».</p>
+<p>Поддерживаемые браузеры для UI4 в коде (browserslist, engines) не указаны.</p>
+<p>Принадлежность версий LTS (1.25.7, 1.26.7) к .NET выведена по Readme служб, а не по веткам LTS — сверить.</p>
+</div>
 
+<div class="src">Источники: <code>Directory.Build.props</code>, <code>global.json</code>, <code>Orchestrator/LTools.Orchestrator.Agent/LTools.Orchestrator.Agent.csproj</code> (версия); <code>azure/build.ps1</code>, <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/astra/*.Dockerfile</code>, <code>k8s/*.Dockerfile</code>, <code>docker/*/docker-compose.yml.template</code>; <code>Orchestrator/*/Readme.txt</code> (переходы на .NET, версии агента и AgentUpdater, 1.26.9.0 — фича 56085); <code>Orchestrator/*Migrations.*</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/WorkersController.cs</code>, <code>AgentDistrsController.cs</code> (порог 1.24.8.0); <code>.../Controllers/LicensesController.cs</code>, <code>.../Dto/LicenseChecker/CheckStudioLicenseParameters.cs</code>, <code>.../Bl/StudioVersion/StudioVersionValidator.cs</code>, <code>.../Options/StudioVersionChecker.cs</code>, <code>Orchestrator/LTools.Enums/StudioVersionExceptionBehaviorType.cs</code>; <code>.../Options/Robot.cs</code>, <code>.../Options/RobotStart.cs</code>, <code>.../Controllers/RobotsController.cs</code>; <code>Orchestrator/LTools.Orchestrator.RobotLogs/Options/RabbitMQ.cs</code>, <code>.../Controllers/RobotLogsController.cs</code>; <code>Orchestrator/LTools.Shared/Robot/VersionRobotUtil.cs</code>; <code>.../Controllers/ExchangeQueuesController.cs</code>, <code>AssetsController.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Bl/RobotClient.cs</code>, <code>.../Bl/ProcessingPipelines/DeployRobotPipeline.cs</code>, <code>DownloadRobotDistrPipeline.cs</code>, <code>StartLinuxRobotPipeline.cs</code>, <code>StartWindowsRobotPipeline.cs</code>, <code>Orchestrator/LTools.Orchestrator.Agent/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.DataModel/Identity/Role.cs</code>, <code>Orchestrator/LTools.Orchestrator.IdentityDal/SeedData.cs</code>; <code>BaGet/src/BaGet.Web/BaGetEndpointBuilder.cs</code>. UI4: <code>package.json</code>, <code>CHANGELOG.md</code>. Старые доки: сайт, «Системные требования».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

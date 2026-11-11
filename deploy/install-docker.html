@@ -11,70 +11,138 @@
 <main>
 <h1>Установка в Docker</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Docker</span></div>
-<p class="lead">Самый быстрый путь: весь Оркестратор поднимается одним файлом <code>docker-compose.yml</code> — PostgreSQL, RabbitMQ, все службы и UI на nginx с HTTPS.</p>
+<p class="lead">Страница проведёт от чистого Linux-сервера до страницы входа в Оркестратор. Всё ставится на один сервер одним compose-файлом: PostgreSQL, RabbitMQ, службы Оркестратора и веб-интерфейс.</p>
 <div class="meta">
-  <div><b>Перед началом</b><a href="checklist.html">Что подготовить</a> — блоки «Дистрибутивы» и «Сертификаты»</div>
-  <div><b>Результат</b>все контейнеры в статусе <code>healthy</code>, UI открывается по <code>https://&lt;адрес&gt;:44392</code></div>
+  <div><b>Перед началом</b>Linux-сервер, доступ по SSH с правами <code>sudo</code>, файлы из <a href="download.html">Дистрибутивов</a>, логин и пароль от реестра образов Primo RPA</div>
+  <div><b>Результат</b>все контейнеры в состоянии <code>healthy</code>, по адресу <code>https://&lt;адрес сервера&gt;:44392</code> открывается страница входа</div>
 </div>
-<div class="note"><p>Docker-поставка работает только с PostgreSQL. RDP2 в compose нет: если нужны RDP-сессии Windows-роботов, поставьте RDP2 отдельно, службой. Нужен MS SQL Server — выбирайте <a href="install-services.html#windows">Установку служб на Windows Server</a>.</p></div>
 
-<h2>Что нужно</h2>
-<ul>
-  <li>Linux-сервер с Docker Engine и плагином <code>docker compose</code>.</li>
-  <li>Доступ к реестру образов Primo RPA.</li>
-  <li>В одном каталоге: <code>docker-compose.yml</code>, <code>nginx.conf</code> (это <code>nginx.docker.conf</code> из поставки), <code>cert1.crt</code>, <code>cert1.rsa</code>.</li>
-</ul>
-
-<h2>Что внутри compose</h2>
+<h2 id="mode">Стенд или промышленная установка</h2>
+<p>Шаги одинаковые, разница — в том, что можно оставить как в поставке.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Сервис</th><th>Порт внутри сети</th><th>Опубликован на хосте</th></tr>
-  <tr><td><code>0postgres-db</code> (postgres:14)</td><td>5432</td><td><code>5432</code></td></tr>
-  <tr><td><code>0rabbitmq</code> (rabbitmq:3-management)</td><td>5672, 15672</td><td><code>15672</code></td></tr>
-  <tr><td><code>ui</code> (nginx + UI4)</td><td>44392</td><td><code>44392</code></td></tr>
-  <tr><td><code>machine-info</code></td><td>5051</td><td>—</td></tr>
-  <tr><td><code>web-api</code></td><td>5001</td><td>—</td></tr>
-  <tr><td><code>robot-logs</code>, <code>analytic</code>, <code>states</code>, <code>notifications</code>, <code>log-events-webhook</code></td><td>56748, 56749, 56750, 56751, 56770</td><td>—</td></tr>
-  <tr><td><code>queues</code>, <code>licenses</code></td><td>5088, 5089</td><td>—</td></tr>
-  <tr><td><code>nuget</code></td><td>8081</td><td><code>8081</code></td></tr>
-  <tr><td><code>mcp</code></td><td>5080</td><td>— (только через nginx: <code>/mcp</code>)</td></tr>
+  <tr><th>Что</th><th>Стенд для знакомства</th><th>Промышленная установка</th></tr>
+  <tr><td>Сертификат HTTPS</td><td>самоподписанный, создаётся одной командой на шаге 4</td><td>выпущен вашим удостоверяющим центром на имя сервера</td></tr>
+  <tr><td>Пароли и ключи в compose-файле</td><td>можно оставить из поставки</td><td>заменить все до первого запуска — шаг 5</td></tr>
+  <tr><td>Порты PostgreSQL и консоли RabbitMQ</td><td>можно оставить открытыми</td><td>закрыть — шаг 5</td></tr>
 </table></div>
-<p>Данные лежат в именованных томах: <code>pgdata</code>, <code>rabbitmqdata</code>, <code>webapidata</code> (дистрибутивы робота и агента в <code>/data</code>), <code>nugetdata</code>. Файлы хранятся в файловой системе (<code>FileStore__Type: 0</code>), отдельное S3-хранилище не нужно.</p>
+<p>Стенд нельзя превратить в промышленную установку сменой паролей на ходу: лицензия привязывается к ключу из compose-файла, а пароли в базе шифруются при первом запуске. Для промышленной установки пройдите шаг 5 до запуска.</p>
+<div class="note"><p>В Docker Оркестратор работает только с PostgreSQL. Нужен MS SQL Server — выбирайте <a href="install-services.html#windows">Установку служб на Windows Server</a>.</p></div>
 
-<h2>Шаги</h2>
+<h2 id="steps">Шаги</h2>
+<p>Команды выполняйте на сервере. В примерах сервер — Ubuntu 24.04, рабочий каталог — <code>/opt/Docker</code>.</p>
 <ol class="steps">
-  <li>Заполните блок <code>x-globals</code>:
+  <li><b>Установите Docker.</b> Если Docker уже стоит, переходите к проверке в конце шага.
+<pre><code>sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</code></pre>
+    Для другой ОС возьмите команды из <a href="https://docs.docker.com/engine/install/">официальной инструкции Docker</a>.
+    <span class="check">команда <code>sudo docker compose version</code> печатает номер версии</span></li>
+
+  <li><b>Создайте каталог и положите в него файлы.</b>
+<pre><code>sudo mkdir -p /opt/Docker
+cd /opt/Docker</code></pre>
+    Скопируйте в каталог два файла из поставки и назовите их так:
+    <div class="tbl-wrap"><table>
+      <tr><th>Файл в поставке</th><th>Имя в каталоге</th></tr>
+      <tr><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code></td><td><code>docker-compose.yml</code></td></tr>
+      <tr><td><code>orchestrator/data/NGINX/nginx.docker.conf</code></td><td><code>nginx.conf</code></td></tr>
+    </table></div>
+    <span class="check">команда <code>ls /opt/Docker</code> показывает <code>docker-compose.yml</code> и <code>nginx.conf</code></span></li>
+
+  <li><b>Укажите адрес сервера.</b> Это адрес, по которому Оркестратор будут открывать пользователи и роботы: DNS-имя или IP. IP сервера показывает команда <code>hostname -I</code>.
+    Откройте файл: <code>sudo nano docker-compose.yml</code>. Адрес из примера, <code>10.0.0.18</code>, стоит в двух строках — замените его в обеих:
+<pre><code>base-url: &amp;base-url https://10.0.0.18:44392
+RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
+    Порт <code>44392</code> и остальное в строках не трогайте. Если сервер работает не по московскому времени, в начале файла замените <code>tz</code> (например, <code>Asia/Yekaterinburg</code>) и <code>TimeOffset</code> (разница с UTC в часах, например <code>5</code>). Строку <code>culture</code> не меняйте.
+    <span class="check">команда <code>grep -c "10.0.0.18" docker-compose.yml</code> печатает <code>0</code></span></li>
+
+  <li><b>Положите сертификат.</b> В каталоге должны лежать сертификат <code>cert1.crt</code> и закрытый ключ <code>cert1.rsa</code> — именно с такими именами.
+    <p><b>Стенд.</b> Создайте самоподписанный сертификат, подставив адрес сервера:</p>
+<pre><code>sudo openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout cert1.rsa -out cert1.crt -subj "/CN=&lt;адрес сервера&gt;"</code></pre>
+    <p><b>Промышленная установка.</b> Сертификат на имя сервера выпускает ваша служба безопасности или удостоверяющий центр. Скопируйте файлы в каталог под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля.</p>
+    <p>Веб-интерфейс в контейнере работает не от root, поэтому дайте ему право читать оба файла:</p>
+<pre><code>sudo chown 101 cert1.crt cert1.rsa</code></pre>
+    <span class="check">команда <code>ls -l /opt/Docker</code> показывает четыре файла, у обоих файлов сертификата владелец <code>101</code></span></li>
+
+  <li><b>Только для промышленной установки: замените пароли и ключи.</b> На стенде шаг пропустите.
+    <p>Все пароли и ключи собраны в начале compose-файла в блоке <code>x-secrets</code>:</p>
     <ul>
-      <li><code>tz</code> и <code>TimeOffset</code> — часовой пояс и смещение в часах;</li>
-      <li><code>culture</code> — язык;</li>
-      <li><code>base-url</code> — внешний адрес Оркестратора, например <code>https://orch.example.local:44392</code>. Он уходит в <code>NuGet__NuGetBaseUrl</code>, <code>RobotDeployment__OrchBaseUrl</code>, <code>RobotDeployment__RobotLogsBaseUrl</code>.</li>
+      <li>Придумайте свои значения для всех строк с паролями и ключами.</li>
+      <li>У части паролей две строки: открытая и с окончанием <code>-encrypted</code>. Во вторую вписывается тот же пароль в зашифрованном виде. Зашифровать его можно утилитой PasswordEncryptor из поставки: запустите её, введите пароль, нажмите Enter и скопируйте строку, напечатанную после слов «Copy following string».</li>
+      <li>Пароли MCP Server (<code>mcp-orch-pass</code>, <code>mcp-api-key</code>) пишутся только открытым текстом.</li>
+      <li><code>primo-machine-key</code> — ключ, к которому привязывается лицензия. Задайте свой до запроса лицензии и сохраните в надёжном месте: без него лицензию на новом сервере не восстановить.</li>
+      <li>Чтобы к PostgreSQL и консоли RabbitMQ нельзя было подключиться снаружи, удалите у служб <code>0postgres-db</code> и <code>0rabbitmq</code> строки <code>ports:</code> вместе со следующей за ними строкой с номером порта.</li>
     </ul>
-    <span class="check">в файле не осталось адреса из примера</span></li>
-  <li>В сервисе <code>web-api</code> поправьте <code>RDP__RdpBaseUrl</code>: <code>https://&lt;внешний адрес&gt;:44392/rdpstream</code>. <span class="check">адрес совпадает с <code>base-url</code> плюс <code>/rdpstream</code></span></li>
-  <li>Замените все значения в <code>x-secrets</code>. Пароли с суффиксом <code>-encrypted</code> зашифруйте утилитой PasswordEncryptor; открытые и зашифрованные значения должны соответствовать друг другу. <span class="check">в файле нет паролей из примера</span></li>
-  <li><code>primo-machine-key</code> (<code>CustomerBinding__Key</code> у machine-info) — ключ, к которому привязывается лицензия вместо параметров оборудования. Задайте его до запроса лицензии.</li>
-  <li>В <code>nginx.conf</code> в блоке <code>upstream rdpstream</code> укажите адрес машины с RDP2 (RDP2 работает вне compose). <span class="check"><code>server &lt;адрес RDP2&gt;:5102;</code></span></li>
-  <li>Положите <code>cert1.crt</code> и <code>cert1.rsa</code> рядом с compose. Другие имена — только если поправите пути в <code>nginx.conf</code>. <span class="check">файлы на месте, ключ читается</span></li>
-  <li>Войдите в реестр (<code>docker login</code>) и запустите:
-<pre><code>docker compose up -d</code></pre>
-    <span class="check"><code>docker compose ps</code> показывает все сервисы в состоянии <code>healthy</code></span></li>
-  <li>Откройте <code>https://&lt;внешний адрес&gt;:44392</code>. <span class="check">открывается страница входа UI4</span></li>
+    <span class="check">в блоке <code>x-secrets</code> не осталось значений из поставки: команда <code>grep -c "Qwe123" docker-compose.yml</code> печатает <code>0</code></span></li>
+
+  <li><b>Только если роботам нужны RDP-сессии: укажите адрес RDP2.</b> Служба RDP2 в compose-файл не входит, её ставят отдельно — см. <a href="install-services.html">Установку служб</a>. В <code>nginx.conf</code> найдите блок <code>upstream rdpstream</code> и замените в нём адрес на адрес машины с RDP2, порт <code>5102</code> оставьте.
+    Если RDP2 нет или вы пока не знаете, нужна ли она, ничего не меняйте: адрес из примера запуску не мешает, его можно поправить позже.</li>
+
+  <li><b>Войдите в реестр образов и запустите.</b> Логин и пароль от реестра выдаёт Primo RPA.
+<pre><code>sudo docker login nexus.primo-rpa.ru:8000
+sudo docker compose up -d</code></pre>
+    При первом запуске Docker скачивает образы, а служба <code>web-api</code> создаёт базу данных — это занимает несколько минут. Состояние смотрите командой:
+<pre><code>sudo docker compose ps</code></pre>
+    <span class="check">у всех служб в колонке STATUS стоит <code>healthy</code></span>
+    <p>Если через десять минут какая-то служба остаётся <code>unhealthy</code> или перезапускается, посмотрите её журнал: <code>sudo docker compose logs &lt;имя службы&gt;</code>. Имя службы — из колонки SERVICE.</p></li>
+
+  <li><b>Откройте Оркестратор в браузере:</b> <code>https://&lt;адрес сервера&gt;:44392</code>. С самоподписанным сертификатом браузер предупредит о небезопасном соединении — на стенде это ожидаемо, выберите «Дополнительно» и продолжите.
+    <span class="check">открылась страница входа</span></li>
 </ol>
 
-<div class="note"><p>Порядок старта задан в compose: web-api ждёт здоровых PostgreSQL, RabbitMQ и machine-info, остальные службы — здоровый web-api. Первый старт web-api дольше обычного: он создаёт и мигрирует БД.</p></div>
+<h2 id="offline">Сервер без доступа в интернет</h2>
+<details>
+  <summary>Как перенести образы на сервер в закрытом контуре</summary>
+  <p>Образы скачивают на компьютере с интернетом и Docker, переносят файлом и загружают на сервере. Docker на сервере ставят из пакетов вашей ОС или внутреннего репозитория.</p>
+  <ol class="substeps">
+    <li>На компьютере с интернетом положите <code>docker-compose.yml</code> в пустой каталог, войдите в реестр и скачайте образы:
+<pre><code>docker login nexus.primo-rpa.ru:8000
+docker compose pull
+docker save -o images.tar $(docker compose config --images)</code></pre></li>
+    <li>Перенесите <code>images.tar</code> на сервер в <code>/opt/Docker</code>.</li>
+    <li>На сервере загрузите образы и продолжайте с шага 2. Вход в реестр на шаге 7 не нужен.
+<pre><code>sudo docker load -i /opt/Docker/images.tar</code></pre></li>
+  </ol>
+</details>
 
-<div class="warn"><p>Порты <code>5432</code> и <code>15672</code> опубликованы на хосте. Если доступ к БД и консоли RabbitMQ извне не нужен — уберите их из <code>ports</code>.</p></div>
+<h2 id="inside">Справка: что внутри compose-файла</h2>
+<details>
+  <summary>Службы, порты и тома</summary>
+  <div class="tbl-wrap"><table>
+    <tr><th>Служба</th><th>Порт внутри сети Docker</th><th>Открыт на сервере</th></tr>
+    <tr><td><code>0postgres-db</code> (PostgreSQL 14)</td><td>5432</td><td><code>5432</code></td></tr>
+    <tr><td><code>0rabbitmq</code> (RabbitMQ 3 с консолью)</td><td>5672, 15672</td><td><code>15672</code></td></tr>
+    <tr><td><code>ui</code> (nginx и веб-интерфейс)</td><td>44392</td><td><code>44392</code></td></tr>
+    <tr><td><code>machine-info</code></td><td>5051</td><td>—</td></tr>
+    <tr><td><code>web-api</code></td><td>5001</td><td>—</td></tr>
+    <tr><td><code>robot-logs</code>, <code>analytic</code>, <code>states</code>, <code>notifications</code>, <code>log-events-webhook</code></td><td>56748, 56749, 56750, 56751, 56770</td><td>—</td></tr>
+    <tr><td><code>queues</code>, <code>licenses</code></td><td>5088, 5089</td><td>—</td></tr>
+    <tr><td><code>nuget</code></td><td>8081</td><td><code>8081</code></td></tr>
+    <tr><td><code>mcp</code></td><td>5080</td><td>— (только через nginx: <code>/mcp</code>)</td></tr>
+  </table></div>
+  <p>Пользователям и роботам нужен только порт <code>44392</code>: все обращения идут через nginx.</p>
+  <p>Данные лежат в томах Docker и переживают пересоздание контейнеров: <code>pgdata</code> (база данных), <code>rabbitmqdata</code>, <code>webapidata</code> (загруженные дистрибутивы робота и агента), <code>nugetdata</code>. Отдельное файловое хранилище не нужно.</p>
+  <p>Порядок запуска задан в файле: <code>web-api</code> ждёт PostgreSQL, RabbitMQ и <code>machine-info</code>, остальные службы ждут <code>web-api</code>.</p>
+</details>
 
-
-
-
-
+<div class="todo"><p>Не проверено на стенде (сухой проход 11.11.2026): владелец <code>101</code> для файлов сертификата (по <code>ui.Dockerfile</code>: <code>USER 101</code>); что nginx стартует с недоступным адресом в <code>upstream rdpstream</code>; время первого запуска; что <code>nginx.docker.conf</code> лежит в <code>orchestrator/data/NGINX/</code>.</p></div>
+<div class="todo"><p>Уточнить у разработки: кто и как выдаёт логин и пароль к реестру <code>nexus.primo-rpa.ru:8000</code> (адрес взят со старого сайта, <code>install/installation-docker.mdx</code>); в каком архиве поставки лежит PasswordEncryptor и есть ли сборка под Linux; как в Docker задать свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code> (в <code>web-api.Dockerfile</code> они объявлены пустыми, в compose-шаблоне их нет). По коду <code>PasswordEncryptor/Program.cs</code> пароль читается со стандартного ввода; старый сайт (<code>security.mdx</code>) описывает запуск с аргументами.</p></div>
+<div class="todo"><p>Healthcheck сервиса <code>ui</code> обращается к <code>https://localhost:44392/health</code>, но в <code>nginx.docker.conf</code> отдельного <code>location /health</code> нет — запрос обслуживает <code>location /</code> (отдаёт <code>index.html</code>). Работает, но проверяет только nginx.</p></div>
+<div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в 1.26.9 конвейером не собираются. Не описывать, пока не подтвердят поставку. Helm-чарты в <code>k8s/helm</code> — для внутреннего стенда.</p></div>
+<div class="todo"><p>Можно ли менять <code>CustomerBinding__Key</code> после выдачи лицензии — в коде не видно; уточнить у разработки.</p></div>
 
 <h2>Что дальше</h2>
 <div class="next">
+  <a href="first-run.html">Первый запуск<small>войти, получить лицензию, добавить робота</small></a>
   <a href="agent.html">Машины роботов и агент<small>поставить агент на машины, где будут работать роботы</small></a>
-  <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
 
+<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>USER</code>, порты, <code>FileStore__Type</code>); <code>nginx/nginx.docker.conf</code>; <code>azure/docker.ps1</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/BL/CustomerBinding.cs</code>; <code>Orchestrator/LTools.Orchestrator.PasswordEncryptor/Program.cs</code>; старый сайт: <code>install/installation-docker.mdx</code>, <code>installation-docker-offline.mdx</code>, <code>security.mdx</code>; журнал сухого прохода <code>сухой-проход-2026-11-11.md</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

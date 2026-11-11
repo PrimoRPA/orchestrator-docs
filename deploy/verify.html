@@ -66,8 +66,10 @@
   <tr><td>MCP Server</td><td><code>/mcp/health</code>; 503, пока Оркестратор недоступен.</td></tr>
 </table></div>
 </details>
-<p>На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
-<pre><code>curl -f http://localhost:5001/health        # WebApi
+<p data-only="docker">В Docker порты служб наружу не открыты: их каждые 30 секунд опрашивает сам compose, и состояние <code>healthy</code> из этапа 1 — это и есть результат проверки. С сервера проверьте только вход через nginx:</p>
+<pre data-only="docker"><code>curl -k -f https://localhost:44392/api/Version   # печатает номер версии</code></pre>
+<p data-only="linux windows">На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
+<pre data-only="linux windows"><code>curl -f http://localhost:5001/health        # WebApi
 curl -f http://localhost:5051/health        # MachineInfo
 curl -f http://localhost:56748/health       # RobotLogs
 curl -k -f https://localhost:44392/api/Version   # WebApi через nginx, без авторизации</code></pre>
@@ -77,11 +79,11 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
 
 <span class="stage">Этап 3 из 3</span>
 <h2 id="run">Тестовый запуск</h2>
-<p>Последняя проверка — сквозная: проект проходит весь путь от Оркестратора до робота и обратно в журнал. Понадобится тестовый RPA-проект из <a href="checklist.html">Что подготовить</a>.</p>
+<p>Последняя проверка — сквозная: проект проходит весь путь от Оркестратора до робота и обратно в журнал. Понадобится тестовый RPA-проект: подойдёт любой простой проект, собранный в Студии, в виде архива <code>zip</code> — попросите его у разработчика роботов. Нужны также машина и робот из <a href="first-run.html">Первого запуска</a>.</p>
 <ol class="steps">
   <li><b>Настройки → Лицензии</b>. <span class="check">есть действующая лицензия</span></li>
   <li><b>Настройки → Система → Машины роботов</b>. <span class="check">у каждой машины заполнены <b>Доступна</b> и <b>Версия агента</b></span></li>
-  <li><b>RPA-проекты → Все RPA-проекты → Добавить RPA-проект</b>, загрузите тестовый проект и нажмите <b>Добавить робота к проекту</b>. <span class="check">робот привязан к проекту</span></li>
+  <li><b>RPA-проекты → Все RPA-проекты → Добавить RPA-проект</b>, загрузите архив проекта и нажмите <b>Добавить робота к проекту</b>. <span class="check">робот привязан к проекту</span></li>
   <li>Нажмите <b>Запустить проект</b>. <span class="check">сообщение «Проект успешно запущен», запуск виден в <b>Журналы → События оркестратора</b>, журнал робота открывается по действию <b>Журнал</b></span></li>
 </ol>
 <p>Готово: Оркестратор, агент и робот работают вместе.</p>
@@ -100,10 +102,13 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
   <a href="../operate/monitoring.html">Мониторинг и метрики<small>чтобы узнавать о сбоях раньше пользователей</small></a>
 </div>
 
+<div class="todo"><p>Сухой проход 11.11.2026: формат проекта «архив zip» взят из подписи в UI4 (<code>projects.json</code>: «Архив (zip)»); есть ли готовый тестовый проект в поставке — уточнить.</p></div>
+<div class="todo"><p>Точное расположение кнопок «Добавить робота к проекту», «Запустить проект» проверить на стенде и приложить скриншоты.</p></div>
+<div class="todo"><p>Старые доки: проверка агента <code>https://{IP}:5002/api/Worker</code> «вернёт HTTP 204». По коду 1.26.9 <code>GET api/Worker</code> возвращает 200 и строку версии агента.</p></div>
+<div class="todo"><p>Healthcheck WebApi не проверяет БД и RabbitMQ — для мониторинга этого мало. Описать в «Мониторинг и метрики» метрики Prometheus (порт <code>10052</code>) как основной сигнал.</p></div>
+<div class="todo"><p>В Docker (ubuntu) у nginx нет отдельного <code>location /health</code>: <code>https://localhost:44392/health</code> отдаёт <code>index.html</code> с кодом 200. Проверяет только nginx, не службы.</p></div>
 
-
-
-
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>, <code>HealthCheckNames.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Bl/HealthCheck/HealthCheckService.cs</code>, <code>LTools.Orchestrator.MachineInfo/BL/HealthCheckService.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (<code>AddHealthChecks</code>, <code>MapHealthCheckEndpoints</code>); <code>BaGet/src/BaGet/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Controllers/WorkerController.cs</code>, <code>VersionController.cs</code>, <code>Bl/OrchestratorSession/OrchestratorBaseUrlService.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/VersionController.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (<code>healthcheck</code>); <code>docker/ubuntu/*.Dockerfile</code> (<code>Serilog__*</code>); <code>Orchestrator/LTools.Orchestrator.*/*.service</code> (<code>SyslogIdentifier</code>); <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.docker.conf</code>; руководство 1.25.7, раздел «Устранение типовых проблем».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

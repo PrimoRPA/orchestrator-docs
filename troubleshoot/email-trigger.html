@@ -38,6 +38,7 @@
   <li>Проверьте фильтры триггера. <b>От</b> — список адресов через запятую, сравнение по вхождению строки. <b>Тема</b> — регулярное выражение или подстрока. <span class="check">Тестовое письмо подходит под оба фильтра</span></li>
   <li>Проверьте папку: берётся папка из триггера, иначе папка ящика, иначе <code>INBOX</code>.</li>
 </ol>
+<div class="todo"><p>Скриншот: экран «Email входящей почты», форма ящика с кнопкой «Тест»; форма триггера «Запуск при получении Email» с полями «От», «Тема», интервалом опроса.</p></div>
 
 <h2>Как исправить</h2>
 <h3>Много непрочитанных писем</h3>
@@ -64,8 +65,10 @@
 </table></div>
 <div class="warn"><p>У секции <code>Triggers:Email</code> нет значений по умолчанию, если её нет в конфигурации: значения из таблицы действуют, только когда секция задана. В Dockerfile поставки она задаётся переменными <code>Triggers__Email__*</code>.</p></div>
 
+<div class="todo"><p>Ошибка подключения в опросе пишется в журнал только текстом исключения, без имени триггера, и событие не создаётся. Событие «Сработал триггер Email» (60002) в коде не создаётся. Предложить разработке.</p></div>
+<div class="todo"><p>Параметр <code>Triggers:Email:IsLotus</code> объявлен, но в коде не используется. Уточнить у разработки, как настраивать Lotus.</p></div>
 
-
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/{Triggers,Tenants}.cs</code>, <code>Bl/Assignments/EventBus/TriggerNativeEmailEventBusService.cs</code>, <code>Controllers/IncomingEmailsController.cs</code>, <code>Program.cs</code>, <code>Readme.txt</code>; <code>docker/*/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/{email,jobs}.json</code>, <code>src/entities/email/model/email.store.ts</code>; старая статья <code>orchestrator-admin-ui4/email.mdx</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

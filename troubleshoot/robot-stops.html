@@ -34,6 +34,7 @@
   <li>Откройте события Оркестратора на время остановки. Ищите «Лицензия робота освобождена по таймауту». В журнале WebApi — «Освобождение лицензии робота с robotKey=… по таймауту…». <span class="check">Понятно, освобождал ли Оркестратор лицензию</span></li>
   <li>Проверьте журнал WebApi на перезапуски службы в это время.</li>
 </ol>
+<div class="todo"><p>Скриншот: форма задания, блок «Автоматически останавливать робота» и триггер «Остановка по таймауту».</p></div>
 <h3>Как исправить</h3>
 <p>Если лицензия освобождается по таймауту, робот не присылал keepalive дольше <code>RobotStart:IntervalForReleaseInSeconds</code>. Вместе с лицензией Оркестратор отключает RDP-сессию робота, и проект прерывается. Варианты:</p>
 <ul>
@@ -64,8 +65,10 @@
 </ol>
 <div class="warn"><p>Linux: при принудительной остановке агент завершает один процесс робота командой <code>kill</code>, а не всё дерево процессов. Дочерние процессы, например браузер, могут остаться. На Windows завершается всё дерево.</p></div>
 
+<div class="todo"><p>В тексте «Рoбот занят Оркестратором {0}.» в коде буква «o» в слове «Рoбот» латинская. Поиск по журналу с кириллической «о» эту строку не найдёт. Передать разработке.</p></div>
+<div class="todo"><p>Перевод робота в «Недоступен» по <code>Robot:RunStatusTimeout</code> в журнал не пишется. Уточнить у разработки, влияет ли он на выполнение проекта.</p></div>
 
-
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/{RobotStart,Robot,Assignment}.cs</code>, <code>Bl/Licensing/RobotTimeoutReleaseLicensesService.cs</code>, <code>Bl/Assignments/LaunchTimeoutService.cs</code>, <code>Bl/Robots/RobotService.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>LTools.Orchestrator.Agent/Bl/Runners/{WindowsScriptRunner,LinuxScriptRunner}.cs</code>; <code>LTools.Enums/OrchestratorEvent.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/{robots,jobs}.json</code>, <code>src/shared/api/agent/robots/index.ts</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

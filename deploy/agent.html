@@ -91,10 +91,12 @@ agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
   <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
 
+<div class="todo"><p>Скрипт <code>PrimoWorker.ps1</code> (команды шагов для Windows взяты из него) лежит в проекте агента, но не копируется в архив агента — уточнить, поставляется ли он отдельно. Проекта <code>AgentInstaller</code> (установщик с авторегистрацией из старых доков) в ветке 1.26.9 нет, в <code>azure/build.ps1</code> он не собирается.</p></div>
+<div class="todo"><p>Команды сеанса по умолчанию взяты из кода агента (<code>StartLinuxRobotPipeline.cs</code>); какую команду ставить на Ubuntu — уточнить у разработки. Список пакетов для графических сеансов (Xvfb/Xvnc и др.) — по путям в <code>LinuxToolsPaths</code>, подтвердить.</p></div>
+<div class="todo"><p>Расхождение со старыми доками: в инструкции для Agent 1.26.7 в sudoers были также <code>systemd-run … --unit=primo-robot-*</code> и <code>systemctl stop primo-robot-*.service</code>. В коде 1.26.9 таких вызовов нет; есть <code>systemd-run</code> без <code>--unit</code> и <code>reboot</code>. С 1.26.8 роботы запускаются через <code>su</code> вместо <code>sudo</code>.</p></div>
+<div class="todo"><p>Где лежит HTTPS-сертификат агента для порта 5002 (<code>Kestrel:EndPoints:ExternalHttps:Certificate</code>, в архиве есть <code>cert1.pfx</code>) и как его заменить — описать после проверки.</p></div>
 
-
-
-
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>, <code>Primo.Orchestrator.Agent.service</code>, <code>Primo.Orchestrator.Agent.user.service</code>, <code>LTools.Orchestrator.Agent.csproj</code>, <code>Readme.txt</code>, <code>ApplicationHostedService.cs</code>, <code>Options/Agent.cs</code>, <code>Options/DeployRobot.cs</code>, <code>Options/Orchestrator.cs</code>, <code>Bl/Runners/LinuxScriptRunner.cs</code>, <code>Bl/OrchestratorSession/*</code>, <code>Bl/HealthCheck/HealthCheckService.cs</code>, <code>Controllers/VersionController.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent.Common/LinuxCommand.cs</code>, <code>LinuxToolsPaths.cs</code>, <code>Options/AgentCommands.cs</code>; <code>Orchestrator/LTools.Orchestrator.AgentUpdater/Readme.txt</code>; <code>azure/build.ps1</code>; <code>k8s/agent/install.sh</code>; UI4: <code>src/shared/lib/translations/ru/machines.json</code>, <code>agentdistrs.json</code>, <code>common.json</code>, <code>src/features/setting/form/MachineForm.tsx</code>, <code>src/shared/config/menuConfig.ts</code>; старый сайт, <code>machines-setup/</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

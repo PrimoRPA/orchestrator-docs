@@ -49,10 +49,12 @@
   <a href="hardware.html">Требования к железу<small>сколько ресурсов нужно под выбранный вариант</small></a>
 </div>
 
+<div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в выгрузке есть, но конвейер сборки сейчас собирает только ubuntu-вариант (<code>BASE_IMAGE: ubuntu</code>, выбор astra закомментирован), а в astra-compose нет служб Queues и Licenses — уточнить, поставляется ли Docker на Astra в 1.26.9.</p></div>
+<div class="todo"><p>Kubernetes: в <code>k8s/helm/</code> есть Helm-чарты, но они для внутреннего стенда разработки (тестовые адреса и значения). Поставки для Kubernetes заказчику в коде не найдено — не обещать в доках, пока не подтвердят.</p></div>
+<div class="todo"><p>Старое руководство 1.25.7 помечало PostgreSQL на Windows как «без гарантии поддержки» — уточнить, поддерживается ли он сейчас на Windows Server.</p></div>
+<div class="todo"><p>Строки «С чем придётся работать», «RDP2 — ставится как служба» и «Где лежат файлы» для Windows сформулированы по смыслу, по коду не сверены — проверить у разработки. Тип СУБД задаётся параметром <code>DBVendor</code> (по умолчанию <code>Postgres</code>) — со страницы планирования убран, есть в справочнике параметров.</p></div>
 
-
-
-
+<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code>, <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/astra/docker-compose.yml.template</code>, <code>azure-pipelines-docker.yml</code>, <code>azure/docker.ps1</code>, <code>azure/build.ps1</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/LTools.Orchestrator.WebApi.csproj</code> (<code>AspNetCoreHostingModel</code>), <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/nginx.docker.conf</code>, <code>Orchestrator/LTools.Orchestrator.*/*.service</code>, <code>k8s/helm/</code>; руководство 1.25.7, раздел «Комплект поставки» (таблицы 3–4).</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

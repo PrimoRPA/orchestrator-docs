@@ -11,6 +11,7 @@
 <main>
 <h1>Перенос на другой сервер или СУБД</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="todo"><p>Нужен ли раздел — уточнить у поддержки: бывают ли такие переносы у клиентов.</p></div>
 <p class="lead">Что перенести, чтобы Оркестратор заработал на новом месте, и что будет с лицензиями. Главный риск переезда — лицензии: они привязаны к оборудованию.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
@@ -60,7 +61,15 @@
   <a href="../deploy/verify.html">Проверка установки<small>убедиться, что всё работает на новом месте</small></a>
 </div>
 
+<div class="todo">
+<p>Поддерживаемый способ переноса данных PostgreSQL ↔ MS SQL Server (и поддерживается ли он вообще) — уточнить у продукта.</p>
+<p>Нужно ли переразвёртывать роботов после смены адреса Оркестратора. По коду агент при развёртывании правит в конфиге робота только порт и сертификат, а адрес Оркестратора передаётся при запуске (<code>RobotDeployment:OrchBaseUrl</code>) — проверить на стенде.</p>
+<p>Привязка к «учётной записи службы MachineInfo» на Windows взята из кода (<code>WindowsIdentity.GetCurrent()</code>). Старые доки говорят про учётные записи WebApi и MachineInfo — уточнить, влияет ли учётка WebApi.</p>
+<p>Перенос RabbitMQ (очереди, виртуальный хост <code>RabbitMQ:VirtualHost</code>) и Redis при переезде не описан.</p>
+<p>Переезд Docker-установки целиком (перенос томов между хостами) — проверить и дописать пример команд.</p>
+</div>
 
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>ConfigureBlModules</code>, <code>GetConnectionStrings</code>), <code>Orchestrator/LTools.Orchestrator.WebApi/Options/License.cs</code>, <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/ExtWeb/ExtWebMachineInfoService.cs</code>, <code>Bl/Licensing/LicenseStateService.cs</code> (проверка системного времени),<code>Bl/Licensing/Postgres/ServerDbMachineInfoService.cs</code>, <code>Bl/Licensing/MSSQL/ServerDbMachineInfoService.cs</code>; <code>Orchestrator/LTools.Orchestrator.License.Migrations.Postgres/Linux|Windows/*.sql</code>, <code>Orchestrator/LTools.Orchestrator.License.Migrations.MSSQL/get_cpu_hdd_host.txt</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/</code> (<code>Startup.cs</code>, <code>BL/CustomerBinding.cs</code>, <code>BL/WindowsMachineInfoService.cs</code>, <code>BL/LinuxMachineInfoService.cs</code>); <code>Orchestrator/LTools.Shared/Config/ConfigSecrets.cs</code>, <code>Cryptography2.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Orchestrator.cs</code>, <code>.../Bl/ProcessingPipelines/DeployRobotPipeline.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code>. UI4: <code>src/shared/lib/translations/ru/licenses.json</code>. Старые доки: сайт, «Замена лицензии (UI4)».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

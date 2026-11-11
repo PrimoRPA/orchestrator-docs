@@ -127,6 +127,7 @@ curl http://localhost:5001/health</code></pre>
   <li>Для каждой машины выберите дистрибутив или включите «Последняя версия». Нажмите «Обновить». <span class="check">в колонке «Последнее обновление» — «Обновление запущено» с датой</span></li>
   <li>Следите за этапами: «Скачивание AgentUpdater», «Скачивание дистрибутива агента», «Остановка сервиса агента», «Обновление сервиса агента», «Запуск сервиса агента». В журнал событий пишутся записи <code>AgentUpdate OK - …</code>. <span class="check">«Версия агента» — новая</span></li>
 </ol>
+<div class="todo"><p>Скриншот: Настройки → Система → Машины роботов, панель «Обновление агента на машинах роботов», выделить выбор дистрибутива и кнопку «Обновить».</p></div>
 <p>Что происходит на машине: AgentUpdater останавливает службу агента (Windows — <code>Primo.Orchestrator.Agent</code>, Linux — <code>systemctl --user stop Primo.Orchestrator.Agent</code>), копирует каталог агента без <code>Logs</code> в <code>&lt;Agent:DataPath&gt;/AgentRecovery</code>, распаковывает новый дистрибутив и запускает службу. При ошибке он возвращает файлы из копии.</p>
 <p>Из старого конфига агента переносятся только эти ключи:</p>
 <div class="tbl-wrap"><table>
@@ -156,8 +157,18 @@ curl http://localhost:5001/health</code></pre>
   <a href="from-root.html">Переход с root на работу без root<small>если службы на Linux всё ещё работают от root</small></a>
 </div>
 
+<div class="todo"><p>Скриншот: Настройки → Система → Дистрибутивы робота, выделить «Сделать основным».</p></div>
 
+<div class="todo">
+<p>Порядок «роботы после агентов» и «Студии после сервера» в коде не обоснован: проверок версии робота или Студии относительно сервера не найдено (кроме настройки <code>StudioVersionChecker</code>). Можно ли работать на смешанных версиях (старый агент с новым сервером и наоборот) и сколько — уточнить у разработки.</p>
+<p>Старые доки требуют перед обновлением сервера остановить роботов и задания. В коде такого требования нет — уточнить у поддержки и при подтверждении добавить шаг.</p>
+<p>Обновление при нескольких узлах WebApi: миграции выполняет каждый узел при старте; нужно ли обновлять узлы по одному — в коде не найдено, уточнить у разработки.</p>
+<p>Linux: AgentUpdater управляет агентом через <code>systemctl --user</code>. Если агент установлен системным юнитом от root, автообновление, судя по коду, не сможет остановить и запустить службу. Проверить на стенде.</p>
+<p>Старые доки требуют после обновления удалить очереди и обменники RabbitMQ (<code>rabbitmqctl set_policy … expires</code>). Нужен ли этот шаг для перехода с 1.25.7 LTS — проверить.</p>
+<p>Ручное обновление агента без UI4 — описать на <a href="../deploy/agent.html">странице агента</a> после проверки.</p>
+</div>
 
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>UpdateDatabase</code>), <code>Program.cs</code> (<code>ASPNETCORE_ENVIRONMENT</code>, <code>UseIISIntegration</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/AgentDistrsController.cs</code>, <code>WorkersController.cs</code> (<code>AgentUpdate</code>, проверка 1.24.8.0), <code>RobotDistrsController.cs</code>, <code>OrchEventsController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/StudioVersionChecker.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/LicenseChecker.cs</code>; <code>Orchestrator/LTools.Orchestrator.AgentUpdater/</code> (<code>Program.cs</code>, <code>ConfigTransformers/*.cs</code>, <code>ServiceManager/*.cs</code>); <code>Orchestrator/LTools.Orchestrator.Agent/Bl/Commands/UpdateQueueService.cs</code>, <code>Options/Agent.cs</code>; <code>Orchestrator/*/Primo.Orchestrator.*.service</code>, <code>*.user.service</code>; <code>azure/build.ps1</code>, <code>azure/docker.ps1</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (1.25.7 и 1.26.9), <code>docker/ubuntu/web-api.Dockerfile</code>, <code>nuget2.Dockerfile</code>; <code>nginx/readme-nginx.linux.md</code>. UI4: <code>src/features/setting/machines/update-workers/ui/UpdateWorkers.tsx</code>, <code>src/features/setting/machines/update-tracking/ui/UpdateTracking.tsx</code>, <code>src/shared/lib/translations/ru/machines.json</code>, <code>agentdistrs.json</code>, <code>robotdistrs.json</code>, <code>robots.json</code>. Старые доки: руководство 1.25.7, «Автоматическое обновление Агента на машине Робота»; сайт, «Обновление Оркестратора под Windows/Linux», «Установка в Docker» → «Обновление версии».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

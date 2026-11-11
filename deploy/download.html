@@ -28,7 +28,7 @@
   <li>архив агента — для машин роботов;</li>
   <li>дистрибутив робота.</li>
 </ul>
-<p data-only="docker">Образы служб Docker скачает сам из реестра образов Primo RPA.</p>
+<p data-only="docker">Образы служб Docker скачает сам из реестра образов Primo RPA <code>nexus.primo-rpa.ru:8000</code>; для входа в реестр нужны логин и пароль, их выдаёт Primo RPA. Агент и дистрибутив робота нужны, когда дойдёте до машин роботов; для запуска серверной части хватит первых двух пунктов.</p>
 <ul data-only="linux">
   <li>архивы служб для Linux — какие именно, см. <a href="know.html#services">Какие службы ставить</a>;</li>
   <li>архив веб-интерфейса UI4;</li>
@@ -52,7 +52,7 @@
   <tr data-ver="1.26.7"><td>MCP Server</td><td><code>orchestrator/windows/</code> или <code>orchestrator/linux/</code>, <code>primo-rpa-mcp-1.26.7.1</code></td></tr>
   <tr><td>Веб-интерфейс UI4</td><td><code>orchestrator/ui/primo-rpa-orchestrator-ui-&lt;версия&gt;.zip</code> — один архив для всех ОС</td></tr>
   <tr><td>Конфиги nginx, юниты nginx, тестовый сертификат</td><td><code>orchestrator/data/NGINX/</code></td></tr>
-  <tr><td>Docker: compose-файл</td><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code>; образы — из реестра образов Primo RPA</td></tr>
+  <tr><td>Docker: compose-файл</td><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code>; образы — из реестра <code>nexus.primo-rpa.ru:8000</code></td></tr>
   <tr><td>Дистрибутив робота</td><td><code>robot/windows/</code> или <code>robot/linux/</code></td></tr>
 </table></div>
 
@@ -61,7 +61,8 @@
   <a href="checklist.html">Что подготовить<small>лист планирования и чек-лист перед установкой</small></a>
 </div>
 
-
+<div class="todo"><p>Какой из архивов робота (<code>zip</code>, <code>exe</code>, <code>msi</code>, <code>rpm</code>, <code>deb</code>) загружается в Оркестратор как «дистрибутив робота» — уточнить у разработки. Адрес реестра Docker-образов для клиента — уточнить.</p></div>
+<div class="todo"><p>Закрытый контур: перенос Docker-образов описан в «Установке в Docker» по старому сайту (<code>installation-docker-offline.mdx</code>). Прямая ссылка на папку версии в Nexus не дана — формат адреса папки не проверен.</p></div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

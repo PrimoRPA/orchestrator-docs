@@ -40,8 +40,10 @@
 </ul>
 <div class="warn"><p>Удаления старых записей по сроку в Оркестраторе нет: ни для журнала робота, ни для журнала Оркестратора, ни для снимков экрана. Объём держите в норме секционированием и удалением старых секций.</p></div>
 
+<div class="todo"><p>Секции читаются только из БД с именем <code>ltoolslogs</code> (имя зашито в запросе). Если БД журналов называется иначе, таблица секций будет пустой. Проверить и описать в «Обслуживании БД».</p></div>
+<div class="todo"><p>Удаление и дамп отдельной секции из UI4, скорее всего, не работают: обработчики команд в WebApi 1.26.9 закомментированы. Проверить на стенде; ожидаемая ошибка в журнале WebApi — «Ошибка обработки события административной команды для БД с логами.»</p></div>
 
-
+<div class="src">Источники: <code>ui4: src/shared/ui/Tabs/tabs.config.ts</code>, <code>src/features/setting/components/tabs.tsx</code>, <code>src/pages/monitoring/README.md</code>, <code>src/pages/journal/ui/*</code>, <code>src/shared/lib/translations/ru/{journal,robots,clientRobots,common}.json</code>; <code>backend: Orchestrator/LTools.Enums/{LogType,LogMessageType,OrchestratorEventType}.cs</code>, <code>LTools.Orchestrator.LogsDal/LogsDbContext.cs</code>, <code>LTools.Orchestrator.WebApi/Controllers/SettingsController.cs</code>, <code>LTools.Orchestrator.RobotLogs/Bl/LogEvents/Commands/Handlers/Postgres/TruncateLogsCommandHandler.cs</code>, <code>.../Queries/Handlers/Postgres/GetLogsSectionsQueryHandler.cs</code>, <code>LTools.Orchestrator.WebApi/Bl/RobotLogs/Commands/Handlers/Postgres/*</code>, <code>Controllers/AccountController.cs</code>; старые статьи <code>monitoring-ui4/*</code>, <code>orchestrator-admin-ui4/journals.mdx</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

@@ -35,10 +35,11 @@
   <li>WebApi. При старте он применяет миграции к БД <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>. <span class="check"><code>/health</code> на порту <code>5001</code> отвечает <code>Healthy</code>, в журнале нет ошибок миграций</span></li>
   <li>Остальные службы: RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2. <span class="check">каждая отвечает на <code>/health</code></span></li>
   <li>nginx с UI4 и сертификатом. <span class="check">UI открывается по <code>https://&lt;адрес&gt;:44392</code></span></li>
-  <li>RDP2 — обязательна, если роботы работают на Windows.</li>
+  <li>RDP2 — нужна, если роботы работают на Windows в RDP-сессиях. <span data-only="docker">В Docker-поставку не входит: её ставят отдельно, службой.</span></li>
   <li>Агенты на машинах роботов.</li>
 </ol>
 
+<div class="todo"><p>Порядок установки ArcSight и MCP Server и место RDP2 в последовательности в коде не заданы — уточнить. В поставочном compose RDP2 отсутствует.</p></div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

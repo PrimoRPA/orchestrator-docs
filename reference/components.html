@@ -38,6 +38,7 @@
 <tr><td>Агент</td><td><code>LTools.Orchestrator.Agent</code></td><td>Развёртывание и запуск роботов, RDP-пользователи, триггеры по папке, сбор производительности, скриншоты, обновление.</td><td>WebApi; RobotLogs</td></tr>
 <tr><td>Agent.Runner</td><td><code>LTools.Orchestrator.Agent.Runner</code></td><td>Только Linux: вспомогательный процесс агента для запуска робота в графическом сеансе. Входит в архив агента для Linux.</td><td>Агент</td></tr>
 <tr><td>AgentUpdater</td><td><code>LTools.Orchestrator.AgentUpdater</code></td><td>Обновление агента. Архивы <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> кладутся внутрь архивов WebApi.</td><td>Агент</td></tr>
+<tr><td>DpaAgent</td><td><code>LTools.Orchestrator.DpaAgent</code></td><td>Агент DPA для Linux. Поставляется deb-пакетами <code>primo-rpa-orchestrator-dpa-agent</code> и <code>primo-rpa-orchestrator-dpa-common</code>.</td><td>WebApi</td></tr>
 </table></div>
 
 <h2>Внешние компоненты</h2>
@@ -64,11 +65,13 @@
 <tr><td><code>Primo.Orchestrator.NuGet</code></td><td><code>/opt/Primo/NuGet2</code></td><td><code>root</code></td></tr>
 <tr><td><code>Primo.Orchestrator.Nginx</code></td><td><code>/opt/Primo/nginx</code></td><td><code>root</code></td></tr>
 <tr><td><code>Primo.Orchestrator.Agent</code></td><td><code>/opt/Primo/Agent</code></td><td><code>agent</code>; скрипт <code>k8s/agent/install.sh</code> ставит агент как пользовательский юнит</td></tr>
+<tr><td><code>Primo.Orchestrator.DpaAgent</code> (пользовательский)</td><td><code>/opt/primo-rpa/dpa-agent</code></td><td>—</td></tr>
 </table></div>
 <p>Во всех юнитах задано <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code>; служба запускается с ключом <code>--console</code>.</p>
 
 <h3>Windows</h3>
 <p>Службы на Windows работают как службы Windows (<code>ServiceBase</code>). Скрипт <code>PrimoWorker.ps1</code> регистрирует агент как службу <code>Primo.Orchestrator.Agent</code> (папка <code>C:\Primo\Agent</code>) и открывает в брандмауэре порт 5002.</p>
+<div class="todo"><p>Имена служб Windows для серверных компонентов (WebApi, RobotLogs и др.) в коде не заданы — их задаёт администратор при установке. Сверить с инструкциями по установке.</p></div>
 
 <h3>Docker</h3>
 <p>Образы собираются скриптом <code>azure/docker.ps1</code> на двух базах: Ubuntu 24.04 и Astra Linux (<code>astra/ubi18</code>). Имена образов и сервисов в шаблоне <code>docker-compose.yml.template</code>:</p>
@@ -90,6 +93,8 @@
 <tr><td><code>rabbitmq:3-management</code></td><td><code>0rabbitmq</code></td><td>RabbitMQ</td></tr>
 </table></div>
 <p>RDP2 в compose не входит: в <code>nginx.docker.conf</code> адрес RDP2 указывается вручную, служба работает вне Docker. Helm-чарты (<code>k8s/helm</code>) есть для webapi, robotlogs, licenses, queues, machineinfo, nuget2 и ui.</p>
+<div class="todo"><p>Старая статья «Компоненты системы» не упоминает службы Licenses и Queues: в 1.26.9 они есть в сборке, в Docker-образах и в маршрутах nginx. Там же указан PostgreSQL 13, а Docker-шаблоны 1.26.9 используют <code>postgres:14</code> — поддерживаемые версии СУБД сверить с требованиями.</p>
+<p>Для States, Notifications, Analytic и LogEventsWebhook Helm-чартов в <code>k8s/helm</code> нет — уточнить, как они разворачиваются в Kubernetes.</p></div>
 
 <h2>Служебные утилиты</h2>
 <div class="tbl-wrap"><table>
@@ -119,7 +124,12 @@ UI ◄── /events (WS:Path) ── WebApi: живые обновления в
 </ol>
 <p>Развёртывание идёт так же через агента (<code>api/Robots/Deploy</code>): агент скачивает дистрибутив робота, распаковывает его, на Windows правит <code>Primo.Robot.exe.config</code> (порт и сертификат) и резервирует URL робота.</p>
 
+<div class="todo"><p>Расхождение со старыми доками: в руководстве 1.25.7 Linux-робот запускается через <code>robotTask.sh</code>, в коде 1.26.9 — цепочка <code>start-0-runner.sh</code> / <code>start-1-session.sh</code> / <code>start-2-robot.sh</code> с хуками pre/post (хуки — с 1.26.6).</p>
+<p>Старые доки: «Оркестратор открывает RDP-сессию под учётной записью робота, дожидается загрузки профиля» перед запуском Windows-робота. В коде есть вызовы агента <code>RDPUserProfileLoaded</code> и <code>LinuxUserSessionReady</code>, но кто и когда открывает сессию (WebApi, RDP2 или внешний клиент) — проверить и описать на странице <a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a>.</p>
+<p>В Docker-поставке на Ubuntu есть ещё служба <code>mcp</code> (MCP-сервер, <code>PrimoRpa.McpServer.Api</code>). Её код не входит в решение <code>Orchestrator.Backend.sln</code>. Через неё ИИ-клиенты работают с Оркестратором по протоколу MCP — см. <a href="../reference/mcp.html">MCP Server</a>.</p>
+</div>
 
+<div class="src">Источники: <code>Orchestrator.Backend.sln</code>; <code>Directory.Build.props</code>; <code>azure/build.ps1</code>, <code>azure/docker.ps1</code>, <code>azure/build-publish-dpa.ps1</code>; <code>docker/ubuntu/*</code>, <code>docker/astra/*</code> (Dockerfile и <code>docker-compose.yml.template</code>); <code>k8s/helm/*</code>; <code>nginx/*.conf</code>, <code>nginx/Primo.Orchestrator.Nginx.service</code>; <code>Orchestrator/LTools.Orchestrator.*/Primo.Orchestrator.*.service</code>, <code>BaGet/src/BaGet/Primo.Orchestrator.NuGet.service</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (регистрация DbContext, RabbitMQ); <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>; <code>k8s/agent/install.sh</code>; <code>Orchestrator/LTools.Orchestrator.ArcSight/Controllers/OrchEventsController.cs</code>; для разделов «Потоки трафика» и «Как запускается робот»: <code>k8s/*.Dockerfile</code>, <code>k8s/docker-compose.yml</code>, <code>k8s/ui-nginx.conf.template</code>, <code>docker/ubuntu/docker-compose.yml.template</code>, <code>azure/build.ps1</code>; <code>Orchestrator/*/Readme.txt</code> (Licenses, Queues — 1.25.5); <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (миграции, <code>DBVendor</code>, <code>UseRedis</code>, секции <code>WS</code>, <code>Mqtt</code>, <code>Vault</code>); <code>Orchestrator/LTools.Orchestrator.Licenses/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Agent/AgentClient.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Bl/ProcessingPipelines/</code> (<code>StartRobotPipelineBase.cs</code>, <code>StartWindowsRobotPipeline.cs</code>, <code>StartLinuxRobotPipeline.cs</code>, <code>DeployRobotPipeline.cs</code>); <code>Orchestrator/LTools.Enums/StartRobotTrackingStage.cs</code>; <code>Orchestrator/LTools.Orchestrator.DataModel/RpaProjectQueue.cs</code>. Старые доки: руководство 1.25.7, «Схема взаимодействия Оркестратора и Робота».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

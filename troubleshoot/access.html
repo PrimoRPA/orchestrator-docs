@@ -37,6 +37,7 @@
   <li>Для AD в журнале WebApi найдите «Ошибка авторизации. Группа в AD … не имеет привязки к роли.» и строки «AD group SID: …» со списком групп пользователя. Для Keycloak — «Отсутствует привязка KeyCloak-ролей.» <span class="check">Группы из журнала совпадают с привязкой в роли</span></li>
   <li>Если включены общие папки, откройте <b>Общие папки</b>, нужную папку и <b>Делегировать</b>. <span class="check">Пользователь есть в списке с нужным уровнем доступа</span></li>
 </ol>
+<div class="todo"><p>Скриншот: экран «Роли пользователей», вкладки «Группы AD» и «Роли KeyCloak»; окно «Делегирование общей папки пользователям».</p></div>
 
 <h2>Как исправить</h2>
 <h3>Права роли</h3>
@@ -50,8 +51,10 @@
 <h3>Тенант</h3>
 <p>Пользователь AD попадает в тенант первой подходящей роли по имени. Роли из других тенантов при этом отбрасываются. Если у пользователя роли в нескольких тенантах, проверьте, в какой он вошёл.</p>
 
+<div class="todo"><p>Делегирование общей папки группе AD или Keycloak в коде не найдено: только отдельным пользователям. По обращениям это частый запрос. Уточнить у разработки планы.</p></div>
+<div class="todo"><p>На ответ 403 UI4 показывает непереведённое «Permission error». Передать разработке.</p></div>
 
-
+<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Controllers/{AccountController,RolesController,Folders2Controller,BaseController}.cs</code>, <code>Bl/Folders/FolderService.cs</code>, <code>Bl/Permissions/PermissionService.cs</code>, <code>Bl/WebSecurity/TokenManager.cs</code>, <code>Options/Folders.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.DataModel/Identity/Permissions.cs</code>; <code>LTools.Orchestrator.IdentityDal/SeedData.cs</code>; <code>LTools.Enums/FolderAccessType.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/utils/newMenuUtils.ts</code>, <code>src/app/providers/PermissionContext.tsx</code>, <code>src/shared/lib/fetch.ts</code>, <code>src/shared/lib/translations/ru/{roles,folders,common}.json</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

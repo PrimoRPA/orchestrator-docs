@@ -78,6 +78,7 @@
   <tr><td>WebApi</td><td><code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code></td><td>—</td><td><code>1000</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>WebApi</td><td><code>Studio:UseRoleCitizen</code>, <code>Studio:UseRoleLimitedRobotRunner</code></td><td>—</td><td><code>false</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>WebApi</td><td><code>UseHttpLogging</code></td><td>—</td><td><code>false</code></td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi, Analytic</td><td><code>Integration:Unloading:*</code> (выгрузки), <code>DPA:*</code></td><td>—</td><td>выключено (<code>Enabled=false</code>)</td><td>1.26.7 LTS</td></tr>
   <tr><td>RobotLogs</td><td><code>InputBufferRobotStatuses:*</code></td><td>—</td><td><code>MaxQueueLength=50000</code>, <code>ThreadSleep=1000</code>, <code>MaxEventCountForSleep=20000</code>, <code>Period=24</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>Notifications</td><td><code>Email:ClientTimeOut</code>, <code>Email:UseProtocolLogger</code></td><td>—</td><td><code>120000</code>, <code>false</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>Licenses, Queues, LogEventsWebhook</td><td>секция <code>Secrets</code> (БД секретов)</td><td>—</td><td>есть в поставочных конфигах</td><td>1.26.7 LTS</td></tr>
@@ -124,7 +125,16 @@
   <a href="order.html">Порядок обновления<small>пошагово для Windows, Linux и Docker</small></a>
 </div>
 
+<div class="todo">
+<p>Параметры из таблицы «Есть в LTS, но нет в 1.26.9.0»: будут ли они в следующих патчах 1.26.9.x — уточнить у разработки. <code>TokenVersion</code> уже есть в ветке 1.26.11.</p>
+<p>Расхождение со старыми доками: <code>UseExternalClient</code> и <code>rdpclientexternalsettings.json</code> («Внешняя поддержка RDP-сессии») не встречаются ни в 1.25.7 LTS, ни в 1.26.7 LTS, ни в 1.26.9 — уточнить, в какой поставке они были.</p>
+<p>Расхождение: комментарий в коде говорит, что <code>DbStore</code> не учитывается «при обновлении на 1.26.8.0», но в ветке <code>releases/v1.26.8.0</code> он ещё читается. По коду переход — в 1.26.9, как и в старых доках.</p>
+<p>Параметры <code>RabbitMQ:VirtualHost</code>, <code>Redis:Password</code>, <code>Triggers:Email:UseManagedNtlm</code>, <code>RobotLogs:ClientTimeoutInSec</code>, <code>SchedulerTaskSettings:*</code> есть уже в 1.25.7 LTS (перенесены патчами), поэтому в таблицы не вошли.</p>
+<p>Имена очередей и обменников RabbitMQ в классах <code>RabbitMQ</code> служб менялись между версиями (например, <code>AssetCacheInvalidation*</code> в 1.25.7 и 1.26.9 против <code>CacheInvalidation*</code> в 1.26.7). Нужно ли что-то делать с брокером при переходе — уточнить у разработки.</p>
+<p>Ключи <code>Mqtt:*</code> — необязательный режим связи WebApi и RDP2 (1.26.8–1.26.11), по умолчанию работает REST. В текущей ветке разработки проект MQTT удалён — подтвердить у разработки, в какой версии.</p>
+</div>
 
+<div class="src">Источники: ветки Orchestrator.Backend <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.8.0</code>, <code>releases/v1.26.9.0</code> (выгрузка 06.11.2026). Сравнивались: <code>Orchestrator/*/Options/*.cs</code>, <code>Orchestrator/LTools.Shared/Config/*.cs</code>, <code>Orchestrator/*/appsettings.json</code>, <code>appsettings.ProdWin.json</code>, <code>appsettings.ProdLinux.json</code>, <code>Orchestrator/LTools.Orchestrator.Agent.Runner/appsettings.Runner.json</code>, <code>BaGet/src/BaGet/appsettings*.json</code>; вызовы <code>GetValue</code>/<code>GetSection</code>/<code>Configuration[…]</code>; <code>docker/ubuntu/*.Dockerfile</code>, <code>docker/ubuntu/docker-compose.yml.template</code>; <code>Orchestrator/*/Primo.Orchestrator.*.service</code>, <code>nginx/*.service</code>. Отдельно: <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>Secrets:External</code>, <code>FileStore:S3</code>, <code>Scheduler:TimeZoneId</code> в 1.26.7), <code>Orchestrator/LTools.Orchestrator.WebApi/Options/RpaProjectArchiveUpload.cs</code>, <code>FileStore.cs</code>, <code>Scheduler.cs</code> (1.26.7); <code>Orchestrator/LTools.Orchestrator.Analytic/Options/Schedules.cs</code>, <code>Bl/Aggregator/RefreshMVTriggerEventScheduleJob.cs</code>, <code>TriggerEventScheduleJob.cs</code> (1.25.7); <code>Orchestrator/LTools.Orchestrator.AgentUpdater/ConfigTransformers/AgentTransformer.cs</code>; <code>Orchestrator/*/Readme.txt</code>. Старые доки: сайт, «Интеграция с S3-хранилищем», «Внешняя поддержка RDP-сессии».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

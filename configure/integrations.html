@@ -41,6 +41,7 @@
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>DbConnection:Items:Analytic:*</code></td><td>Подключение к БД аналитики: <code>Hostname</code>, <code>Port</code>, <code>DbName</code>, <code>UserName</code>, <code>Password</code> и др.</td><td><code>DbName</code> в Docker — <code>ltoolsanalytic</code></td></tr>
   <tr><td><code>Orchestrator:BaseUrl</code></td><td>Адрес WebApi</td><td>—</td></tr>
+  <tr><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CronString</code></td><td>Расписание обновления (Quartz cron). Ключи: <code>mv_WorkersUsage</code>, <code>mv_RobotsUsage</code>, <code>mv_DpaEvents</code></td><td>не задано — не обновляются</td></tr>
   <tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
   <tr><td><code>Integration:Unloading</code>, <code>Observability:Unloading</code></td><td>Выгрузки в интеграционные таблицы (<code>Enabled</code>, <code>Items</code> с <code>CronString</code>, <code>ObjectFlow</code>, <code>LeaveIterations</code>)</td><td>выключены</td></tr>
 </table></div>
@@ -85,7 +86,11 @@
   <li>Через 5–10 минут после старта Analytic выполните в БД <code>ltoolsanalytic</code> запрос к <code>mv_RobotsUsage</code>. <span class="check">Данные свежие; в журнале Analytic нет ошибок обновления представлений.</span></li>
 </ol>
 
+<div class="todo"><p>Старое руководство упоминает спецификацию интеграционного шлюза из комплекта поставки — в коде её нет, формат тела взят из класса события LogEventsWebhook. Нужно приложить актуальную спецификацию.</p>
+<p>Старые доки и пароль «ApiKey» в таблице предустановленных паролей намекают на API-ключи. В коде WebApi 1.26.9 ключ <code>ApiKey</code> есть только у NuGet (<code>NuGet:ApiKey</code>) — для доступа к API он не используется.</p>
+<p>Содержимое и назначение выгрузок <code>Observability:Unloading</code> (поток <code>RobotLicenseUsage2</code>) и <code>Integration:Unloading</code> Analytic не расписаны — нужен владелец функции.</p></div>
 
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Integration.cs</code>, <code>Options/RabbitMQ.cs</code>; <code>WebApi/Bl/Events/OrchEventManager.cs</code>, <code>Bl/Events/EventBus/OrchEventWebhookHub.cs</code>, <code>Bl/Events/EventBus/QueuesCreator.cs</code>, <code>Bl/Integration/Commands/Handlers/Postgres/*UnloadingCommandHandler.cs</code>, <code>Startup.cs</code>; <code>Controllers/AccountController.cs</code>; <code>LTools.Orchestrator/Swagger/SwaggerSetupExtensions.cs</code>; <code>LTools.Orchestrator.LogEventsWebhook/Options/HttpEndPoint.cs</code>, <code>Options/RabbitMQ.cs</code>, <code>Bl/Clients/HttpEndPointClient.cs</code>, <code>Bl/Events/OrchEvent.cs</code>, <code>Bl/Events/OrchEventRabbitConsumerService.cs</code>; <code>LTools.Orchestrator.ArcSight/Options/*.cs</code>; <code>LTools.Orchestrator.Analytic/Options/Schedules.cs</code>, <code>Integration.cs</code>, <code>Observability.cs</code>, <code>RabbitMQ.cs</code>, <code>Bl/Aggregator/RefreshMVTriggerEventScheduleJob.cs</code>, <code>SchedulerService.cs</code>; <code>docker/astra/analytic.Dockerfile</code>, <code>log-events-webhook.Dockerfile</code>, <code>web-api.Dockerfile</code>. Руководство 1.25.7: «Интеграционный шлюз», «Аналитическая БД».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

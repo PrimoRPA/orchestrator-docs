@@ -49,7 +49,15 @@ journalctl -u Primo.Orchestrator.RobotLogs -f</code></pre>
 </ul>
 <p>Как проверить: после <code>POST</code> ответ содержит новый уровень, в журнале службы появляются записи этого уровня.</p>
 
+<div class="todo">
+  <p><b>Пути к файлам журналов на Windows и Linux</b> зависят от секции <code>Serilog</code> в <code>appsettings*.json</code>, которых нет в выгрузке. Взять фактические значения из комплекта поставки и дописать таблицу «служба → папка журналов».</p>
+  <p><b>Вывод в файл.</b> Пакет <code>Serilog.Sinks.File</code> явно подключён только у RDP2; у служб на ASP.NET Core он приходит транзитивно. Проверить, что файловый вывод работает у States, Notifications, LogEventsWebhook.</p>
+  <p><b>Elasticsearch и Seq.</b> Пакеты подключены у всех служб, но примеров настройки в поставке нет. Решить, документировать ли. В руководстве 1.25.7 упоминался Logstash для журналов роботов — к журналам служб не относится.</p>
+  <p><b>Путь /loggers.</b> Проверить на стенде, на каком порту и под каким префиксом он отвечает у каждой службы и проксируется ли nginx.</p>
+  <p><b>Syslog.</b> Отдельного вывода в syslog в коде нет; только journald через systemd.</p>
+</div>
 
+<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/Serilog/ConfigurationExtensions.cs</code>, <code>LoggerLevelSwitchManager.cs</code>; <code>Orchestrator/LTools.Orchestrator/Controllers/LoggersController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Program.cs</code>, <code>Startup.cs</code> (<code>UseHttpLogging</code>, <code>UseSerilogRequestLogging</code>); <code>Orchestrator/*/Primo.Orchestrator.*.service</code>; <code>k8s/*.Dockerfile</code>; <code>k8s/agent/install.sh</code>; <code>k8s/docker/ui/*.Dockerfile</code>; <code>Orchestrator/*/LTools.Orchestrator.*.csproj</code>, <code>Directory.Packages.props</code>. Старая документация: руководство 1.25.7, раздел «Введение» (Logstash).</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>
