@@ -23,8 +23,7 @@
 <tr><td>Запрос к <code>/api</code></td><td>перенаправление (301) на <code>/api/v1/swagger.json</code></td></tr>
 </table></div>
 <p>Для WebApi через nginx: <code>https://&lt;сервер&gt;:44392/api/doc</code> — путь <code>/api/</code> проксируется в WebApi. Swagger остальных служб открывается напрямую на порту службы (см. <a href="ports.html">«Порты»</a>), например <code>http://&lt;сервер&gt;:56748/api/doc</code> для RobotLogs.</p>
-<p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2, агента и DpaAgent есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
-<div class="todo"><p>В старой документации были отдельные инструкции «Открытие Swagger в Nginx». По коду 1.26.9 Swagger WebApi доступен через <code>/api/doc</code> без дополнительной настройки nginx — проверить на стенде, не закрыт ли путь в поставляемых конфигах.</p></div>
+<p>В Swagger WebApi, RobotLogs, Licenses, Queues, Analytic, RDP2 и агента есть кнопка ввода токена (схема <code>Bearer</code>). Значение вводится целиком: <code>Bearer &lt;токен&gt;</code>.</p>
 
 <h2>Аутентификация</h2>
 <p>API защищено JWT-токенами (схема Bearer). Токен подписывает WebApi; издатель, аудиторию и ключ подписи задают переменные окружения <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code>, <code>PRIMOSIGNINGKEY</code> (см. <a href="config.html#common">«Параметры конфигурации»</a>). Время жизни — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
@@ -70,7 +69,6 @@
 <tr><td><code>Subscriptions</code>, <code>NotificationEmailQueue</code>, <code>Email</code></td><td>Подписки на уведомления, очередь писем, отправка писем.</td></tr>
 <tr><td><code>Licenses</code></td><td>Лицензии.</td></tr>
 <tr><td><code>NuGet</code></td><td>Работа с NuGet-сервером.</td></tr>
-<tr><td><code>ProcessRepository</code></td><td>Репозиторий процессов (подсистема DPA).</td></tr>
 <tr><td><code>BlackWhiteIpStudioRules</code></td><td>Чёрный и белый списки IP для Студии.</td></tr>
 <tr><td><code>Settings</code>, <code>UserUISettingsStorage</code>, <code>Culture</code>, <code>Banner</code>, <code>Support</code></td><td>Настройки для UI, пользовательские настройки интерфейса, язык, баннер, ссылка на поддержку (частично без входа).</td></tr>
 <tr><td><code>StatesSlaConfig</code></td><td>Параметры SLA службы States.</td></tr>
@@ -92,9 +90,7 @@
 </table></div>
 <p>Во всех службах есть служебные методы вне Swagger: <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code>, <code>/info</code> (сведения о службе) и <code>/loggers</code> (просмотр и смена уровня журналирования: <code>POST /loggers/{имя}/{уровень}</code>).</p>
 
-<div class="todo"><p>Маршрут <code>/loggers</code> и <code>/info</code> объявлены в общей библиотеке <code>LTools.Orchestrator</code>; проверить на стенде, что они действительно отвечают в каждой службе.</p></div>
 
-<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/Swagger/SwaggerSetupExtensions.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (<code>SetupSwagger</code>/<code>SetupSwaggerWithAuth</code>, <code>AddSwagger</code>, <code>AddJwtBearer</code>, <code>MapHub</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/*.cs</code>, в т. ч. <code>AccountController.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Dto/Orchestrator/Security/LoginDto.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Auth.cs</code>; <code>Orchestrator/LTools.Orchestrator.{RobotLogs,Queues,Licenses,Analytic,MachineInfo,RDP2,Agent}/Controllers/*.cs</code>; <code>Orchestrator/LTools.Orchestrator/Controllers/InfoController.cs</code>, <code>LoggersController.cs</code>; <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>; <code>Orchestrator/LTools.Shared/Encryption/Jwt.cs</code>; <code>nginx/nginx.linux.conf</code>. Сборка списка контроллеров — <code>refscripts/ctrls.py</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

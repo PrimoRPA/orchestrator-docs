@@ -36,7 +36,6 @@
   <li>Если задан <code>License:MachineInfoUrl</code> или <code>License:MachineInfoUrls</code>, проверьте, что MachineInfo отвечает с сервера WebApi и часы на обоих серверах совпадают. Ошибки: «Таймаут … при обращении к MachineInfo…», «Сервис параметров оборудования для лицензий скомпрометирован». <span class="check">Таких строк нет</span></li>
   <li>Если в журнале «Проверка системного времени скомпрометирована или системное время переведено назад.», все лицензии считаются недействительными. Исправьте время на сервере.</li>
 </ol>
-<div class="todo"><p>Скриншот: экран «Лицензии», колонки «Состояние», «Дата истечения», кнопка «Запрос на замену лицензии».</p></div>
 <h3>Как исправить</h3>
 <p>Если изменилось оборудование, сформируйте <b>Запрос на замену лицензии</b> и отправьте его поставщику. После загрузки новой лицензии нажмите <b>Активировать</b>.</p>
 <p>Если источник отпечатка — MachineInfo (<code>License:MachineInfoUrl</code>), запрос проходит за <code>License:Timeout</code> (по умолчанию 4 с). Для нескольких узлов WebApi адреса MachineInfo перечисляются в <code>License:MachineInfoUrls</code>, порядок важен. Лицензия действительна, если совпал хотя бы один узел. Запрос на лицензию не создаётся, если недоступен любой узел: «Не все узлы кластера доступны. Создание запроса на лицензию не возможно.»</p>
@@ -56,10 +55,8 @@
 </ol>
 <p>Освобождение по таймауту отмечается событием «Лицензия робота освобождена по таймауту». За истечением срока следит служба States: уведомление «Срок действия лицензии истекает» за <code>LicenseExpired:DaysStartBefore</code> (15) дней.</p>
 
-<div class="todo"><p>Если робот с ключом не найден, по коду вместо 404 «Робот не найден.» вероятен ответ 500: после проверки на пустой объект код обращается к его полю. Передать разработке.</p></div>
-<div class="todo"><p>Без <code>License:MachineInfoUrl</code> на PostgreSQL отпечаток берётся функциями БД, и для диска жёстко задан <code>/dev/sda</code>. Уточнить у разработки, как быть с другими именами дисков.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/{LicenseChecker,LicenseStateService,LicenseService,RobotTimeoutReleaseLicensesService}.cs</code>, <code>Bl/Licensing/ExtWeb/ExtWebMachineInfoService.cs</code>, <code>Bl/Licensing/Postgres/ServerDbMachineInfoService.cs</code>, <code>Controllers/LicensesController.cs</code>, <code>Bl/Licensing/LicenseInternalFilterAttribute.cs</code>, <code>Options/{License,Cache,RobotStart}.cs</code>, <code>Bl/Robots/RobotService.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.MachineInfo/BL/{WindowsMachineInfoService,LinuxMachineInfoService}.cs</code>; <code>LTools.Orchestrator.States/Options/LicenseExpired.cs</code>; <code>LTools.Enums/OrchestratorEvent.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/shared/lib/translations/ru/licenses.json</code>, <code>src/shared/lib/fetch.ts</code>.</div>
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

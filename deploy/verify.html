@@ -102,13 +102,11 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
   <a href="../operate/monitoring.html">Мониторинг и метрики<small>чтобы узнавать о сбоях раньше пользователей</small></a>
 </div>
 
-<div class="todo"><p>Сухой проход 11.11.2026: формат проекта «архив zip» взят из подписи в UI4 (<code>projects.json</code>: «Архив (zip)»); есть ли готовый тестовый проект в поставке — уточнить.</p></div>
-<div class="todo"><p>Точное расположение кнопок «Добавить робота к проекту», «Запустить проект» проверить на стенде и приложить скриншоты.</p></div>
-<div class="todo"><p>Старые доки: проверка агента <code>https://{IP}:5002/api/Worker</code> «вернёт HTTP 204». По коду 1.26.9 <code>GET api/Worker</code> возвращает 200 и строку версии агента.</p></div>
-<div class="todo"><p>Healthcheck WebApi не проверяет БД и RabbitMQ — для мониторинга этого мало. Описать в «Мониторинг и метрики» метрики Prometheus (порт <code>10052</code>) как основной сигнал.</p></div>
-<div class="todo"><p>В Docker (ubuntu) у nginx нет отдельного <code>location /health</code>: <code>https://localhost:44392/health</code> отдаёт <code>index.html</code> с кодом 200. Проверяет только nginx, не службы.</p></div>
 
-<div class="src">Источники: <code>Orchestrator/LTools.Orchestrator/HealthCheck/ApplicationBuilderExtensions.cs</code>, <code>HealthCheckNames.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Bl/HealthCheck/HealthCheckService.cs</code>, <code>LTools.Orchestrator.MachineInfo/BL/HealthCheckService.cs</code>; <code>Orchestrator/LTools.Orchestrator.*/Startup.cs</code> (<code>AddHealthChecks</code>, <code>MapHealthCheckEndpoints</code>); <code>BaGet/src/BaGet/Startup.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Controllers/WorkerController.cs</code>, <code>VersionController.cs</code>, <code>Bl/OrchestratorSession/OrchestratorBaseUrlService.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Controllers/VersionController.cs</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (<code>healthcheck</code>); <code>docker/ubuntu/*.Dockerfile</code> (<code>Serilog__*</code>); <code>Orchestrator/LTools.Orchestrator.*/*.service</code> (<code>SyslogIdentifier</code>); <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.docker.conf</code>; руководство 1.25.7, раздел «Устранение типовых проблем».</div>
+
+
+
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

@@ -101,12 +101,10 @@
   <a href="service-accounts.html">Учётные записи и права служб<small>от кого будут работать службы и агент</small></a>
 </div>
 
-<div class="todo"><p>Диапазон портов роботов в коде не найден: порт робота хранится в карточке робота и приходит от агента при развертывании. Старые доки называли диапазон 8000–9000 — подтвердить.</p></div>
-<div class="todo"><p>Привязка Kestrel служб на Windows/Linux задаётся в <code>appsettings.*.json</code>, которых нет в выгрузке. Порты в таблице взяты из <code>Kestrel__EndPoints__*__Url</code> в Dockerfile и из <code>upstream</code> в конфигах nginx — сверить с <code>appsettings.ProdLinux.json</code>/<code>ProdWin.json</code> поставки. В Dockerfile <code>EXPOSE 8080 10052</code> не совпадает с фактическим портом Kestrel (<code>5001</code>, <code>56748</code>…) — на работу не влияет, но может путать.</p></div>
-<div class="todo"><p>Старая таблица портов упоминала 3389 для RDP2, 389/636 (LDAP/LDAPS). В коде nginx RDP2 доступен на 5102; порты LDAP и RDP до машин роботов описать на странице интеграций/RDP после проверки.</p></div>
-<div class="todo"><p>В короткой таблице строка «Сервер Оркестратора → машина с RDP2, 5102» выведена из конфигов nginx (RDP2 за nginx на 5102) — подтвердить, что при отдельной машине RDP2 достаточно этого порта. Порт Студии к Оркестратору в таблицу не включён — уточнить, нужен ли.</p></div>
 
-<div class="src">Источники: <code>nginx/nginx.linux.conf</code>, <code>nginx/nginx.win.conf</code>, <code>nginx/nginx.docker.conf</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>Kestrel__EndPoints__*__Url</code>, <code>Monitoring__Port</code>, <code>RabbitMQ__Port</code>, <code>Email__FromSmtpPort</code>); <code>docker/ubuntu/docker-compose.yml.template</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Options/Tenants.cs</code> (<code>AgentSettings</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Robots/RobotClient.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Agent/AgentClient.cs</code>; <code>Orchestrator/LTools.Orchestrator.Agent/Options/Orchestrator.cs</code>; <code>Orchestrator/LTools.Orchestrator.Monitoring/Options/Monitoring.cs</code>; старый сайт, <code>orchestrator-sys-admin/ports.md</code>.</div>
+
+
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

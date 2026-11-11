@@ -77,13 +77,10 @@
   <li>Для AD смотрите «Ошибка логина пользователя … в AD …», «Ошибка получения групп AD …». Строки «AD group SID: …» показывают, какие группы пришли, — сверьте их с привязкой в роли.</li>
   <li>Исправьте конфигурацию и перезапустите WebApi. <span class="check">Нужный способ появился на странице входа, вход проходит, разделы меню соответствуют роли</span></li>
 </ol>
-<div class="todo"><p>Скриншот: страница входа со списком «Другие способы входа»; роль с вкладками «Группы AD» и «Роли KeyCloak».</p></div>
 <p>«Пользователь временно заблокирован.» — сработала блокировка после неудачных попыток: <code>Security:Lockout:MaxFailedAccessAttempts</code> (5), <code>DefaultLockoutTimeSpan</code> (300 с по умолчанию в коде; в Dockerfile — 1 мин).</p>
 
-<div class="todo"><p>Расхождение со старыми доками. Кнопки «Войти с доменной учетной записью» в UI4 1.26.9 нет: строка осталась в переводах, но не используется. Способ выбирается в <b>Другие способы входа</b>.</p></div>
-<div class="todo"><p>Параметров <code>Authority</code>, <code>RequireHttpsMetadata</code>, SPN в коде нет. Если в старых доках они есть — убрать.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/Auth.cs</code>, <code>Options/ActiveDirectory.cs</code>, <code>Options/OpenId.cs</code>, <code>Controllers/AccountController.cs</code>, <code>Controllers/AdController.cs</code>, <code>Bl/Ad/AdClient.cs</code>, <code>Startup.cs</code> (Security:Lockout), <code>docker/*/web-api.Dockerfile</code>, <code>k8s/helm/*</code>; <code>ui4: src/entities/auth/model/auth.store.ts</code>, <code>src/shared/lib/oidc/*</code>, <code>src/shared/lib/translations/ru/common.json</code>; старые статьи <code>orchestrator-admin-ui4/users/ad-users.mdx</code>, <code>keycloak-users.mdx</code>.</div>
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

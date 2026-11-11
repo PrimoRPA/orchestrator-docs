@@ -42,7 +42,6 @@
   <li>В журнале WebApi найдите строки по Id задания: «Проект задания с Id=… не запускается в не рабочий день …», «Ошибка постановки проекта задания с Id=… в очередь ожидания. ErrorMsg=…», «Assignment with Id=… starting error=…». <span class="check">Найдена причина пропуска</span></li>
   <li>Сверьте время на сервере WebApi. Планировщик работает по локальному времени сервера: часовой пояс в коде не задаётся. В шаблонах docker-compose указано <code>TZ: Europe/Moscow</code>. <span class="check">Время и часовой пояс сервера те, что нужны</span></li>
 </ol>
-<div class="todo"><p>Скриншот: экран «Задания», карточка задания с полями «Последнее срабатывание» и «Следующая дата по расписанию».</p></div>
 
 <h2>Как исправить</h2>
 <h3>Задание в статусе «Ошибка» или «На паузе»</h3>
@@ -63,10 +62,8 @@
 <h3>Несколько узлов WebApi</h3>
 <p>Каждый узел планирует все задания, двойной запуск исключает блокировка в БД. Время на узлах должно совпадать. Строка «Триггер с Id=… заблокирован ранее … другой нодой.» — это нормально.</p>
 
-<div class="todo"><p>События «Сработал триггер Email» (60002) и «Сработал триггер папки» (60004) объявлены, но в коде не создаются. По ним срабатывание этих триггеров не отследить. Передать разработке.</p></div>
-<div class="todo"><p>Параметр часового пояса тенанта <code>TimeOffset</code> влияет только на отображение времени в журналах и запусках, не на расписание. Уточнить у разработки, нужен ли часовой пояс для расписаний.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Bl/Assignments/{SchedulerService,CollectControlSignalsJob,LockService}.cs</code>, <code>Bl/Assignments/EventBus/{TriggerEventBusService,TriggerNativeEventBusService,TriggerNativeEventHub}.cs</code>, <code>Bl/Scheduling/CronScheduleUtil.cs</code>, <code>Options/{Assignment,Triggers,Tenants}.cs</code>, <code>Controllers/OrchEventsController.cs</code>, <code>Startup.cs</code>; <code>LTools.Enums/{TriggerType,AssignmentStatus,OrchestratorEvent}.cs</code>; <code>docker/*/docker-compose.yml.template</code>; <code>ui4: src/shared/lib/translations/ru/jobs.json</code>.</div>
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

@@ -41,7 +41,6 @@
   <li>Откройте журнал агента за время запуска. Ищите «Ошибка скачивания архива проекта с Оркестратора.», «StartRobotPipeline.CreateTaskToStartRobot - …», на Linux — «Robot … invalid credentials.» и строки с концовкой «the launch of robots is impossible». <span class="check">Найдена ошибка этапа</span></li>
   <li>На 75 % проверьте сессию: <a href="rdp.html">Сессия робота не поднимается</a>. Затем лицензии в <b>Лицензии</b>: <a href="license.html">Нет лицензии</a>.</li>
 </ol>
-<div class="todo"><p>Скриншот: список роботов, подсказка с этапами запуска при наведении на процент.</p></div>
 
 <h2>Как исправить</h2>
 <h3>Linux</h3>
@@ -61,10 +60,8 @@
 <h3>Робот ещё не развернут</h3>
 <p>Проект уходит только на развернутого робота. Если <b>Статус развертывания</b> — «Ошибка», смотрите сообщение: «Отсутствует актуальный … дистрибутив робота.» — загрузите дистрибутив нужной ОС и разрядности; «Таймаут деплоя … мин. истек …» — агент не сообщил о завершении за <code>RobotDeployment:TimeOutInMinutes</code> (в классе 5, в Dockerfile 2).</p>
 
-<div class="todo"><p>Этапы 30, 40 и 50 (88 %, 92 % и «Выполнение проекта») в коде Оркестратора и агента не отправляются — вероятно, их шлёт сам робот. Параметр <code>RobotStart:TimeOutInMinutesForStage</code> объявлен, но не используется. Уточнить у разработки.</p></div>
-<div class="todo"><p>Расхождение со старыми доками: в приложении «Стадии запуска робота» этапы перечислены по возрастанию кода, а агент выполняет их в другом порядке (сначала завершает старый процесс). <code>/api/Worker</code> отвечает 200 с версией, а не 204.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Enums/StartRobotTrackingStage.cs</code>; <code>LTools.Orchestrator.Agent/Bl/ProcessingPipelines/StartRobotPipelineBase.cs</code>, <code>Bl/Commands/StartRobotCommandQueueService.cs</code>, <code>Bl/Runners/LinuxScriptRunner.cs</code>, <code>ApplicationHostedService.cs</code>, <code>Options/Orchestrator.cs</code>, <code>Controllers/WorkerController.cs</code>; <code>LTools.Orchestrator.WebApi/Options/{RobotStart,RobotDeployment}.cs</code>, <code>Bl/Robots/CollectRobotStatusService.cs</code>, <code>Bl/Licensing/RobotTimeoutReleaseLicensesService.cs</code>, <code>Controllers/{RobotsController,LicensesController}.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/features/robots/ui/robot-table/rules.ts</code>, <code>src/features/robots/ui/components/StartTrackings.tsx</code>, <code>src/shared/lib/translations/ru/{robots,machines}.json</code>; старые доки <code>appendix/appendix2.md</code>, <code>orchestrator-sys-admin/deployment/troubleshooting.md</code>.</div>
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>

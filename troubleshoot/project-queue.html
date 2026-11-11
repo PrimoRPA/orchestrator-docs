@@ -46,7 +46,6 @@
   <tr><td>«Робот … подходит для выполнения проекта …, но заблокирован Агентом.»</td><td>На агенте остался файл блокировки, см. ниже</td></tr>
   <tr><td>«Проект с Id=… исключен из очереди ожидания - превышена максимальная длина очереди.»</td><td>Очередь длиннее <code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code> (1000). Уберите лишние запуски</td></tr>
 </table></div>
-<div class="todo"><p>Скриншот: экран «Очередь проектов» и значок блокировки робота в списке роботов, кнопка «Разблокировать».</p></div>
 
 <h2>Как исправить</h2>
 <h3>Робот заблокирован агентом</h3>
@@ -62,9 +61,7 @@
 <h3>Повторы в очереди</h3>
 <p>Флаг проекта <b>Без повторов в очереди</b>: если проект уже стоит в очереди, второй раз он не добавится. Флаг задаётся у RPA-проекта, а не у задания.</p>
 <p>При публикации новой версии флаг берётся из публикации, а не из активной версии. Чтобы новая версия наследовала флаг активной, задайте в WebApi <code>RpaProject:NoDuplicateDeferredQueueFromParentVersion=true</code> (по умолчанию <code>false</code>) и перезапустите WebApi. <span class="check">После публикации новой версии флаг сохранился</span></p>
-<div class="todo"><p>Ограничение по нагрузке использует только CPU (<code>ProjectQueue:WorkerPerformanceHighCPUOnly=true</code>), хотя в сообщении выводится и RAM. Проверить на стенде.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Bl/ProjectQueue/EventBus/BaseTenantProjectEventBusService.cs</code>, <code>Bl/ProjectQueue/BaseReadProjectQueueService.cs</code>, <code>Bl/ProjectQueue/Commands/Handlers/RpaProjectEnqueueCommandHandler.cs</code>, <code>Options/{ProjectQueue,RobotStart,RpaProject}.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>LTools.Orchestrator.Agent/Options/Robot.cs</code>, <code>Controllers/RobotsController.cs</code>; <code>docker/ubuntu/web-api.Dockerfile</code>; <code>ui4: src/features/project-queues/ui/ProjectQueues.tsx</code>, <code>src/shared/lib/translations/ru/{projectQueues,projects,robots,common}.json</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

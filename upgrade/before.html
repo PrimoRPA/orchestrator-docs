@@ -43,7 +43,6 @@
   <li>Если не укладывается, получите новую лицензию до обновления: «Запрос на замену лицензии», затем «Добавить отзыв лицензии» и «Добавить лицензию». Порядок — в разделе о лицензиях на странице <a href="migrate.html">Перенос на другой сервер</a>. <span class="check">новая лицензия в колонке «Состояние» валидна на текущей версии</span></li>
   <li>Запишите, под какой учётной записью работает MachineInfo (Windows), и для Docker — значение <code>primo-machine-key</code> из compose. <span class="check">значения сохранены вместе с резервной копией</span></li>
 </ol>
-<div class="todo"><p>Скриншот: Настройки → Лицензии, выделить колонки «Продукт», «Период», «Дата регистрации», «Состояние».</p></div>
 <div class="note"><p>После перезапуска WebApi список занятых лицензий Студии очищается, Студии получают лицензии заново. Это штатное поведение при старте, а не потеря лицензий.</p></div>
 
 <h2>2. Резервные копии</h2>
@@ -55,7 +54,7 @@
   <tr><td><code>ltools</code></td><td><code>DbConnection:Items:Default</code> / <code>ConnectionStrings:DefaultConnection</code></td><td>WebApi, Licenses</td><td>роботы, машины, проекты, задания, очереди, ресурсы; время последней проверки лицензий</td></tr>
   <tr><td><code>ltoolsidentity</code></td><td><code>…:Identity</code> / <code>IdentityConnection</code></td><td>WebApi</td><td>пользователи и роли</td></tr>
   <tr><td><code>ltoolslicense</code></td><td><code>…:License</code> / <code>LicenseConnection</code></td><td>WebApi</td><td>лицензии</td></tr>
-  <tr><td><code>ltoolsltwrepo</code></td><td><code>…:ProcessRepository</code> / <code>ProcessRepositoryConnection</code></td><td>WebApi</td><td>репозиторий процессов (DPA)</td></tr>
+  <tr><td><code>ltoolsltwrepo</code></td><td><code>…:ProcessRepository</code> / <code>ProcessRepositoryConnection</code></td><td>WebApi</td><td>репозиторий процессов</td></tr>
   <tr><td><code>ltoolslogs</code></td><td><code>…:Logs</code> / <code>LogsConnection</code></td><td>RobotLogs</td><td>журналы роботов</td></tr>
   <tr><td><code>ltoolsanalytic</code></td><td><code>…:Analytic</code> / <code>AnalyticConnection</code></td><td>Analytic</td><td>аналитика</td></tr>
   <tr><td><code>ltoolsnuget</code></td><td><code>Database:DbConnection</code></td><td>NuGet2</td><td>метаданные пакетов</td></tr>
@@ -86,15 +85,7 @@
   <a href="config-changes.html">Изменения в конфигах между LTS<small>что поправить в конфигах при переходе</small></a>
 </div>
 
-<div class="todo">
-<p>Поддерживается ли переход с последних патчей 1.26.7.x и 1.25.7.x на 1.26.9.0 или нужен более поздний релиз — уточнить у разработки. В ветке 1.26.11 миграция <code>TokenVersion_Add</code> уже есть, в 1.26.9 и 1.26.10 — нет.</p>
-<p>UI4 не показывает причину невалидности лицензии (<code>InvalidReason</code> отдаётся API, но в интерфейсе не выводится). Как пользователю увидеть <code>UpdateToInvalidVersion</code> — уточнить у разработки.</p>
-<p>В коде (<code>Migrations.MSSQL/SQL</code>) есть SQL-скрипты миграций для MS SQL «для заказчиков, которые не разрешают накатывать миграции из приложения». Проверить, входят ли они в поставку и как их применять.</p>
-<p>Режим <code>--migration</code> — только для WebApi. Как заранее накатить миграции RobotLogs, Analytic и NuGet2 — не найдено.</p>
-<p>Объём резервной копии и рекомендации по бэкапу — согласовать со страницей <a href="../operate/backup.html">Резервное копирование и восстановление</a>.</p>
-</div>
 
-<div class="src">Источники (ветки <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.9.0</code>): <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Licensing/LicenseService.cs</code> (<code>GetPerpetualValidFromVersion</code>, разница 1.25.7 ↔ 1.26.x), <code>LicenseStateService.cs</code> (период 15 с, проверка времени, <code>UpdateToInvalidVersion</code>), <code>LicenseChecker.cs</code>, <code>LicenseInternalFilterAttribute.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Readme.txt</code> (1.26.4.0, Б 30500); <code>Orchestrator/LTools.Orchestrator.License.Migrations.Postgres|MSSQL/Migrations/</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/BL/</code> (<code>CustomerBinding.cs</code>, <code>WindowsMachineInfoService.cs</code>, <code>LinuxMachineInfoService.cs</code>); <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>UpdateDatabase</code>: миграции, <code>BusyStudioLicenses</code>, <code>CurrentSystemParameters</code>; <code>UpdateDBMigrationMode</code>), <code>Program.cs</code> (<code>--migration</code>); <code>Orchestrator/LTools.Shared/Config/ConfigSecrets.cs</code>, <code>DbConnection.cs</code>, <code>Orchestrator/LTools.Shared/Encryption/Jwt.cs</code>; <code>Orchestrator/*/Migrations*/</code> (сравнение списков миграций); <code>Orchestrator/*/Primo.Orchestrator.*.user.service</code>; <code>docker/ubuntu/docker-compose.yml.template</code> (1.25.7 и 1.26.9). UI4: <code>src/shared/lib/translations/ru/licenses.json</code>, <code>src/shared/config/menuConfig.ts</code>. Старые доки: сайт, «Обновление Оркестратора».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

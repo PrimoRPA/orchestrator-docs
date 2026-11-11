@@ -74,7 +74,7 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
     <ul>
       <li>Придумайте свои значения для всех строк с паролями и ключами.</li>
       <li>У части паролей две строки: открытая и с окончанием <code>-encrypted</code>. Во вторую вписывается тот же пароль в зашифрованном виде. Зашифровать его можно утилитой PasswordEncryptor из поставки: запустите её, введите пароль, нажмите Enter и скопируйте строку, напечатанную после слов «Copy following string».</li>
-      <li>Пароли MCP Server (<code>mcp-orch-pass</code>, <code>mcp-api-key</code>) пишутся только открытым текстом.</li>
+      <li>Пароли MCP Server (<code>mcp-orch-pass</code>, <code>mcp-api-key</code>) задаются одной строкой, без пары <code>-encrypted</code>.</li>
       <li><code>primo-machine-key</code> — ключ, к которому привязывается лицензия. Задайте свой до запроса лицензии и сохраните в надёжном месте: без него лицензию на новом сервере не восстановить.</li>
       <li>Чтобы к PostgreSQL и консоли RabbitMQ нельзя было подключиться снаружи, удалите у служб <code>0postgres-db</code> и <code>0rabbitmq</code> строки <code>ports:</code> вместе со следующей за ними строкой с номером порта.</li>
     </ul>
@@ -130,11 +130,10 @@ docker save -o images.tar $(docker compose config --images)</code></pre></li>
   <p>Порядок запуска задан в файле: <code>web-api</code> ждёт PostgreSQL, RabbitMQ и <code>machine-info</code>, остальные службы ждут <code>web-api</code>.</p>
 </details>
 
-<div class="todo"><p>Не проверено на стенде (сухой проход 11.11.2026): владелец <code>101</code> для файлов сертификата (по <code>ui.Dockerfile</code>: <code>USER 101</code>); что nginx стартует с недоступным адресом в <code>upstream rdpstream</code>; время первого запуска; что <code>nginx.docker.conf</code> лежит в <code>orchestrator/data/NGINX/</code>.</p></div>
-<div class="todo"><p>Уточнить у разработки: кто и как выдаёт логин и пароль к реестру <code>nexus.primo-rpa.ru:8000</code> (адрес взят со старого сайта, <code>install/installation-docker.mdx</code>); в каком архиве поставки лежит PasswordEncryptor и есть ли сборка под Linux; как в Docker задать свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code> (в <code>web-api.Dockerfile</code> они объявлены пустыми, в compose-шаблоне их нет). По коду <code>PasswordEncryptor/Program.cs</code> пароль читается со стандартного ввода; старый сайт (<code>security.mdx</code>) описывает запуск с аргументами.</p></div>
-<div class="todo"><p>Healthcheck сервиса <code>ui</code> обращается к <code>https://localhost:44392/health</code>, но в <code>nginx.docker.conf</code> отдельного <code>location /health</code> нет — запрос обслуживает <code>location /</code> (отдаёт <code>index.html</code>). Работает, но проверяет только nginx.</p></div>
-<div class="todo"><p>Образы на базе Astra Linux (<code>docker/astra/</code>) в 1.26.9 конвейером не собираются. Не описывать, пока не подтвердят поставку. Helm-чарты в <code>k8s/helm</code> — для внутреннего стенда.</p></div>
-<div class="todo"><p>Можно ли менять <code>CustomerBinding__Key</code> после выдачи лицензии — в коде не видно; уточнить у разработки.</p></div>
+
+
+
+
 
 <h2>Что дальше</h2>
 <div class="next">
@@ -142,7 +141,6 @@ docker save -o images.tar $(docker compose config --images)</code></pre></li>
   <a href="agent.html">Машины роботов и агент<small>поставить агент на машины, где будут работать роботы</small></a>
 </div>
 
-<div class="src">Источники: <code>docker/ubuntu/docker-compose.yml.template</code>; <code>docker/ubuntu/*.Dockerfile</code> (<code>USER</code>, порты, <code>FileStore__Type</code>); <code>nginx/nginx.docker.conf</code>; <code>azure/docker.ps1</code>; <code>Orchestrator/LTools.Orchestrator.MachineInfo/BL/CustomerBinding.cs</code>; <code>Orchestrator/LTools.Orchestrator.PasswordEncryptor/Program.cs</code>; старый сайт: <code>install/installation-docker.mdx</code>, <code>installation-docker-offline.mdx</code>, <code>security.mdx</code>; журнал сухого прохода <code>сухой-проход-2026-11-11.md</code>.</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

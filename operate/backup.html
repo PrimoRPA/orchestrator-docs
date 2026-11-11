@@ -58,14 +58,7 @@
   <li>Лицензии привязываются к серверу через службу MachineInfo (<code>License:MachineInfoUrl</code>, <code>License:MachineInfoUrls</code>). При восстановлении на другое железо лицензии могут стать недействительными.</li>
 </ul>
 
-<div class="todo">
-  <p><b>Методики нет.</b> В коде нет процедур резервного копирования и восстановления: порядок остановки служб, согласованность копий нескольких БД, проверка восстановления. Нужна методика от команды; тесты восстановления — на стенде.</p>
-  <p><b>RabbitMQ.</b> Нужно ли сохранять состояние очередей RabbitMQ (очередь проектов, события) или достаточно пересоздать их при старте служб — уточнить.</p>
-  <p><b>Привязка лицензий.</b> Проверить, что именно сверяется при переносе на другой сервер, и описать порядок перевыпуска лицензии.</p>
-  <p><b>Windows.</b> Пути установки служб на Windows в коде не зафиксированы (кроме Агента: <code>C:\Primo\…</code> в <code>PrimoWorker.ps1</code>) — взять из инсталлятора.</p>
-</div>
 
-<div class="src">Источники: <code>Orchestrator/*Dal/*DbContext.cs</code> (ApplicationDbContext, IdentityDbContext, LicenseDbContext, LogsDbContext, ProcessRepositoryDbContext, AnalyticDbContext, SecretsDbContext); <code>Orchestrator/LTools.Orchestrator.WebApi/Options/DbConnection.cs</code>, <code>Options/Secrets.cs</code>, <code>Options/FileStore.cs</code>, <code>Options/RobotDistrUpload.cs</code>, <code>Options/AgentDistrUpload.cs</code>, <code>Options/RpaProjectArchiveUpload.cs</code>, <code>Options/ActiveDirectory.cs</code>, <code>Options/License.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Startup.cs</code> (<code>Secrets:ConnectionString</code>, <code>CreateFolders</code>); <code>Orchestrator/LTools.Orchestrator.RobotLogs/Options/ScreenFileUpload.cs</code>; <code>Orchestrator/LTools.Enums/RpaProjectArchiveStoreType.cs</code>, <code>FileStoreType.cs</code>; <code>Orchestrator/LTools.Shared/Config/ConfigSecrets.cs</code>, <code>LTools.Shared/Encryption/Jwt.cs</code>; <code>Orchestrator/LTools.Orchestrator.WebApi/Bl/Security/ConfigService.cs</code>; <code>Orchestrator/*/Primo.Orchestrator.*.service</code>; <code>k8s/*.Dockerfile</code> (имена БД); <code>nginx/nginx.linux.conf</code>; <code>Orchestrator/LTools.Orchestrator.Agent/PrimoWorker.ps1</code>. Старая документация: руководство 1.25.7, разделы «Атрибуты безопасности», «Контроль целостности конфигурационных файлов».</div>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

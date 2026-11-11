@@ -75,11 +75,9 @@
 <h3>Потери сообщений</h3>
 <p>Если БД журналов не успевает, RobotLogs отбрасывает записи: «Сообщение … потеряно по причине ограничения входного буфера.» Буферы: <code>InputBufferRobotLogs</code>, <code>InputBufferOrchEvents</code>, <code>InputBufferRobotStatuses</code>, <code>InputBufferAttendedRobotLogs</code> — <code>MaxQueueLength</code> (в классе 50000, в Dockerfile 200000). Увеличивать буфер имеет смысл только вместе с ускорением БД. Очереди RabbitMQ Оркестратора объявлены с ограничением длины (например, <code>dbevents</code> — 10000) без <code>x-overflow</code>: при переполнении RabbitMQ молча удаляет самые старые сообщения.</p>
 
-<div class="todo"><p>Скриншот: «Настройки → Система → Журналы», таблица секций.</p></div>
-<div class="todo"><p>Расхождение: в старых доках описан SQL для секционирования, в коде его нет. Таблица секций в UI читает только БД с именем <code>ltoolslogs</code>. Удаление секции из UI4 в 1.26.9, вероятно, не работает: обработчик закомментирован.</p></div>
-<div class="todo"><p>Получение лицензии роботом блокирует таблицу <code>BusyRobotLicenses</code> целиком (<code>LOCK TABLE</code> / <code>TABLOCKX</code>). При массовом старте роботов это возможная точка ожидания — проверить на нагрузке.</p></div>
 
-<div class="src">Источники: <code>backend: Orchestrator/LTools.Orchestrator.WebApi/Options/{RpaProjectLaunch,ProjectQueue,RobotStart,ExchangeQueue}.cs</code>, <code>Bl/RpaProjectLaunches/LogsRpaProjectLaunchesService.cs</code>, <code>Bl/ProjectQueue/*</code>, <code>Controllers/LicensesController.cs</code>, <code>Startup.cs</code>; <code>LTools.Orchestrator.RobotLogs/Startup.cs</code>, <code>Controllers/RobotLogsController.cs</code>, <code>Bl/LogEvents/*</code>; <code>LTools.Shared/Config/PgСonnectionString.cs</code>, <code>LTools.Shared/RabbitMQ/*</code>; <code>LTools.Orchestrator.Monitoring/Options/Monitoring.cs</code>; <code>LTools.Orchestrator/Controllers/LoggersController.cs</code>; <code>LTools.Orchestrator.LogsDal/LogsDbContext.cs</code>; <code>docker/ubuntu/*.Dockerfile</code>; старые статьи <code>orchestrator-sys-admin/partitioning-tables-*.md</code>.</div>
+
+
 </main>
 <script src="../assets/nav.js"></script>
 </body>
