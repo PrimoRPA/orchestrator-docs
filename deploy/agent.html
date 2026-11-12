@@ -11,7 +11,7 @@
 <main>
 <h1>Машины роботов и агент</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
-<p class="lead">На каждую машину, где будут работать роботы, ставится агент Оркестратора. Через него WebApi разворачивает и запускает роботов. После установки машину регистрируют в UI4.</p>
+<p class="lead">На каждой машине роботов устанавливается агент Оркестратора: через него WebApi разворачивает и запускает роботов. После установки агента машина регистрируется в интерфейсе Оркестратора.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="install.html">Установка</a> серверной части</div>
   <div><b>Результат</b>машина зарегистрирована в Оркестраторе, видна версия агента</div>
@@ -20,22 +20,22 @@
 <h2>Как агент связан с Оркестратором</h2>
 <ul>
   <li>Агент слушает <code>5002</code> по HTTPS; к нему обращается WebApi (<code>Tenants:Agent:Port</code>, <code>Tenants:Agent:Https</code>).</li>
-  <li>Адрес Оркестратора агент узнаёт из заголовка <code>orchestrator-url</code> в запросах WebApi (значение <code>RobotDeployment:OrchBaseUrl</code>). Задавать <code>Orchestrator:BaseUrl</code> в конфиге агента не обязательно.</li>
-  <li>Пока WebApi ни разу не обратился к агенту, <code>/health/readiness</code> агента отвечает <code>Unhealthy</code> — это нормально до регистрации машины.</li>
+  <li>Адрес Оркестратора агент получает из заголовка <code>orchestrator-url</code> в запросах WebApi (значение <code>RobotDeployment:OrchBaseUrl</code>). Задавать <code>Orchestrator:BaseUrl</code> в конфиге агента не обязательно.</li>
+  <li>Пока WebApi ни разу не обратился к агенту, <code>/health/readiness</code> агента отвечает <code>Unhealthy</code> — до регистрации машины это штатное состояние.</li>
 </ul>
 
 <h2>Установка агента</h2>
-<p>Вкладка с вашей ОС откроется сама: страница определяет систему по браузеру. Если ставите агент на другую машину — переключите вкладку.</p>
+<p>Вкладка выбирается автоматически по ОС, определённой браузером. Для установки агента на машину с другой ОС переключите вкладку.</p>
 <div class="tabs" data-key="agent-os" data-detect="1">
 <section class="tab" id="windows" data-title="Windows" data-os="windows">
-<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-windows.zip</code>, PowerShell от имени администратора.</p>
+<p>Требуется: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-windows.zip</code>, PowerShell от имени администратора.</p>
 <ol class="steps">
   <li>Откройте порт агента:
 <pre><code>New-NetFirewallRule -Name "Primo Agent (5002)" -DisplayName "Primo Agent (5002)" -Profile "Private, Domain, Public" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5002</code></pre>
     <span class="check">правило <code>Primo Agent (5002)</code> есть в брандмауэре</span></li>
   <li>Задайте окружение:
 <pre><code>[System.Environment]::SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "ProdWin", [System.EnvironmentVariableTarget]::Machine)</code></pre></li>
-  <li>Распакуйте архив в <code>C:\Primo\Agent</code> и при необходимости поправьте <code>appsettings.ProdWin.json</code>. Каталог роботов по умолчанию — <code>C:\LTools</code> (<code>DeployRobot:RobotsPath</code>).</li>
+  <li>Распакуйте архив в <code>C:\Primo\Agent</code> и при необходимости измените <code>appsettings.ProdWin.json</code>. Каталог роботов по умолчанию — <code>C:\LTools</code> (<code>DeployRobot:RobotsPath</code>).</li>
   <li>Зарегистрируйте и запустите службу:
 <pre><code>New-Service -Name "Primo.Orchestrator.Agent" -BinaryPathName "C:\Primo\Agent\Primo.Orchestrator.Agent.exe" -DisplayName "Primo.Orchestrator.Agent" -StartupType Automatic
 Start-Service "Primo.Orchestrator.Agent"</code></pre>
@@ -44,20 +44,20 @@ Start-Service "Primo.Orchestrator.Agent"</code></pre>
 <p>Роботов агент запускает заданиями Планировщика заданий Windows от имени пользователя робота.</p>
 </section>
 <section class="tab" id="linux" data-title="Linux" data-os="linux">
-<p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), права root на подготовку.</p>
+<p>Требуется: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), права root.</p>
 <ol class="steps">
-  <li>Создайте группу и пользователя агента (имена по умолчанию; другие — укажите в <code>Agent:GroupName</code> и <code>Agent:UserName</code>):
+  <li>Создайте группу и пользователя агента (имена по умолчанию; другие имена указываются в <code>Agent:GroupName</code> и <code>Agent:UserName</code>):
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent</code></pre>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Установите <code>expect</code> и <code>unzip</code>. На Ubuntu и Astra Linux: <code>sudo apt install expect unzip</code>. Без <code>expect</code> (<code>/usr/bin/expect</code>) роботы не запустятся.</li>
-  <li>Убедитесь, что машина подготовлена под робота: на ней стоят графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Это делают по инструкции робота. Пользователя робота включите в группу агента: <code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code>.</li>
-  <li>Создайте каталоги агента, данных агента и роботов, распакуйте архив и отдайте каталоги агенту:
+  <li>Установите <code>expect</code> и <code>unzip</code>. На Ubuntu и Astra Linux: <code>sudo apt install expect unzip</code>. Без <code>expect</code> (<code>/usr/bin/expect</code>) запуск роботов невозможен.</li>
+  <li>Убедитесь, что машина подготовлена для робота: установлены графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Подготовка выполняется по инструкции робота. Пользователя робота включите в группу агента: <code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code>.</li>
+  <li>Создайте каталоги агента, данных агента и роботов, распакуйте архив и назначьте владельцем каталогов пользователя агента:
 <pre><code>sudo mkdir -p /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
 sudo unzip primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip -d /opt/Primo/Agent
 sudo chown -R agent:primo-rpa /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
 sudo chmod +x /opt/Primo/Agent/Primo.Orchestrator.Agent /opt/Primo/Agent/LTools.Orchestrator.Agent.Runner /opt/Primo/Agent/launch-as-user.expect</code></pre></li>
-  <li>Дайте агенту права sudo без пароля: создайте файл <code>/etc/sudoers.d/primo-agent</code> командой <code>sudo visudo -f /etc/sudoers.d/primo-agent</code> с таким содержимым:
+  <li>Предоставьте агенту права sudo без пароля: создайте файл <code>/etc/sudoers.d/primo-agent</code> командой <code>sudo visudo -f /etc/sudoers.d/primo-agent</code> со следующим содержимым:
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
 agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
     <span class="check"><code>sudo -l -U agent</code> показывает обе команды</span></li>
@@ -66,7 +66,7 @@ agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
     <ul>
       <li><code>Agent:DataPath</code> — каталог данных агента, в архиве задан <code>/opt/Primo/AgentData</code>;</li>
       <li><code>DeployRobot:RobotsPath</code> — каталог роботов, в архиве задан <code>/opt/LTools</code>;</li>
-      <li><code>AgentCommands:Session</code> — полный путь к команде, которая запускает графический сеанс. В архиве записано <code>/usr/bin/mate-session</code> — это значение для РЕД ОС. Для другой ОС замените его: Astra Linux — <code>/usr/bin/fly-wm --execOnly {}</code>, CentOS — <code>/usr/bin/gnome-session</code>, Ubuntu с оболочкой Openbox — <code>/usr/bin/openbox-session</code>. Если строку удалить, для Astra Linux, РЕД ОС и CentOS агент подставит значение сам.</li>
+      <li><code>AgentCommands:Session</code> — полный путь к команде, которая запускает графический сеанс. В архиве указано <code>/usr/bin/mate-session</code> — значение для РЕД ОС. Для другой ОС замените его: Astra Linux — <code>/usr/bin/fly-wm --execOnly {}</code>, CentOS — <code>/usr/bin/gnome-session</code>, Ubuntu с оболочкой Openbox — <code>/usr/bin/openbox-session</code>. Если строка удалена, для Astra Linux, РЕД ОС и CentOS значение подставляется автоматически.</li>
     </ul></li>
   <li>Откройте порт <code>5002/tcp</code> на файерволе машины, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 5002/tcp</code>.</li>
   <li>Установите юнит агента. Основной вариант — пользовательский юнит пользователя <code>agent</code>: файл <code>Primo.Orchestrator.Agent.user.service</code> из архива скопируйте под именем <code>Primo.Orchestrator.Agent.service</code> и запустите:
@@ -77,11 +77,11 @@ sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) systemctl --user enable -
     Другой вариант — системный юнит <code>Primo.Orchestrator.Agent.service</code> (работает от <code>User=agent</code>) в <code>/etc/systemd/system/</code>.
     <span class="check"><code>curl -k https://localhost:5002/api/Version</code> печатает версию агента; в журнале (<code>sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) journalctl --user -u Primo.Orchestrator.Agent</code>) нет предупреждений «the launch of robots is impossible»</span></li>
 </ol>
-<p>Пока машина не зарегистрирована в Оркестраторе, агент каждые несколько секунд пишет в журнал ошибку «Не задан BaseUrl Оркестратора» — это нормально и прекращается после регистрации.</p>
-<p>При старте агент сам проверяет: доступен ли sudo, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале.</p>
+<p>До регистрации машины в Оркестраторе агент каждые несколько секунд записывает в журнал ошибку «Не задан BaseUrl Оркестратора». Это штатное поведение; после регистрации запись прекращается.</p>
+<p>При запуске агент проверяет доступность sudo, наличие <code>expect</code>, права на исполнение <code>launch-as-user.expect</code> и команды сеанса, разрешение на вызов <code>systemd-run</code> в sudoers, существование пользователя и группы. По каждому нарушению в журнал записывается отдельное предупреждение.</p>
 <details>
-<summary>Агент без root: от кого работает и что ему нужно</summary>
-<p>Агент в обоих вариантах работает от <code>Agent:UserName</code> (по умолчанию <code>agent</code>), разница только в том, кто его запускает: системный менеджер (<code>User=agent</code>) или менеджер самого <code>agent</code>. Работа агента без root поддержана с версии 1.24.1.</p>
+<summary>Работа агента без root: учётная запись и требования</summary>
+<p>Агент в обоих вариантах работает от <code>Agent:UserName</code> (по умолчанию <code>agent</code>), различается только способ запуска: системный менеджер (<code>User=agent</code>) или менеджер самого <code>agent</code>. Работа агента без root поддержана с версии 1.24.1.</p>
 <ul>
   <li>Обновление агента из Оркестратора (AgentUpdater) останавливает и запускает агент командой <code>systemctl --user stop|start Primo.Orchestrator.Agent</code>. Поэтому основной вариант — пользовательский юнит под этим именем.</li>
   <li>Для пользователя агента нужен linger, как и для служб.</li>
@@ -95,13 +95,13 @@ sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) systemctl --user enable -
 
 <h2>Регистрация машины в Оркестраторе</h2>
 <ol class="steps">
-  <li>В UI4 откройте <b>Настройки → Система → Машины роботов</b> и нажмите <b>Добавить машину</b>.</li>
+  <li>В интерфейсе Оркестратора откройте <b>Настройки → Система → Машины роботов</b> и нажмите <b>Добавить машину</b>.</li>
   <li>Заполните <b>Наименование</b> и <b>IP/DNS</b>; при необходимости — <b>Работающие роботы (макс)</b>. Для Linux-машины включите <b>Linux</b> — после сохранения это поле не меняется. Для Windows можно включить <b>Удерживать RDP-сессию в консоли</b> и указать <b>RDP-пользователь</b> и <b>Пароль</b>.</li>
   <li>Сохраните. <span class="check">в колонке <b>Доступна</b> появилась дата проверки доступности, в колонке <b>Версия агента</b> — версия</span></li>
 </ol>
 
 <h2>Обновление агента</h2>
-<p>Загрузите новый дистрибутив в <b>Настройки → Система → Дистрибутивы агента</b> (<b>Добавить дистрибутив Агента</b>), затем на странице <b>Машины роботов</b> выберите машины и нажмите <b>Обновить выбранные</b>. Утилита обновления AgentUpdater для Windows и Linux вшита в архив WebApi.</p>
+<p>Загрузите новый дистрибутив в <b>Настройки → Система → Дистрибутивы агента</b> (<b>Добавить дистрибутив Агента</b>), затем на странице <b>Машины роботов</b> выберите машины и нажмите <b>Обновить выбранные</b>. Утилита обновления AgentUpdater для Windows и Linux входит в архив WebApi.</p>
 
 <h2>Что дальше</h2>
 <div class="next">
