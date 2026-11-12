@@ -10,7 +10,7 @@
 <main>
 <h1>Совместимость продуктов и платформ</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>1.26.7 LTS</span><span>1.25.7 LTS</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Какие версии Студии, робота, Robot Runner и агента работают с какой версией Оркестратора, а также ОС, СУБД и .NET. Что такое LTS — на странице <a href="lifecycle.html">«Жизненный цикл версий»</a>.</p>
+<p class="lead">Соответствие версий Студии, робота, Robot Runner и агента версиям Оркестратора, а также ОС, СУБД и .NET. Определение LTS — на странице <a href="lifecycle.html">«Жизненный цикл версий»</a>.</p>
 
 <h2>Версии продуктов между собой</h2>
 <p>Кода Студии, Студии Linux, робота и Robot Runner в выгрузке нет. Ниже подтверждено только то, что видно в коде Оркестратора; остальные клетки — «уточнить».</p>
@@ -20,17 +20,17 @@
   <tr><td><b>1.26.7 LTS</b></td><td>уточнить</td><td>уточнить</td><td>уточнить</td><td>уточнить</td><td>агент той же версии, <code>1.26.7.x</code></td></tr>
   <tr><td><b>1.26.9</b></td><td>уточнить</td><td>уточнить</td><td>уточнить</td><td>уточнить</td><td>агент той же версии, <code>1.26.9.0</code></td></tr>
 </table></div>
-<p>Агент собирается в том же решении, что и серверные службы, и получает тот же номер версии. Ставьте агент той же версии, что и сервер.</p>
+<p>Агент собирается в том же решении, что и серверные службы, и получает тот же номер версии. Устанавливайте агент той же версии, что и сервер.</p>
 
-<h3>Что видно в коде 1.26.9</h3>
+<h3>Сведения из кода 1.26.9</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Пара</th><th>Что известно из кода</th></tr>
-  <tr><td>Службы сервера</td><td>Все службы (WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, MachineInfo, LogEventsWebhook, NuGet2, RDP2) и агент собираются с одной версией, в этом релизе <code>1.26.9</code>. Ставьте их одной версией. Состав служб — на странице <a href="../start/overview.html">«Общие сведения»</a>.</td></tr>
+  <tr><td>Службы сервера</td><td>Все службы (WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, MachineInfo, LogEventsWebhook, NuGet2, RDP2) и агент собираются с одной версией, в этом релизе <code>1.26.9</code>. Устанавливайте их одной версией. Состав служб — на странице <a href="../start/overview.html">«Общие сведения»</a>.</td></tr>
   <tr><td>Сервер × UI4</td><td>UI4 выпускается отдельно, с номером <code>4.ГГ.М.x</code>. Релизу 1.26.9.0 соответствует UI4 из ветки <code>releases/v4.26.9.1</code>.</td></tr>
-  <tr><td>Сервер × агент</td><td>Автообновление агента из Оркестратора принимает только дистрибутив агента версии <code>1.24.8.0</code> и выше и только той же ОС, что и машина. Утилита обновления (AgentUpdater) берётся из пакета WebApi, поэтому сначала обновляют сервер. Отдельной проверки версии уже установленного агента при обычной работе нет.</td></tr>
-  <tr><td>Сервер × Студия</td><td>Студия занимает, продлевает и освобождает лицензию через WebApi (<code>api/Licenses/{key}/TakeAvailableStudioLicense</code>, <code>KeepAliveStudio</code>, <code>ReleaseStudioLicense</code>). В запросе Студия может передать свою версию; поля платформы нет, поэтому Студию Windows и Студию Linux Оркестратор не различает. Проверку версии см. в разделе <a href="#studio-version">«Ограничение версии Студии»</a>.</td></tr>
-  <tr><td>Сервер × робот</td><td>Дистрибутив робота загружается в Оркестратор и разворачивается агентом: архив <code>LTools.Robot.x64.zip</code> или <code>LTools.Robot.x86.zip</code>, исполняемый файл <code>Primo.Robot</code> (<code>Primo.Robot.exe</code> на Windows). Агент обращается к роботу по <code>https://&lt;IP&gt;:&lt;порт&gt;/LTools.Robot/RobotService/api/…</code>. Версию дистрибутива Оркестратор не отклоняет, но отдельные функции включает только с определённой версии робота (таблица ниже).</td></tr>
-  <tr><td>Сервер × Студия и робот: методы API</td><td>Старые методы, которыми пользуются робот и Студия, оставлены рядом с новыми: например, <code>api/ExchangeQueues/ReadItems</code>, <code>v2/ReadItems</code> и <code>v3/ReadItems</code>; <code>api/Assets/GetByName</code> (помечен <code>Obsolete</code>) и <code>v2/GetByName</code>; <code>TakeAvailableAttendedRobotLicense</code> и <code>TakeAvailableAttendedRobotLicense/v2</code>. В 1.26.9 в фильтр чтения очереди добавлен список статусов <code>EventTypes</code>, старое поле <code>EventType</code> оставлено. Это наблюдение по коду, а не гарантия: новая функция робота или Студии может требовать метода, которого нет в более старом Оркестраторе.</td></tr>
+  <tr><td>Сервер × агент</td><td>Автообновление агента из Оркестратора принимает только дистрибутив агента версии <code>1.24.8.0</code> и выше и только той же ОС, что и машина. Утилита обновления (AgentUpdater) берётся из пакета WebApi, поэтому сначала обновляется сервер. Отдельной проверки версии уже установленного агента при обычной работе нет.</td></tr>
+  <tr><td>Сервер × Студия</td><td>Студия занимает, продлевает и освобождает лицензию через WebApi (<code>api/Licenses/{key}/TakeAvailableStudioLicense</code>, <code>KeepAliveStudio</code>, <code>ReleaseStudioLicense</code>). В запросе Студия может передать свою версию; поля платформы нет, поэтому Студия Windows и Студия Linux в Оркестраторе не различаются. Проверку версии см. в разделе <a href="#studio-version">«Ограничение версии Студии»</a>.</td></tr>
+  <tr><td>Сервер × робот</td><td>Дистрибутив робота загружается в Оркестратор и разворачивается агентом: архив <code>LTools.Robot.x64.zip</code> или <code>LTools.Robot.x86.zip</code>, исполняемый файл <code>Primo.Robot</code> (<code>Primo.Robot.exe</code> на Windows). Агент обращается к роботу по <code>https://&lt;IP&gt;:&lt;порт&gt;/LTools.Robot/RobotService/api/…</code>. Дистрибутив любой версии не отклоняется, но отдельные функции включаются только с определённой версии робота (таблица ниже).</td></tr>
+  <tr><td>Сервер × Студия и робот: методы API</td><td>Старые методы, которые используют робот и Студия, оставлены рядом с новыми: например, <code>api/ExchangeQueues/ReadItems</code>, <code>v2/ReadItems</code> и <code>v3/ReadItems</code>; <code>api/Assets/GetByName</code> (помечен <code>Obsolete</code>) и <code>v2/GetByName</code>; <code>TakeAvailableAttendedRobotLicense</code> и <code>TakeAvailableAttendedRobotLicense/v2</code>. В 1.26.9 в фильтр чтения очереди добавлен список статусов <code>EventTypes</code>, старое поле <code>EventType</code> оставлено. Это наблюдение по коду, а не гарантия: новая функция робота или Студии может требовать метода, которого нет в более старом Оркестраторе.</td></tr>
   <tr><td>Сервер × пакеты</td><td>NuGet2 построен на BaGet: фид по протоколу NuGet v3 (<code>v3/index.json</code>), публикация пакета — <code>api/v2/package</code>.</td></tr>
   <tr><td>Сервер × Robot Runner</td><td>Отдельного клиента с именем Robot Runner в коде Оркестратора нет. Есть роль <code>LimitedRobotRunner</code> и признак роли с тем же именем; связь с продуктом Robot Runner в коде не описана.</td></tr>
 </table></div>
@@ -45,11 +45,11 @@
 </table></div>
 
 <h2 id="studio-version">Ограничение версии Студии — настройка, а не совместимость</h2>
-<p>Секция <code>StudioVersionChecker</code> в WebApi задаёт минимальную версию Студии, которой Оркестратор выдаёт лицензию. Это ограничение, которое ставит администратор. Оно не говорит, какие версии Студии совместимы с Оркестратором.</p>
+<p>Секция <code>StudioVersionChecker</code> в WebApi задаёт минимальную версию Студии, которой Оркестратор выдаёт лицензию. Это ограничение, которое задаёт администратор. Оно не определяет, какие версии Студии совместимы с Оркестратором.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>StudioVersionChecker:MinimumStudioVersion</code></td><td>Минимальная версия Студии в формате <code>1.23.8.4</code>. Если не задана, проверка выключена (в журнал пишется предупреждение).</td><td>не задано</td></tr>
-  <tr><td><code>StudioVersionChecker:StudioVersionExceptionBehaviorType</code></td><td>Что делает Студия при отказе: <code>0</code> — закрывается молча, <code>1</code> — показывает сообщение и закрывается, <code>2</code> — только показывает сообщение. Значение вне 0–2 заменяется на <code>1</code>.</td><td><code>0</code></td></tr>
+  <tr><td><code>StudioVersionChecker:StudioVersionExceptionBehaviorType</code></td><td>Поведение Студии при отказе: <code>0</code> — закрывается без сообщения, <code>1</code> — показывает сообщение и закрывается, <code>2</code> — только показывает сообщение. Значение вне 0–2 заменяется на <code>1</code>.</td><td><code>0</code></td></tr>
 </table></div>
 <ul>
   <li>Если версия Студии ниже порога, WebApi отвечает <code>409</code> с текстом «Версия студии устарела…» и передаёт выбранное поведение в заголовке <code>Studio-Version-Failed-Behavior</code>.</li>
@@ -61,14 +61,14 @@
 <h2>Операционные системы</h2>
 <h3>Сервер</h3>
 <ul>
-  <li>Службы публикуются как self-contained под <code>win-x64</code> и <code>linux-x64</code>: отдельно ставить .NET не нужно.</li>
+  <li>Службы публикуются как self-contained под <code>win-x64</code> и <code>linux-x64</code>: отдельная установка .NET не требуется.</li>
   <li>Linux: службы оформлены как systemd-юниты (<code>/opt/Primo/&lt;Служба&gt;</code>), есть системный и пользовательский (rootless) варианты юнитов.</li>
   <li>Docker-образы строятся на базе <code>ubuntu:24.04</code> и Astra Linux (<code>astra/ubi18:1.8.6</code>); образы для Kubernetes — на <code>astra/ubi17</code>.</li>
 </ul>
 <h3>Машина робота</h3>
 <ul>
-  <li>Агент есть для Windows и Linux.</li>
-  <li>На Linux агент сам знает команду графической сессии для Astra Linux (<code>fly-wm</code>), CentOS (<code>gnome-session</code>) и РЕД ОС (<code>mate-session</code>). Для других дистрибутивов, в том числе Ubuntu, задайте <code>AgentCommands:Session</code> вручную. Для Astra Linux 1.8 агент дополнительно запускает <code>dbus-launch</code>.</li>
+  <li>Агент выпускается для Windows и Linux.</li>
+  <li>На Linux команда графической сессии определяется автоматически для Astra Linux (<code>fly-wm</code>), CentOS (<code>gnome-session</code>) и РЕД ОС (<code>mate-session</code>). Для других дистрибутивов, в том числе Ubuntu, задайте <code>AgentCommands:Session</code> вручную. Для Astra Linux 1.8 агент дополнительно запускает <code>dbus-launch</code>.</li>
 </ul>
 
 <h2>СУБД</h2>
@@ -83,7 +83,7 @@
   <tr><td>Аналитика (<code>ltoolsanalytic</code>)</td><td><code>Analytic.Migrations.Postgres</code></td><td><code>Analytic.Migrations.MSSQL</code></td></tr>
   <tr><td>Секреты (если включена)</td><td><code>Secrets.Migrations.Postgres</code></td><td><code>Secrets.Migrations.MSSQL</code></td></tr>
 </table></div>
-<div class="note"><p>Структурированное подключение <code>DbConnection:Items</code> (хост, порт, имя БД, отдельная учётка для миграций) WebApi читает только при <code>DBVendor=Postgres</code>. Для MS SQL используются строки <code>ConnectionStrings:*Connection</code>.</p></div>
+<div class="note"><p>Структурированное подключение <code>DbConnection:Items</code> (хост, порт, имя БД, отдельная учётная запись для миграций) WebApi читает только при <code>DBVendor=Postgres</code>. Для MS SQL используются строки <code>ConnectionStrings:*Connection</code>.</p></div>
 <p>В поставочных docker-compose используются образы <code>postgres:14</code> и <code>rabbitmq:3-management</code>.</p>
 
 <h2>.NET</h2>

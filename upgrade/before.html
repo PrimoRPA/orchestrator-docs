@@ -10,26 +10,26 @@
 <main>
 <h1>Перед обновлением: лицензия и бэкап</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Сначала убедитесь, что лицензия Оркестратора останется валидной на новой версии. Затем сделайте резервные копии БД, конфигов и ключей. Только после этого сверяйте совместимость и переходите к <a href="order.html">порядку обновления</a>.</p>
+<p class="lead">Сначала убедитесь, что лицензия Оркестратора останется валидной на новой версии. Затем сделайте резервные копии БД, конфигов и ключей. После этого проверьте совместимость и перейдите к <a href="order.html">порядку обновления</a>.</p>
 <div class="meta">
   <div><b>Результат</b>лицензия будет действовать на новой версии, копии БД и конфигов сделаны</div>
 </div>
 
 <h2>1. Лицензии</h2>
 
-<h3>Что обновление делает с лицензиями</h3>
-<p>Обновление не удаляет и не перезаписывает лицензии. Схема БД лицензий (<code>ltoolslicense</code>) в 1.25.7 LTS, 1.26.7 LTS и 1.26.9 одна и та же: последняя миграция — <code>InvalidReason</code> (август 2024), новых нет. Файл лицензии в БД WebApi не изменяет.</p>
+<h3>Влияние обновления на лицензии</h3>
+<p>Обновление не удаляет и не перезаписывает лицензии. Схема БД лицензий (<code>ltoolslicense</code>) в 1.25.7 LTS, 1.26.7 LTS и 1.26.9 одинакова: последняя миграция — <code>InvalidReason</code> (август 2024), новых нет. Файл лицензии в БД WebApi не изменяет.</p>
 <p>WebApi пересчитывает только состояние лицензий: при старте и затем каждые 15 секунд. Если после обновления лицензия стала невалидной, причина в одном из условий ниже, а не в потере данных.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Что проверяется</th><th>Когда лицензия станет невалидной</th></tr>
   <tr><td>Версия Оркестратора (только бессрочная лицензия Оркестратора)</td><td>Целевая версия выпущена позже, чем через год от начала лицензии. Подробно — ниже.</td></tr>
   <tr><td>Привязка к оборудованию: имя, CPU, диск</td><td>MachineInfo переустановлен под другой учётной записью (Windows), сменились хост, процессор или диск; в Docker не перенесён <code>primo-machine-key</code> или <code>PRIMOSALT</code>. Логика MachineInfo между 1.25.7 и 1.26.9 не менялась.</td></tr>
   <tr><td>Доступность MachineInfo</td><td>WebApi не может получить данные MachineInfo. Как только служба станет доступна, следующая проверка вернёт прежнее состояние.</td></tr>
-  <tr><td>Системное время</td><td>Часы сервера отстают от времени последней проверки, сохранённого в БД <code>ltools</code>. Тогда невалидны все лицензии, в журнале — «Проверка системного времени скомпрометирована или системное время переведено назад.»</td></tr>
+  <tr><td>Системное время</td><td>Часы сервера отстают от времени последней проверки, сохранённого в БД <code>ltools</code>. В этом случае невалидны все лицензии, в журнале — «Проверка системного времени скомпрометирована или системное время переведено назад.»</td></tr>
 </table></div>
 
 <h3>Бессрочная лицензия Оркестратора</h3>
-<p>«Бессрочная» значит: год обновлений плюс бессрочная работа на версиях, вышедших в этот год. Версия <code>1.ГГ.М</code> считается выпущенной 1-го числа месяца М 20ГГ года. В первый год действия лицензии подходит любая версия.</p>
+<p>«Бессрочная» означает: год обновлений и бессрочная работа на версиях, вышедших за этот год. Версия <code>1.ГГ.М</code> считается выпущенной 1-го числа месяца М 20ГГ года. В первый год действия лицензии подходит любая версия.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Версия, на которой работает правило</th><th>Как проверяется версия, если с начала лицензии прошло больше года</th></tr>
   <tr><td>1.25.7 LTS</td><td>Фактически не ограничивает: подходит любая версия, «выпущенная» до сегодняшнего дня.</td></tr>
@@ -38,7 +38,7 @@
 <div class="warn"><p>При переходе с 1.25.7 LTS на 1.26.x бессрочная лицензия Оркестратора, которая валидна сейчас, может стать невалидной. Для 1.26.7 начало лицензии должно быть позже 01.07.2025, для 1.26.9 — позже 01.09.2025 (если с начала лицензии ещё не прошёл год, ограничения нет). Без валидной лицензии Оркестратора методы API, которые требуют лицензии, отвечают кодом 402 «Отсутствует валидная лицензия на оркестратор.»</p></div>
 <p>Лицензии Робота и Студии по версии не проверяются.</p>
 <ol class="steps">
-  <li>Откройте Настройки → Лицензии. Найдите лицензию с продуктом Оркестратора и периодом «Бессрочная», посмотрите «Дата регистрации». <span class="check">известна дата начала лицензии</span></li>
+  <li>Откройте Настройки → Лицензии. Найдите лицензию с продуктом Оркестратора и периодом «Бессрочная», проверьте значение «Дата регистрации». <span class="check">известна дата начала лицензии</span></li>
   <li>Сравните дату с целевой версией по правилу выше. Пример: лицензия с 01.10.2024 после 01.10.2025 допускает версии до 1.25.9 включительно; на 1.26.x она станет невалидной. <span class="check">целевая версия укладывается в год от даты регистрации, либо год ещё не прошёл</span></li>
   <li>Если не укладывается, получите новую лицензию до обновления: «Запрос на замену лицензии», затем «Добавить отзыв лицензии» и «Добавить лицензию». Порядок — в разделе о лицензиях на странице <a href="migrate.html">Перенос на другой сервер</a>. <span class="check">новая лицензия в колонке «Состояние» валидна на текущей версии</span></li>
   <li>Запишите, под какой учётной записью работает MachineInfo (Windows), и для Docker — значение <code>primo-machine-key</code> из compose. <span class="check">значения сохранены вместе с резервной копией</span></li>
@@ -46,11 +46,11 @@
 <div class="note"><p>После перезапуска WebApi список занятых лицензий Студии очищается, Студии получают лицензии заново. Это штатное поведение при старте, а не потеря лицензий.</p></div>
 
 <h2>2. Резервные копии</h2>
-<p>При старте новые версии сами накатывают миграции: WebApi — на четыре свои БД и БД секретов, RobotLogs — на журналы, Analytic — на аналитику, NuGet2 — на свою БД. Отката миграций у служб нет: вернуться на прежнюю версию можно только из резервной копии.</p>
+<p>При старте новых версий миграции применяются автоматически: WebApi — к четырём своим БД и БД секретов, RobotLogs — к журналам, Analytic — к аналитике, NuGet2 — к своей БД. Отката миграций в службах нет: возврат на прежнюю версию возможен только из резервной копии.</p>
 
 <h3>Базы данных</h3>
 <div class="tbl-wrap"><table>
-  <tr><th>БД (имя по умолчанию)</th><th>Подключение</th><th>Чья</th><th>Что внутри</th></tr>
+  <tr><th>БД (имя по умолчанию)</th><th>Подключение</th><th>Служба</th><th>Что внутри</th></tr>
   <tr><td><code>ltools</code></td><td><code>DbConnection:Items:Default</code> / <code>ConnectionStrings:DefaultConnection</code></td><td>WebApi, Licenses</td><td>роботы, машины, проекты, задания, очереди, ресурсы; время последней проверки лицензий</td></tr>
   <tr><td><code>ltoolsidentity</code></td><td><code>…:Identity</code> / <code>IdentityConnection</code></td><td>WebApi</td><td>пользователи и роли</td></tr>
   <tr><td><code>ltoolslicense</code></td><td><code>…:License</code> / <code>LicenseConnection</code></td><td>WebApi</td><td>лицензии</td></tr>
@@ -64,25 +64,25 @@
 
 <h3>Файлы и ключи</h3>
 <ul>
-  <li><b>Конфиги</b> каждой службы: <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> (Windows) или <code>appsettings.ProdLinux.json</code> (Linux); у Linux-агента ещё <code>appsettings.Runner.json</code>. На Linux — также свои юниты (<code>~/.config/systemd/user/Primo.Orchestrator.*.service</code> или системные), если вы добавляли в них строки <code>Environment=</code>.</li>
-  <li><b><code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code></b>. Первая участвует в шифровании паролей в конфигах и в Docker-привязке лицензии, вторая — в подписи токенов. Службы читают их из переменных окружения процесса или машины. Запишите не только значения, но и сам факт: задана переменная или нет. Иначе зашифрованные пароли не расшифруются.</li>
-  <li><b>Файловые хранилища WebApi</b> — каталоги из <code>AgentDistrUpload:TargetFilePath</code>, <code>RobotDistrUpload:TargetFilePath</code>, <code>RpaProjectArchiveUpload:TargetFilePath</code>, <code>LogsDump:Path</code>, <code>LogsDump:ArchPath</code>; у NuGet2 — <code>FileSystem:Path</code>. Если <code>FileStore:Type=1</code>, файлы лежат в S3. Архивы RPA-проектов по умолчанию хранятся в БД <code>ltools</code> и попадают в её дамп.</li>
+  <li><b>Конфиги</b> каждой службы: <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> (Windows) или <code>appsettings.ProdLinux.json</code> (Linux); у Linux-агента ещё <code>appsettings.Runner.json</code>. На Linux — также свои юниты (<code>~/.config/systemd/user/Primo.Orchestrator.*.service</code> или системные), если в них добавлялись строки <code>Environment=</code>.</li>
+  <li><b><code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code></b>. Первая участвует в шифровании паролей в конфигах и в Docker-привязке лицензии, вторая — в подписи токенов. Службы читают их из переменных окружения процесса или машины. Запишите не только значения, но и то, задана ли переменная. Иначе зашифрованные пароли не расшифруются.</li>
+  <li><b>Файловые хранилища WebApi</b> — каталоги из <code>AgentDistrUpload:TargetFilePath</code>, <code>RobotDistrUpload:TargetFilePath</code>, <code>RpaProjectArchiveUpload:TargetFilePath</code>, <code>LogsDump:Path</code>, <code>LogsDump:ArchPath</code>; у NuGet2 — <code>FileSystem:Path</code>. Если <code>FileStore:Type=1</code>, файлы находятся в S3. Архивы RPA-проектов по умолчанию хранятся в БД <code>ltools</code> и попадают в её дамп.</li>
   <li><b>Docker</b>: старый <code>docker-compose.yml</code> целиком (блоки <code>x-globals</code>, <code>x-secrets</code>, <code>primo-machine-key</code>) и именованные тома. В поставочном compose проект называется <code>orch-docker</code>, поэтому тома — <code>orch-docker_pgdata</code>, <code>orch-docker_rabbitmqdata</code>, <code>orch-docker_webapidata</code>, <code>orch-docker_nugetdata</code>; в compose 1.25.7 вместо двух последних был <code>orch-docker_miniodata</code>.</li>
   <li>Сертификаты Kestrel и Nginx.</li>
 </ul>
 <ol class="steps">
   <li>Сделайте дампы всех БД из таблицы. <span class="check">для каждой БД есть свежий дамп и он открывается</span></li>
-  <li>Скопируйте конфиги, юниты, compose, каталоги хранилищ и тома. Запишите <code>PRIMOSALT</code>, <code>PRIMOSIGNINGKEY</code>, <code>primo-machine-key</code> в надёжное место. <span class="check">копии лежат вне сервера Оркестратора</span></li>
+  <li>Скопируйте конфиги, юниты, compose, каталоги хранилищ и тома. Запишите <code>PRIMOSALT</code>, <code>PRIMOSIGNINGKEY</code>, <code>primo-machine-key</code> в надёжное место. <span class="check">копии находятся вне сервера Оркестратора</span></li>
 </ol>
-<div class="note"><p>Если накатывать миграции из приложения нельзя, WebApi умеет только мигрировать БД и выйти: <code>Primo.Orchestrator.WebApi --migration</code>. При успехе в консоли будет «Migrations done successfully». Для PostgreSQL миграции можно выполнять отдельной учёткой: <code>MigrationUserName</code> / <code>MigrationPassword</code> в <code>DbConnection:Items:*</code>.</p></div>
+<div class="note"><p>Если применять миграции из приложения нельзя, в WebApi есть режим, в котором выполняется только миграция БД и работа завершается: <code>Primo.Orchestrator.WebApi --migration</code>. При успехе в консоль выводится «Migrations done successfully». Для PostgreSQL миграции допускается выполнять от отдельной учётной записи: <code>MigrationUserName</code> / <code>MigrationPassword</code> в <code>DbConnection:Items:*</code>.</p></div>
 
 <h2>3. Совместимость</h2>
 <p>Сверьтесь с <a href="../reference/compatibility.html">Совместимостью версий и платформ</a> и с <a href="config-changes.html">изменениями в конфигах между LTS</a>.</p>
-<div class="warn"><p>Последние патчи LTS-веток содержат изменения БД, которых нет в 1.26.9.0. В 1.26.7 LTS это, например, миграции <code>TokenVersion_Add</code> и <code>StudioRolePermissions_Add</code> (БД <code>ltoolsidentity</code>), <code>RpaProjectQueue_Update17</code> (БД <code>ltools</code>); в 1.25.7 LTS — <code>FolderUser2_Update3</code>. Если у вас последний патч LTS, переход на 1.26.9.0 согласуйте с поддержкой.</p></div>
+<div class="warn"><p>Последние патчи LTS-веток содержат изменения БД, которых нет в 1.26.9.0. В 1.26.7 LTS это, например, миграции <code>TokenVersion_Add</code> и <code>StudioRolePermissions_Add</code> (БД <code>ltoolsidentity</code>), <code>RpaProjectQueue_Update17</code> (БД <code>ltools</code>); в 1.25.7 LTS — <code>FolderUser2_Update3</code>. Если установлен последний патч LTS, переход на 1.26.9.0 согласуйте с поддержкой.</p></div>
 
 <h2>Что дальше</h2>
 <div class="next">
-  <a href="config-changes.html">Изменения в конфигах между LTS<small>что поправить в конфигах при переходе</small></a>
+  <a href="config-changes.html">Изменения в конфигах между LTS<small>что изменить в конфигах при переходе</small></a>
 </div>
 
 

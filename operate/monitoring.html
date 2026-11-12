@@ -11,10 +11,10 @@
 <main>
 <h1>Мониторинг и метрики</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Каждая служба Оркестратора умеет отдавать метрики в Prometheus или Zabbix. Здесь — как включить сбор, какой адрес указать в системе мониторинга и какие метрики есть.</p>
+<p class="lead">Каждая служба Оркестратора может предоставлять метрики для Prometheus или Zabbix. На странице описано, как включить сбор, какой адрес указать в системе мониторинга и какие метрики доступны.</p>
 
 <h2>Как это устроено</h2>
-<p>Служба сама ничего не отправляет. Она открывает отдельный порт и ждёт, когда к ней обратится Prometheus (HTTP, путь <code>/metrics</code>) или сервер Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
+<p>Служба не отправляет метрики самостоятельно. Она открывает отдельный порт и отвечает на запросы Prometheus (HTTP, путь <code>/metrics</code>) или сервера Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
 <p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента на машинах роботов.</p>
 
 <h2>Параметры</h2>
@@ -24,8 +24,8 @@
   <tr><td><code>Monitoring:Port</code></td><td>Порт, на котором служба отвечает системе мониторинга. Значение вне 0–65535 — ошибка, мониторинг выключен.</td><td><code>10052</code></td></tr>
   <tr><td><code>Monitoring:DotNetMonitoringEnabled</code></td><td>Метрики процесса .NET: память, сборки мусора, потоки, CPU.</td><td><code>false</code></td></tr>
   <tr><td><code>Monitoring:KestrelMonitoringEnabled</code></td><td>Метрики встроенного веб-сервера Kestrel: подключения, очереди, TLS.</td><td><code>false</code></td></tr>
-  <tr><td><code>Monitoring:NpgsqlMonitoringEnabled</code></td><td>Метрики подключений к PostgreSQL, с меткой <code>DbName</code>. Для служб, которые не ходят в БД (RDP2, MachineInfo), включать незачем.</td><td><code>false</code></td></tr>
-  <tr><td><code>Monitoring:IdleDurationMillis</code></td><td>Только WebApi: как часто (мс) пересчитывать метрики <code>primo_orch_*</code>, которые считаются запросами к БД. Между пересчётами отдаются прежние значения. Меньше 1000 не бывает.</td><td><code>2000</code></td></tr>
+  <tr><td><code>Monitoring:NpgsqlMonitoringEnabled</code></td><td>Метрики подключений к PostgreSQL, с меткой <code>DbName</code>. Для служб, которые не обращаются к БД (RDP2, MachineInfo), включение не требуется.</td><td><code>false</code></td></tr>
+  <tr><td><code>Monitoring:IdleDurationMillis</code></td><td>Только WebApi: как часто (мс) пересчитывать метрики <code>primo_orch_*</code>, которые считаются запросами к БД. Между пересчётами отдаются прежние значения. Минимальное значение — 1000.</td><td><code>2000</code></td></tr>
 </table></div>
 
 <p>Пример фрагмента <code>appsettings.json</code> любой службы:</p>
@@ -38,7 +38,7 @@
   "IdleDurationMillis": 10000
 }</code></pre>
 <p>В Docker-образах из <code>k8s/*.Dockerfile</code> мониторинг уже включён переменными окружения: <code>Monitoring__Provider=Prometheus</code>, <code>Monitoring__Port=10052</code>, порт 10052 объявлен в <code>EXPOSE</code>.</p>
-<div class="warn"><p>Если несколько служб стоят на одном сервере, задайте каждой свой <code>Monitoring:Port</code> — по умолчанию у всех 10052, и вторая служба не сможет открыть порт.</p></div>
+<div class="warn"><p>Если несколько служб установлены на одном сервере, задайте каждой отдельный <code>Monitoring:Port</code> — по умолчанию у всех 10052, и вторая служба не сможет открыть порт.</p></div>
 
 <h2>Подключение Prometheus</h2>
 <ol class="steps">
@@ -46,14 +46,14 @@
   <li>Откройте в браузере <code>http://&lt;хост службы&gt;:&lt;Monitoring:Port&gt;/metrics</code>. <span class="check">видны строки <code># HELP</code> и <code>primo_…</code></span></li>
   <li>Добавьте задание в <code>scrape_configs</code> Prometheus — по одному <code>job_name</code> на службу.</li>
 </ol>
-<p>Пример конфига Prometheus лежит в поставке исходников: <code>prometheus/prometheus.yml</code>. Он рассчитан на локальный стенд (порты 9900–9960 на <code>host.docker.internal</code>) — в своей установке подставьте реальные хосты и порты.</p>
+<p>Пример конфига Prometheus находится в поставке исходников: <code>prometheus/prometheus.yml</code>. Он рассчитан на локальный стенд (порты 9900–9960 на <code>host.docker.internal</code>) — в рабочей установке укажите фактические хосты и порты.</p>
 
 <h2>Подключение Zabbix</h2>
-<p>При <code>Provider: "Zabbix"</code> служба работает как пассивный агент Zabbix на порту <code>Monitoring:Port</code>. На сервере Zabbix заведите узел с интерфейсом агента на этот адрес и порт.</p>
+<p>При <code>Provider: "Zabbix"</code> служба работает как пассивный агент Zabbix на порту <code>Monitoring:Port</code>. На сервере Zabbix создайте узел с интерфейсом агента на этот адрес и порт.</p>
 <ul>
   <li>Ключ элемента данных — имя метрики, например <code>primo_rl_queue_length</code>.</li>
   <li>Для метрики с меткой значение метки пишется в квадратных скобках: <code>db_client_connections_usage[ltoolslogs]</code>. Метка без скобок — значение без метки.</li>
-  <li>Ключ <code>agent.ping</code> всегда возвращает <code>1</code> — удобно для проверки доступности.</li>
+  <li>Ключ <code>agent.ping</code> всегда возвращает <code>1</code> — подходит для проверки доступности.</li>
   <li>Неизвестный ключ возвращает <code>ZBX_NOTSUPPORTED</code>.</li>
 </ul>
 <div class="warn"><p>Значение метки в ключе Zabbix должно состоять из латинских букв, цифр и <code>_</code> и не начинаться с цифры. Метрики WebApi размечены именем тенанта (<code>TenantName</code>): для тенанта с кириллицей, пробелом или дефисом в имени ключ не пройдёт проверку, Zabbix получит <code>ZBX_NOTSUPPORTED</code>.</p></div>
@@ -79,7 +79,7 @@
 <div class="note"><p>Метрики <code>primo_orch_*</code> считаются запросами к БД при каждом обращении Prometheus или Zabbix, но не чаще, чем раз в <code>IdleDurationMillis</code>. При частом опросе увеличьте этот параметр.</p></div>
 
 <h2>Grafana</h2>
-<p>Для показа отчётов Grafana внутри Оркестратора в конфиге WebApi есть секция <code>Grafana:ReportItems</code> — список разделов (<code>Name</code>) с отчётами (<code>Name</code>, <code>Url</code>, <code>Description</code>). В UI4 отчёты открываются в разделе «Аналитика» → «Grafana». В шаблонах nginx Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>. Примеры дашбордов и представлений для аналитической БД лежат в <code>LTools.Orchestrator.Analytic/Grafana/</code>.</p>
+<p>Для показа отчётов Grafana внутри Оркестратора в конфиге WebApi есть секция <code>Grafana:ReportItems</code> — список разделов (<code>Name</code>) с отчётами (<code>Name</code>, <code>Url</code>, <code>Description</code>). В UI4 отчёты открываются в разделе «Аналитика» → «Grafana». В шаблонах nginx Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>. Примеры дашбордов и представлений для аналитической БД находятся в <code>LTools.Orchestrator.Analytic/Grafana/</code>.</p>
 
 
 </main>

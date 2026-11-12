@@ -11,14 +11,14 @@
 <main>
 <h1>Обслуживание БД</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Какие фоновые задачи Оркестратора сами чистят и переносят данные, какими параметрами они управляются и что администратору БД нужно делать вручную.</p>
+<p class="lead">На странице описаны фоновые задачи Оркестратора, которые очищают и переносят данные, их параметры и действия, которые администратор БД выполняет вручную.</p>
 
 <h2>Что растёт быстрее всего</h2>
-<p>Больше всего данных в БД журналов <code>ltoolslogs</code>: таблицы <code>Logs</code> (журнал робота), <code>OrchEvents</code> (журнал Оркестратора), <code>RobotLogMessages</code>, <code>RobotCustomLogMessages</code>, <code>RobotScreenFiles</code>. Сам Оркестратор старые записи журналов не удаляет — для этого секционирование и ручная очистка секций или всего журнала.</p>
-<p>В оперативной БД <code>ltools</code> растут запуски проектов, очередь проектов и элементы очередей обмена данными. Для них есть фоновые задачи WebApi.</p>
+<p>Больше всего данных в БД журналов <code>ltoolslogs</code>: таблицы <code>Logs</code> (журнал робота), <code>OrchEvents</code> (журнал Оркестратора), <code>RobotLogMessages</code>, <code>RobotCustomLogMessages</code>, <code>RobotScreenFiles</code>. Старые записи журналов в Оркестраторе автоматически не удаляются — для этого используются секционирование и ручная очистка секций или всего журнала.</p>
+<p>В оперативной БД <code>ltools</code> растут запуски проектов, очередь проектов и элементы очередей обмена данными. Для них предусмотрены фоновые задачи WebApi.</p>
 
 <h2>Перенос старых запусков в БД журналов</h2>
-<p>Служба WebApi периодически переносит завершённые запуски проектов (завершены успешно, с ошибкой, принудительно или по таймауту) старше <code>Period</code> из <code>ltools</code> в <code>ltoolslogs</code> вместе со значениями аргументов. При нескольких узлах WebApi каждая пачка помечается узлом, чтобы узлы не переносили одно и то же. Результат пишется в журнал Оркестратора: 90300 — успешно, 90301 — ошибка.</p>
+<p>Служба WebApi периодически переносит завершённые запуски проектов (завершены успешно, с ошибкой, принудительно или по таймауту) старше <code>Period</code> из <code>ltools</code> в <code>ltoolslogs</code> вместе со значениями аргументов. При нескольких узлах WebApi каждый пакет помечается узлом, чтобы узлы не переносили одни и те же запуски. Результат записывается в журнал Оркестратора: 90300 — успешно, 90301 — ошибка.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>RpaProjectLaunch:EnableLogsTransfer</code></td><td>Включить перенос. Читается при старте службы.</td><td><code>true</code></td></tr>
@@ -32,7 +32,7 @@
   "MaxBatch": 2000,
   "LogsThreadSleep": 300
 }</code></pre>
-<div class="warn"><p>В Docker-образе WebApi (<code>k8s/web-api.Dockerfile</code>) перенос выключен: <code>RpaProjectLaunch__EnableLogsTransfer=False</code>, а <code>MaxBatch=500</code>, <code>Period=80640</code>. Если оставить так, таблица запусков в <code>ltools</code> будет только расти. Проверьте значение в своей установке.</p></div>
+<div class="warn"><p>В Docker-образе WebApi (<code>k8s/web-api.Dockerfile</code>) перенос выключен: <code>RpaProjectLaunch__EnableLogsTransfer=False</code>, а <code>MaxBatch=500</code>, <code>Period=80640</code>. При таких значениях таблица запусков в <code>ltools</code> только растёт. Проверьте значение в установке.</p></div>
 <p>Как проверить: в журнале Оркестратора появляются события 90300 «Перенос старых запусков в БД с логами: успешно»; число запусков старше <code>Period</code> в <code>ltools</code> не растёт.</p>
 
 <h2>Очистка очереди проектов</h2>
@@ -52,8 +52,8 @@
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>ExchangeQueue:DeleteExpiredInterval</code></td><td>Интервал удаления просроченных элементов, мс.</td><td><code>4000</code></td></tr>
   <tr><td><code>ExchangeQueue:AllowDeleteLockedItems</code></td><td>Удалять просроченные элементы, заблокированные роботом.</td><td><code>false</code></td></tr>
-  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteInterval</code></td><td>Интервал автоочистки/архивации, минуты. Меньше 5 не бывает.</td><td><code>60</code></td></tr>
-  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteChunkSize</code></td><td>Размер пачки при автоочистке, записей (1–10000).</td><td><code>100</code></td></tr>
+  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteInterval</code></td><td>Интервал автоочистки/архивации, минуты. Минимальное значение — 5.</td><td><code>60</code></td></tr>
+  <tr><td><code>ExchangeQueue:ExchangeQueueValuesAutoDeleteChunkSize</code></td><td>Размер пакета при автоочистке, записей (1–10000).</td><td><code>100</code></td></tr>
   <tr><td><code>ExchangeQueue:MinExchangeQueueValuesDeleteLimitDays</code></td><td>Минимально допустимый порог «возраст в днях» в правиле очереди.</td><td><code>30</code></td></tr>
   <tr><td><code>ExchangeQueue:MinExchangeQueueValuesDeleteLimitElements</code></td><td>Минимально допустимый порог «число элементов» в правиле очереди.</td><td><code>100000</code></td></tr>
   <tr><td><code>ExchangeQueue:AllowPhysicalRemoval</code></td><td>Удалять элементы физически (<code>true</code>) или логически, с отметкой <code>DeletedAt</code> (<code>false</code>).</td><td><code>false</code></td></tr>
@@ -61,20 +61,20 @@
 <p>Результат автоочистки — события 3030 (успешно) и 3031 (ошибка) в журнале Оркестратора.</p>
 
 <h2>Журналы: секции, дамп, полная очистка</h2>
-<p>Только для PostgreSQL. В UI4 в настройках есть вкладка «Журналы» (видна, если СУБД — PostgreSQL). Там список секций таблиц <code>Logs</code> и <code>OrchEvents</code> БД <code>ltoolslogs</code> с размером, фильтром по году и архивным секциям, кнопками «Сделать дамп» и «Удалить».</p>
+<p>Только для PostgreSQL. В UI4 в настройках есть вкладка «Журналы» (отображается, если СУБД — PostgreSQL). На вкладке приведён список секций таблиц <code>Logs</code> и <code>OrchEvents</code> БД <code>ltoolslogs</code> с размером, фильтром по году и архивным секциям, кнопками «Сделать дамп» и «Удалить».</p>
 <ul>
   <li>Список секций строится по наследованию таблиц в PostgreSQL (<code>pg_inherits</code>). Год берётся из имени секции: четыре символа после первого <code>_</code> (например, <code>Logs_2026…</code>); секции с <code>arch</code> в этом месте считаются архивными.</li>
-  <li>Сами секции Оркестратор не создаёт — секционирование настраивает администратор БД.</li>
-  <li>Полная очистка журналов выполняет <code>TRUNCATE</code> таблиц <code>OrchEvents</code>, <code>RobotCustomLogMessages</code>, <code>RobotLogMessages</code>, <code>Logs</code>, <code>RobotScreenFiles</code> и пишет событие 20000 «Очистка логов» (класс «Инцидент безопасности»). Если идёт выгрузка журналов, очистка отклоняется.</li>
+  <li>Секции в Оркестраторе не создаются — секционирование настраивает администратор БД.</li>
+  <li>При полной очистке журналов выполняется <code>TRUNCATE</code> таблиц <code>OrchEvents</code>, <code>RobotCustomLogMessages</code>, <code>RobotLogMessages</code>, <code>Logs</code>, <code>RobotScreenFiles</code> и записывается событие 20000 «Очистка логов» (класс «Инцидент безопасности»). Если идёт выгрузка журналов, очистка отклоняется.</li>
 </ul>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>LogsDump:Path</code></td><td>Папка для дампов. WebApi создаёт её при старте, если её нет.</td><td>не задано</td></tr>
-  <tr><td><code>LogsDump:ArchPath</code></td><td>Подпапка (относительно <code>Path</code>) для файла выгрузки <code>LogsDump.zip</code>, который отдаётся на скачивание.</td><td>не задано</td></tr>
+  <tr><td><code>LogsDump:ArchPath</code></td><td>Подпапка (относительно <code>Path</code>) для файла выгрузки <code>LogsDump.zip</code>, который предоставляется для скачивания.</td><td>не задано</td></tr>
   <tr><td><code>LogsDump:PageSize</code></td><td>Размер страницы выгрузки, записей. В 1.26.9 используется только отключённой службой выгрузки.</td><td><code>20000</code></td></tr>
   <tr><td><code>LogsDump:MaxPageCount</code></td><td>Максимум страниц в выгрузке. В 1.26.9 используется только отключённой службой выгрузки.</td><td><code>100</code></td></tr>
 </table></div>
-<div class="warn"><p>Удаление секции — это <code>DROP TABLE</code> секции: данные удаляются безвозвратно. Перед удалением сделайте резервную копию.</p></div>
+<div class="warn"><p>Удаление секции — это <code>DROP TABLE</code> секции: данные удаляются безвозвратно. Перед удалением создайте резервную копию.</p></div>
 
 
 </main>

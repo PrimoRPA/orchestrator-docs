@@ -11,7 +11,7 @@
 <main>
 <h1>Путеводитель</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Впервые открыли документацию Оркестратора? Найдите свою задачу — под ней страницы, которые нужно прочитать. Что означают номера, переключатели и другие элементы страниц — на странице <a href="how-to-use.html">Как пользоваться документацией</a>.</p>
+<p class="lead">Страница для первого знакомства с документацией Оркестратора. Найдите задачу — под ней перечислены страницы, которые нужно прочитать. Значение номеров, переключателей и других элементов страниц описано на странице <a href="how-to-use.html">Как пользоваться документацией</a>.</p>
 
 <ol class="route">
   <li><a href="overview.html">Понять, что такое Оркестратор</a>
@@ -25,43 +25,43 @@
       <li><a href="../deploy/know.html">Что нужно знать</a> <span>— версия, совместимость, какие службы нужны</span></li>
       <li><a href="../deploy/planning-options.html">Выбор варианта развертывания</a> <span>— Docker или службы, СУБД, число серверов</span></li>
       <li><a href="../deploy/hardware.html">Требования к железу</a> <span>— сколько серверов и машин роботов</span></li>
-      <li><a href="../deploy/network.html">Порты и сетевой трафик</a> <span>— заявка сетевикам и ИБ</span></li>
-      <li><a href="../deploy/service-accounts.html">Учётные записи и права служб</a> <span>— заявка на учётки и права</span></li>
+      <li><a href="../deploy/network.html">Порты и сетевой трафик</a> <span>— заявка для сетевой службы и ИБ</span></li>
+      <li><a href="../deploy/service-accounts.html">Учётные записи и права служб</a> <span>— заявка на учётные записи и права</span></li>
       <li><a href="../deploy/download.html">Дистрибутивы</a> <span>— где скачать</span></li>
       <li><a href="../deploy/checklist.html">Что подготовить</a> <span>— чек-лист перед установкой</span></li>
     </ol>
   </li>
-  <li><a href="../deploy/install.html">Поставить Оркестратор с нуля</a>
+  <li><a href="../deploy/install.html">Установить Оркестратор с нуля</a>
     <ol class="substeps">
-      <li data-only="docker"><a href="../deploy/install-docker.html">Установка в Docker</a> <span>— всё одним compose-файлом</span></li>
+      <li data-only="docker"><a href="../deploy/install-docker.html">Установка в Docker</a> <span>— все компоненты в одном compose-файле</span></li>
       <li data-only="linux"><a href="../deploy/install-services.html#astra">Установка служб</a> <span>— Astra Linux, РЕД ОС или Ubuntu</span></li>
       <li data-only="windows"><a href="../deploy/install-services.html#windows">Установка служб</a> <span>— Windows Server</span></li>
       <li><a href="../deploy/agent.html">Машины роботов и агент</a> <span>— агент на каждую машину робота</span></li>
       <li><a href="../deploy/first-run.html">Первый запуск</a> <span>— лицензия, дистрибутив робота, первый робот</span></li>
-      <li><a href="../deploy/verify.html">Проверка установки</a> <span>— тестовый проект выполнился</span></li>
+      <li><a href="../deploy/verify.html">Проверка установки</a> <span>— тестовый проект выполнен</span></li>
     </ol>
   </li>
   <li><a href="../upgrade/index.html">Обновить действующую установку</a>
     <ol class="substeps">
       <li><a href="../upgrade/before.html">Перед обновлением</a> <span>— лицензия и бэкап</span></li>
-      <li><a href="../upgrade/config-changes.html">Изменения в конфигах</a> <span>— что поправить при переходе между LTS</span></li>
+      <li><a href="../upgrade/config-changes.html">Изменения в конфигах</a> <span>— что изменить при переходе между LTS</span></li>
       <li><a href="../upgrade/order.html">Порядок обновления</a> <span>— службы, агенты, роботы</span></li>
       <li><a href="../deploy/verify.html">Проверка установки</a> <span>— всё работает на новой версии</span></li>
     </ol>
   </li>
-  <li><a href="../upgrade/migrate.html">Переехать на другой сервер или СУБД</a>
+  <li><a href="../upgrade/migrate.html">Перенести на другой сервер или СУБД</a>
     <ol class="substeps">
       <li><a href="../upgrade/before.html">Перед обновлением</a> <span>— лицензия и бэкап</span></li>
       <li><a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a> <span>— что перенести и что будет с лицензиями</span></li>
       <li><a href="../deploy/verify.html">Проверка установки</a> <span>— всё работает на новом месте</span></li>
     </ol>
   </li>
-  <li><a href="../configure/index.html">Настроить под свою организацию</a>
+  <li><a href="../configure/index.html">Настроить под организацию</a>
     <ol class="substeps plain">
       <li><a href="../configure/access.html">Вход и доступ</a> <span>— AD, SSO, Keycloak, права и роли</span></li>
       <li><a href="../configure/security.html">Безопасность</a> <span>— пароли в конфигах, Vault, сертификаты</span></li>
-      <li><a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a> <span>— как запускаются роботы и живут сессии</span></li>
-      <li><a href="../configure/project-queue.html">Очередь проектов</a> <span>— кто первым получит робота</span></li>
+      <li><a href="../configure/robots-rdp.html">Запуск роботов и RDP-сессии</a> <span>— запуск роботов и время жизни сессий</span></li>
+      <li><a href="../configure/project-queue.html">Очередь проектов</a> <span>— какой проект первым получит робота</span></li>
       <li><a href="../configure/notifications.html">Почта и оповещения</a> <span>— SMTP, оповещения, почтовые триггеры</span></li>
       <li><a href="../configure/storage.html">Хранилища</a> <span>— файлы, S3, общие папки</span></li>
       <li><a href="../configure/integrations.html">Интеграции</a> <span>— вебхуки, аналитика, внешние системы</span></li>
@@ -75,22 +75,22 @@
       <li><a href="../work/projects.html">RPA-проекты</a> <span>— загрузка, версии, публикация</span></li>
       <li><a href="../work/jobs-triggers.html">Задания и триггеры</a> <span>— расписания и запуск по событию</span></li>
       <li><a href="../work/logs.html">Журналы</a> <span>— что произошло и почему</span></li>
-      <li><a href="../work/ui2-to-ui4.html">Где это теперь: UI2 → UI4</a> <span>— если привыкли к старому интерфейсу</span></li>
+      <li><a href="../work/ui2-to-ui4.html">Где это теперь: UI2 → UI4</a> <span>— для работавших в старом интерфейсе</span></li>
     </ol>
   </li>
-  <li><a href="../operate/index.html">Следить за здоровьем системы</a>
+  <li><a href="../operate/index.html">Контролировать состояние системы</a>
     <ol class="substeps plain">
       <li><a href="../operate/monitoring.html">Мониторинг и метрики</a> <span>— узнавать о сбоях раньше пользователей</span></li>
       <li><a href="../operate/service-logs.html">Журналы служб</a> <span>— где искать технические журналы</span></li>
       <li><a href="../operate/events.html">События и их коды</a> <span>— что значит запись в журнале</span></li>
-      <li><a href="../operate/db-maintenance.html">Обслуживание БД</a> <span>— что чистится само, что вручную</span></li>
+      <li><a href="../operate/db-maintenance.html">Обслуживание БД</a> <span>— что очищается автоматически, что вручную</span></li>
       <li><a href="../operate/backup.html">Резервное копирование</a> <span>— что копировать и как восстановить</span></li>
     </ol>
   </li>
-  <li><a href="../troubleshoot/index.html">Разобраться со сбоем</a>
+  <li><a href="../troubleshoot/index.html">Устранить сбой</a>
     <ol class="substeps">
-      <li><a href="../troubleshoot/index.html">Неполадки</a> <span>— найдите свой симптом</span></li>
-      <li><a href="../operate/service-logs.html">Журналы служб</a> <span>— не нашли — соберите журналы для поддержки</span></li>
+      <li><a href="../troubleshoot/index.html">Неполадки</a> <span>— поиск по симптому</span></li>
+      <li><a href="../operate/service-logs.html">Журналы служб</a> <span>— если симптом не найден, соберите журналы для поддержки</span></li>
     </ol>
   </li>
   <li><a href="../reference/index.html">Найти параметр, порт или файл</a>
@@ -98,7 +98,7 @@
       <li><a href="../reference/config.html">Параметры конфигурации</a> <span>— ключи всех служб</span></li>
       <li><a href="../reference/ports.html">Порты</a> <span>— кто слушает и кто подключается</span></li>
       <li><a href="../reference/components.html">Компоненты и службы</a> <span>— службы и их зависимости</span></li>
-      <li><a href="../reference/delivery.html">Комплект поставки</a> <span>— какие архивы и где лежат</span></li>
+      <li><a href="../reference/delivery.html">Комплект поставки</a> <span>— какие архивы и где находятся</span></li>
       <li><a href="../reference/glossary.html">Глоссарий</a> <span>— термины UI4 и кода</span></li>
     </ol>
   </li>
@@ -107,14 +107,14 @@
 
 <h2>Частые задачи</h2>
 <ul>
-  <li><a href="../deploy/install-services.html#astra">Поставить Оркестратор на Astra Linux</a></li>
-  <li><a href="../deploy/install-docker.html">Быстро поднять стенд в Docker</a></li>
+  <li><a href="../deploy/install-services.html#astra">Установить Оркестратор на Astra Linux</a></li>
+  <li><a href="../deploy/install-docker.html">Быстро развернуть стенд в Docker</a></li>
   <li><a href="../upgrade/before.html">Проверить лицензию перед обновлением</a></li>
   <li><a href="../configure/access.html">Подключить вход через AD</a></li>
   <li><a href="../troubleshoot/logs-empty.html">Журнал робота пустой</a></li>
   <li><a href="../reference/config.html">Найти параметр конфигурации</a></li>
 </ul>
-<p class="auto-note">Список подобран вручную. В идеале он собирается автоматически — по популярности страниц и числу обращений в поддержку.</p>
+<p class="auto-note">Список подобран вручную. Целевой вариант — автоматическая сборка по популярности страниц и числу обращений в поддержку.</p>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

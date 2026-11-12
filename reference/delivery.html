@@ -11,10 +11,10 @@
 <main>
 <h1>Комплект поставки</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Какие архивы и файлы собирает конвейер сборки Оркестратора 1.26.9 и что лежит внутри. Список составлен по сценариям сборки, а не по старому руководству: сторонние дистрибутивы (СУБД, RabbitMQ и т. п.) конвейер не собирает.</p>
+<p class="lead">Архивы и файлы, которые собирает конвейер сборки Оркестратора 1.26.9, и их содержимое. Список составлен по сценариям сборки, а не по старому руководству: сторонние дистрибутивы (СУБД, RabbitMQ и т. п.) конвейер не собирает.</p>
 
-<h2 id="nexus">Что лежит в репозитории</h2>
-<p>Клиенту дистрибутив приходит из открытого репозитория <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>: релизы — <code>raw-hosted-release/&lt;версия&gt;/</code>, LTS — <code>raw-hosted-lts/&lt;версия&gt;/</code>. Состав папки <code>1.26.9/orchestrator/</code> на 09.11.2026:</p>
+<h2 id="nexus">Состав репозитория</h2>
+<p>Клиент получает дистрибутив из открытого репозитория <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>: релизы — <code>raw-hosted-release/&lt;версия&gt;/</code>, LTS — <code>raw-hosted-lts/&lt;версия&gt;/</code>. Состав папки <code>1.26.9/orchestrator/</code> на 09.11.2026:</p>
 <div class="tbl-wrap"><table>
 <tr><th>Папка</th><th>Что внутри</th></tr>
 <tr><td><code>windows/</code>, <code>linux/</code></td><td>Архивы <code>primo-rpa-orchestrator-&lt;служба&gt;-1.26.9.0-&lt;windows|linux&gt;.zip</code>: webapi, robotlogs, states, notifications, analytic, licenses, queues, machineinfo, logeventswebhook, rdp2, arcsight, nuget2, agent, agentupdater, passwordencryptor</td></tr>
@@ -44,7 +44,7 @@
 <tr><td>Шифрование паролей</td><td><code>PasswordEncryptor</code></td><td><code>PasswordEncryptor-linux</code></td><td>Утилита для паролей в конфигах.</td></tr>
 </table></div>
 
-<h3>Что внутри архива службы</h3>
+<h3>Состав архива службы</h3>
 <ul>
   <li>Исполняемый файл <code>Primo.Orchestrator.&lt;Служба&gt;</code> и библиотеки, включая среду .NET.</li>
   <li><code>appsettings.json</code> и файл окружения: в Windows-архивах — <code>appsettings.ProdWin.json</code>, в Linux-архивах — <code>appsettings.ProdLinux.json</code>. <code>appsettings.Development.json</code> удаляется.</li>

@@ -14,28 +14,28 @@
 <p class="lead">Шифрование паролей в конфигах, хранение секретов в HashiCorp Vault, учётные записи в CyberArk и Vault, сертификаты TLS и контроль изменения конфигурационных файлов.</p>
 
 <h2>Шифрование паролей в конфигах</h2>
-<p>Пароли и ключи в конфигах служб хранятся зашифрованными. Служба расшифровывает их при старте. Исключения: среда <code>Development</code> и режим <code>Secrets:External=1</code> (Vault) — тогда значения берутся как есть.</p>
+<p>Пароли и ключи в конфигах служб хранятся зашифрованными. Служба расшифровывает их при старте. Исключения: среда <code>Development</code> и режим <code>Secrets:External=1</code> (Vault) — в этих случаях значения используются без расшифровки.</p>
 <p>Что шифруется: пароли БД в строках подключения, <code>ActiveDirectory:MultyForest:*:AdminPassword</code>, <code>OpenId:KeyCloak:*:ClientSecret</code>, <code>Tenants:IncomingEmail:Password</code>, <code>RabbitMQ:Password</code> и <code>SslCertPassphrase</code>, <code>RobotDeployment:SslCertPassword</code> и <code>OrchPassword</code>, <code>CyberArk:Password</code>, <code>NuGet:ApiKey</code>, <code>FileStore:Minio:SecretKey</code>, <code>Redis:Password</code>, <code>Email:FromPassword</code> (Notifications), пароль сертификата Kestrel.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр / переменная</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr><td><code>ConfigPasswordEncryptor:Algorithm</code></td><td><code>AES</code> или <code>RSA</code>. Должен совпадать с утилитой, которой шифровали</td><td>не задан → AES (в Docker-образах <code>AES</code>)</td></tr>
-  <tr><td>переменная окружения <code>PRIMOSALT</code></td><td>Своя соль для AES. Если задана, должна быть одинаковой на всех серверах служб и агентов</td><td>—</td></tr>
+  <tr><td><code>ConfigPasswordEncryptor:Algorithm</code></td><td><code>AES</code> или <code>RSA</code>. Должен совпадать с утилитой, которой выполнено шифрование</td><td>не задан → AES (в Docker-образах <code>AES</code>)</td></tr>
+  <tr><td>переменная окружения <code>PRIMOSALT</code></td><td>Собственная соль для AES. Если задана, должна быть одинаковой на всех серверах служб и агентов</td><td>—</td></tr>
   <tr><td>переменные <code>PRIMOSIGNINGKEY</code>, <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code></td><td>Ключ подписи и реквизиты JWT-токенов. Читаются всеми службами, которые проверяют токены, — задавайте одинаково</td><td>issuer <code>LToolsOrchestratorWebApi</code>, audience <code>LToolsOrchestratorUi</code></td></tr>
 </table></div>
 <div class="warn"><p>Для промышленной установки задайте свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code> и зашифруйте ими пароли.</p></div>
-<div class="warn"><p>Пароль сертификата Kestrel (<code>Kestrel:Endpoints:&lt;имя&gt;:Certificate:Password</code>) расшифровывается, только если <code>ConfigPasswordEncryptor:Algorithm</code> явно равен <code>AES</code> или <code>RSA</code>. Без параметра пароль берётся как есть, в открытом виде.</p></div>
+<div class="warn"><p>Пароль сертификата Kestrel (<code>Kestrel:Endpoints:&lt;имя&gt;:Certificate:Password</code>) расшифровывается, только если <code>ConfigPasswordEncryptor:Algorithm</code> явно равен <code>AES</code> или <code>RSA</code>. Без параметра пароль используется без расшифровки, в открытом виде.</p></div>
 
 <h3>Как зашифровать пароль</h3>
 <ol class="steps">
   <li>Запустите <code>Primo.Orchestrator.PasswordEncryptor</code> (для RSA — <code>Primo.Orchestrator.RsaPasswordEncryptor</code>).</li>
-  <li>Введите одной строкой пароль. Если <code>PRIMOSALT</code> на этой машине не задан, а на серверах задан, введите через пробел пароль и соль. <span class="check">Утилита печатает строку после «Copy following string:» и для проверки — расшифровку.</span></li>
+  <li>Введите одной строкой пароль. Если <code>PRIMOSALT</code> на этой машине не задан, а на серверах задан, введите через пробел пароль и соль. <span class="check">Утилита выводит строку после «Copy following string:» и для проверки — расшифровку.</span></li>
   <li>Скопируйте зашифрованную строку в конфиг и перезапустите службу. <span class="check">В журнале службы нет ошибок расшифровки, подключение к БД/RabbitMQ/AD проходит.</span></li>
 </ol>
 
 <h2>HashiCorp Vault</h2>
 <p>Vault используется в трёх ролях.</p>
 <h3>1. Хранилище секретов служб</h3>
-<p>Включается <code>Secrets:External=1</code>. Значение <code>0</code> (БД секретов) устарело. Служба берёт из Vault пароли, ключи и учётки вместо конфига. Подключение к Vault задаётся только переменными окружения.</p>
+<p>Включается <code>Secrets:External=1</code>. Значение <code>0</code> (БД секретов) устарело. Пароли, ключи и учётные записи служба получает из Vault, а не из конфига. Подключение к Vault задаётся только переменными окружения.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Переменная</th><th>Назначение</th></tr>
   <tr><td><code>VAULT_URL</code></td><td>Адрес Vault</td></tr>
@@ -44,20 +44,20 @@
   <tr><td><code>VAULT_PATH</code></td><td>Путь к секрету службы</td></tr>
 </table></div>
 <p>Каждую переменную можно задать с префиксом службы: <code>WEBAPI_</code>, <code>ROBOTLOGS_</code>, <code>STATES_</code>, <code>NOTIFICATIONS_</code>, <code>ANALYTIC_</code>, <code>LICENSES_</code>, <code>QUEUES_</code>, <code>LOGEVENTSWEBHOOK_</code>, <code>AGENT_</code> — например, <code>WEBAPI_VAULT_PATH</code>. Без префикса значение общее.</p>
-<p>Ключи внутри секрета повторяют имена параметров конфига: <code>RabbitMQ:Password</code>, <code>CyberArk:Password</code>, <code>FileStore:Minio:SecretKey</code> и т. п. Для WebApi учётки AD лежат в подпутях <code>ad/&lt;домен&gt;</code> (ключи <code>AdAdminUserName</code>, <code>AdAdminPassword</code>), почта тенантов — в <code>tenant/&lt;Id тенанта&gt;</code> (<code>TenantIncomingEmailUserName</code>, <code>TenantIncomingEmailLogin</code>, <code>TenantIncomingEmailPassword</code>).</p>
+<p>Ключи внутри секрета повторяют имена параметров конфига: <code>RabbitMQ:Password</code>, <code>CyberArk:Password</code>, <code>FileStore:Minio:SecretKey</code> и т. п. Для WebApi учётные записи AD находятся в подпутях <code>ad/&lt;домен&gt;</code> (ключи <code>AdAdminUserName</code>, <code>AdAdminPassword</code>), почта тенантов — в <code>tenant/&lt;Id тенанта&gt;</code> (<code>TenantIncomingEmailUserName</code>, <code>TenantIncomingEmailLogin</code>, <code>TenantIncomingEmailPassword</code>).</p>
 
 <h3>2. Учётные записи ресурсов и RDP-пользователей</h3>
-<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётку в Vault. В UI4 в карточке машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». RDP-учётки в Vault появились в 1.26.8.</p>
+<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётную запись в Vault. В UI4 в карточке машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». Учётные записи RDP в Vault появились в 1.26.8.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётками для ресурсов</td><td><code>asset</code></td></tr>
-  <tr data-ver="1.26.9"><td><code>Vault:AllCredentialsPath</code></td><td>Подпуть с учётками, из которого выбираются RDP-пользователи машин</td><td><code>credentials</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётными записями для ресурсов</td><td><code>asset</code></td></tr>
+  <tr data-ver="1.26.9"><td><code>Vault:AllCredentialsPath</code></td><td>Подпуть с учётными записями, из которого выбираются RDP-пользователи машин</td><td><code>credentials</code></td></tr>
 </table></div>
-<p>Подключение — те же переменные <code>VAULT_*</code> с префиксом <code>WEBAPI_</code>; включать <code>Secrets:External</code> для этого не нужно.</p>
+<p>Подключение — те же переменные <code>VAULT_*</code> с префиксом <code>WEBAPI_</code>; включать <code>Secrets:External</code> для этого не требуется.</p>
 
 <h3>3. Keytab для SSO</h3>
 <p>См. <code>ActiveDirectory:KerberosKeytabVault</code> на странице <a href="access.html">Вход и доступ</a>.</p>
-<div class="warn"><p>Клиент Vault в службах не проверяет сертификат сервера Vault (принимает любой). Защищайте канал до Vault сетевыми средствами.</p></div>
+<div class="warn"><p>Клиент Vault в службах не проверяет сертификат сервера Vault (принимается любой). Защищайте канал до Vault сетевыми средствами.</p></div>
 
 <h2>CyberArk: секция <code>CyberArk</code></h2>
 <p>Ресурсы типа Credentials могут хранить логин и пароль в CyberArk. Поле в UI4 — «Учетная запись CyberArk».</p>
@@ -65,7 +65,7 @@
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>BaseUrl</code></td><td>Адрес API CyberArk</td><td>—</td></tr>
   <tr><td><code>LogonType</code></td><td>Тип входа: <code>0</code> — CyberArk, <code>1</code> — LDAP, <code>2</code> — RADIUS, <code>3</code> — Windows</td><td><code>0</code></td></tr>
-  <tr><td><code>UserName</code>, <code>Password</code></td><td>Учётка API, пароль зашифрован</td><td>—</td></tr>
+  <tr><td><code>UserName</code>, <code>Password</code></td><td>Учётная запись API, пароль зашифрован</td><td>—</td></tr>
   <tr><td><code>Timeout</code></td><td>Таймаут запросов, мс</td><td><code>2000</code></td></tr>
 </table></div>
 
@@ -78,7 +78,7 @@
   <tr><td>RabbitMQ</td><td><code>RabbitMQ:UseSsl</code>, <code>SslServerName</code> (CN/SAN сертификата сервера), <code>SslCertPath</code> (client_key.p12), <code>SslCertPassphrase</code></td><td><code>false</code></td></tr>
   <tr><td>AD</td><td><code>UseSsl</code>, <code>AcceptUntrustedCertificate</code> в <code>ActiveDirectory:MultyForest:*</code></td><td><code>false</code></td></tr>
   <tr><td>S3 (MinIO)</td><td><code>FileStore:Minio:SSL</code>, <code>IgnoreValidateCert</code></td><td><code>false</code></td></tr>
-  <tr><td>Агент и робот</td><td><code>RobotDeployment:SslCertPassword</code> — пароль сертификата, который ставится вместе с роботом</td><td>—</td></tr>
+  <tr><td>Агент и робот</td><td><code>RobotDeployment:SslCertPassword</code> — пароль сертификата, который устанавливается вместе с роботом</td><td>—</td></tr>
   <tr><td>CORS WebApi</td><td><code>Security:EnabledOrigins</code> — список разрешённых источников. Пусто — политика CORS не включается</td><td>пусто</td></tr>
 </table></div>
 
@@ -107,7 +107,7 @@ WEBAPI_VAULT_PASSWORD=&lt;пароль&gt;</code></pre>
 <h2>Как проверить</h2>
 <ol class="steps">
   <li>После смены паролей перезапустите службу. <span class="check">Служба стартует, <code>/health</code> отвечает <code>200</code>.</span></li>
-  <li>С Vault: в карточке машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётками из <code>credentials</code>.</span></li>
+  <li>С Vault: в карточке машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётными записями из <code>credentials</code>.</span></li>
   <li>Измените любой параметр в <code>appsettings.json</code> и перезапустите службу. <span class="check">В журнале «События оркестратора» появилось событие «Конфигурационный файл изменен».</span></li>
 </ol>
 

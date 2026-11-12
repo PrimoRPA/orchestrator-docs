@@ -22,7 +22,7 @@
   <li>Переменные окружения. Вложенный ключ записывается через двойное подчёркивание: <code>RabbitMQ__Host</code> для <code>RabbitMQ:Host</code>.</li>
 </ol>
 <div class="warn"><p>Переменная окружения <code>ASPNETCORE_ENVIRONMENT</code> обязательна: без неё служба пишет «Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.» и не запускается.</p></div>
-<p>В таблицах ниже ключ записан через двоеточие: <code>Секция:Ключ</code>. В JSON это вложенные объекты. <code>[n]</code> обозначает элемент массива, <code>&lt;имя&gt;</code> — ключ словаря, который вы задаёте сами.</p>
+<p>В таблицах ниже ключ записан через двоеточие: <code>Секция:Ключ</code>. В JSON это вложенные объекты. <code>[n]</code> обозначает элемент массива, <code>&lt;имя&gt;</code> — ключ словаря, имя которого задаёт администратор.</p>
 <div class="note"><p>Пароли в конфиге (RabbitMQ, строки подключения, AD, MinIO и т. п.) службы ожидают в зашифрованном виде, если не используется Vault. Алгоритм задаёт <code>ConfigPasswordEncryptor:Algorithm</code>: <code>RSA</code> или <code>AES</code>; пусто — AES.</p></div>
 
 <p>Службы: <a href="#webapi">WebApi</a> · <a href="#agent">Агент</a> · <a href="#rdp2">RDP2</a> · <a href="#robotlogs">RobotLogs</a> · <a href="#states">States</a> · <a href="#notifications">Notifications</a> · <a href="#analytic">Analytic</a> · <a href="#licenses">Licenses</a> · <a href="#queues">Queues</a> · <a href="#machineinfo">MachineInfo</a> · <a href="#logeventswebhook">LogEventsWebhook</a> · <a href="#arcsight">ArcSight</a></p>
@@ -74,13 +74,13 @@
 <div class="warn"><p>Для промышленной установки задайте свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code>.</p></div>
 
 <h3>Внешнее хранилище секретов</h3>
-<p>Ключ <code>Secrets:External</code> включает хранилище секретов: <code>DB</code> (отдельная БД секретов, устаревший вариант) или <code>Vault</code>. Старое булево значение <code>true</code> служба понимает как <code>DB</code> и пишет предупреждение в журнал.</p>
+<p>Ключ <code>Secrets:External</code> включает хранилище секретов: <code>DB</code> (отдельная БД секретов, устаревший вариант) или <code>Vault</code>. Старое булево значение <code>true</code> воспринимается как <code>DB</code>, в журнал записывается предупреждение.</p>
 <p>Для Vault адрес и учётные данные берутся из переменных окружения: <code>VAULT_URL</code>, <code>VAULT_TOKEN</code> или <code>VAULT_USER_NAME</code> + <code>VAULT_PASSWORD</code>, <code>VAULT_PATH</code>, <code>VAULT_MOUNT_POINT</code>. Если переменной без префикса нет, служба ищет её с префиксом своего имени: <code>WEBAPI_</code>, <code>ROBOTLOGS_</code>, <code>STATES_</code>, <code>NOTIFICATIONS_</code>, <code>ANALYTIC_</code>, <code>LICENSES_</code>, <code>QUEUES_</code>, <code>LOGEVENTSWEBHOOK_</code>, <code>AGENT_</code>.</p>
 <h3>Monitoring</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>Monitoring:Provider</code></td><td>строка</td><td>Провайдер метрик: <code>Prometheus</code>, <code>Zabbix</code> или пусто (мониторинг выключен).</td><td><code>&quot;&quot;</code></td></tr>
-<tr><td><code>Monitoring:Port</code></td><td>число</td><td>Порт, на котором служба отдаёт метрики (Prometheus) или работает агент Zabbix.</td><td><code>10052</code></td></tr>
+<tr><td><code>Monitoring:Port</code></td><td>число</td><td>Порт, на котором служба предоставляет метрики (Prometheus) или работает агент Zabbix.</td><td><code>10052</code></td></tr>
 <tr><td><code>Monitoring:IdleDurationMillis</code></td><td>число</td><td>Период простоя сборщика метрик, мс.</td><td><code>2000</code></td></tr>
 <tr><td><code>Monitoring:DotNetMonitoringEnabled</code></td><td>bool</td><td>Собирать метрики среды .NET.</td><td><code>false</code></td></tr>
 <tr><td><code>Monitoring:KestrelMonitoringEnabled</code></td><td>bool</td><td>Собирать метрики Kestrel.</td><td><code>false</code></td></tr>
@@ -292,18 +292,18 @@
 <tr><td><code>RobotStart:AttemptsKeepRDPSessionLevels:[n]:AttempCount</code></td><td>число</td><td>Число попыток поднять RDP-сессию на этом уровне.</td><td><code>3</code></td></tr>
 <tr><td><code>RobotStart:AttemptsKeepRDPSessionLevels:[n]:AttempExpirationInSeconds</code></td><td>число</td><td>Интервал между попытками на этом уровне, с.</td><td><code>5</code></td></tr>
 <tr><td><code>RobotStart:UseRabbitMQ</code></td><td>bool</td><td>Используется ли очередь ожидания на раббите, или на таблице в БД.</td><td><code>true</code></td></tr>
-<tr><td><code>RobotStart:UseLocalLock</code></td><td>bool</td><td>Используется критическая секция при запуске кода поиска подходящего робота. Изначальное предположение: если не блокировать потоки, они сильно конкурентно будут обращаться в БД, на пиках частое параллельное обращение выигрыша не даст, лучше немного притормозить потоки.</td><td><code>false</code></td></tr>
+<tr><td><code>RobotStart:UseLocalLock</code></td><td>bool</td><td>Используется критическая секция при запуске кода поиска подходящего робота. Изначальное предположение: если не блокировать потоки, они сильно конкурентно будут обращаться в БД, на пиках частое параллельное обращение выигрыша не даст, целесообразно замедлить потоки.</td><td><code>false</code></td></tr>
 <tr><td><code>RobotStart:BatchSize</code></td><td>число</td><td>Количество проектов, вычитываемое за один раз (для UseRabbitMQ == false).</td><td><code>10</code></td></tr>
 <tr><td><code>RobotStart:ThreadSleep</code></td><td>число</td><td>Время (мсек) засыпания потока чтения очереди из таблицы БД (для UseRabbitMQ == false).</td><td><code>2000</code></td></tr>
 <tr><td><code>RobotStart:ProjectEventBusService</code></td><td>перечисление</td><td>Тип агоритма определения подходящего робота. Значения: <code>Legacy</code>, <code>LockFree</code>, <code>LockFreeWithCache</code>.</td><td><code>Legacy</code></td></tr>
-<tr><td><code>RobotStart:LockFreeWithCache</code></td><td>объект</td><td>Только для ProjectEventBusServiceType.LockFreeWithCache Параметры кэширования. Изначальное предположение: если часто дергать БД, то за короткое время там ничего не поменяется, также не поменяется состояние блокировки робота агентом. Позволит снизить нагрузку на БД на пиках, образованных циклами в очереди ожидания.</td><td><code>—</code></td></tr>
+<tr><td><code>RobotStart:LockFreeWithCache</code></td><td>объект</td><td>Только для ProjectEventBusServiceType.LockFreeWithCache Параметры кэширования. Изначальное предположение: при частых обращениях к БД за короткое время данные в ней не изменятся, также не изменится состояние блокировки робота агентом. Позволит снизить нагрузку на БД на пиках, образованных циклами в очереди ожидания.</td><td><code>—</code></td></tr>
 <tr><td><code>RobotStart:LockFreeWithCache:LockAgentTTL</code></td><td>число</td><td>Время жизни кэша с информацией о блокировке робота агентом.</td><td><code>500</code></td></tr>
 <tr><td><code>RobotStart:LockFreeWithCache:LockTTL</code></td><td>число</td><td>Время жизни кэша с информацией о блокировке робота на основе заполнения данных в БД.</td><td><code>500</code></td></tr>
 <tr><td><code>RobotStart:LockFreeWithCache:QueryRobotsTTL</code></td><td>число</td><td>Время жизни кэша с информацией о кандидатах для проекта.</td><td><code>500</code></td></tr>
 <tr><td><code>RobotStart:RetryCount</code></td><td>число</td><td>Количество попыток подключения при возникновении исключения.</td><td><code>2</code></td></tr>
-<tr><td><code>RobotStart:AliveInterval</code></td><td>число</td><td>Интервал (мсек), через который робот шлет в Оркестратор свое &quot;Я живой&quot;. Для оптимизации нагрузки: долгоработающим роботам нет смысла слать это часто Используется, если аналогичный параметр не задан в роботе.</td><td><code>null</code></td></tr>
+<tr><td><code>RobotStart:AliveInterval</code></td><td>число</td><td>Интервал (мсек), через который робот отправляет в Оркестратор сообщение &quot;Я живой&quot;. Для оптимизации нагрузки: долго работающим роботам не требуется отправлять его часто Используется, если аналогичный параметр не задан в роботе.</td><td><code>null</code></td></tr>
 <tr><td><code>RobotStart:WaitUserProfileLoaded</code></td><td>bool</td><td>Ждать загрузки профиля пользователя.</td><td><code>false</code></td></tr>
-<tr><td><code>RobotStart:ReEnqueueNoRdpOrProfile</code></td><td>bool</td><td>Перенаправлять запуск снова в очередь, если после всех попыток не удалось поднять rdp-сессию или дождаться профиль пользователя.</td><td><code>false</code></td></tr>
+<tr><td><code>RobotStart:ReEnqueueNoRdpOrProfile</code></td><td>bool</td><td>Перенаправлять запуск снова в очередь, если после всех попыток не удалось открыть rdp-сессию или дождаться профиль пользователя.</td><td><code>false</code></td></tr>
 <tr><td><code>RobotStart:AgentHttpClientTimeoutInSec</code></td><td>число</td><td>Timeout for Agent Client HttpClient for some requests. Default 10 sec.</td><td><code>10</code></td></tr>
 </table></div>
 <h3>LogsDump</h3>
@@ -399,7 +399,7 @@
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>License:SuppressShellErrorCpuId</code></td><td>bool</td><td>Подавлять ошибки shell-скрипта для определения серийного номера процессора.</td><td><code>false</code></td></tr>
-<tr><td><code>License:MachineInfoUrl</code></td><td>строка</td><td>Url сервиса, который отдает данные о железе для лицензии. Вариант привязки лицензий к одному серверу.</td><td><code>—</code> <br><small>при чтении в Startup: <code>null</code></small></td></tr>
+<tr><td><code>License:MachineInfoUrl</code></td><td>строка</td><td>Url сервиса, который предоставляет данные об оборудовании для лицензии. Вариант привязки лицензий к одному серверу.</td><td><code>—</code> <br><small>при чтении в Startup: <code>null</code></small></td></tr>
 <tr><td><code>License:MachineInfoUrls</code></td><td>массив строк</td><td>Url сервисов, которые отдают данные о железе для лицензии. Вариант привязки лицензий к нескольким серверам. Используется при кластеризации Порядок строк имеет значение, так как по нему формируется перечень в запросе лицензи/лицензии.</td><td><code>—</code></td></tr>
 <tr><td><code>License:Timeout</code></td><td>число</td><td>Таймаут запроса к службе MachineInfo, с.</td><td><code>4</code></td></tr>
 <tr><td><code>License:EnableUserRobotQuotas</code></td><td>bool</td><td>Глобальное включение/отключение пользовательских квот на лицензии. Для оптимизации, чтобы сократить обращения к БД в момент взятия лицензии роботом.</td><td><code>true</code></td></tr>
@@ -409,7 +409,7 @@
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>RDP:SessionsReleaseThreadSleep</code></td><td>число</td><td>Время засыпания потока отключения RDP-сессий (мсек).</td><td><code>1000</code></td></tr>
 <tr><td><code>RDP:SessionsReleaseDelay</code></td><td>число</td><td>Задержка релиза сессии (мсек) - сессия может очень быстро понадобиться другому роботу, чтобы её не пересоздавать заново. Только для ExclusiveSessionsRelease = false.</td><td><code>0</code></td></tr>
-<tr><td><code>RDP:ExclusiveSessionsRelease</code></td><td>bool</td><td>Если поднят этот флаг, робот, когда освобождает сессию, не смотрит на отсутствие релиза сессии у других роботов. Должно использоваться, когда только один робот закрывает сессию, чтобы не ломать работу остальных роботов в этой сессии.</td><td><code>false</code></td></tr>
+<tr><td><code>RDP:ExclusiveSessionsRelease</code></td><td>bool</td><td>Если флаг установлен, робот при освобождении сессии не учитывает отсутствие релиза сессии у других роботов. Должно использоваться, когда только один робот закрывает сессию, чтобы не нарушать работу остальных роботов в этой сессии.</td><td><code>false</code></td></tr>
 <tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>bool</td><td>Разлогинивать отключенных RDP-пользователей.</td><td><code>true</code> <br><small>при чтении в Startup: <code>false</code></small></td></tr>
 <tr><td><code>RDP:LogOffDisconnectedRDPUsersThreadSleep</code></td><td>число</td><td>Время засыпания потока разлогинивания отключенных RDP-пользователей (мсек).</td><td><code>1000</code></td></tr>
 <tr><td><code>RDP:LostConnectTimeout</code></td><td>число</td><td>Время (сек) с последней даты обновления состояния, после которого соединение считается потерянным.</td><td><code>5</code></td></tr>
@@ -444,7 +444,7 @@
 <tr><td><code>Triggers:Email:RemoveGSSAPI</code></td><td>bool</td><td>Отключить механизм аутентификации GSSAPI.</td><td><code>false</code></td></tr>
 <tr><td><code>Triggers:Email:RemoveNTLM</code></td><td>bool</td><td>Отключить механизм аутентификации NTLM.</td><td><code>false</code></td></tr>
 <tr><td><code>Triggers:Email:RemoveAuthenticationMechanisms</code></td><td>строка</td><td>Список механизмов аутентификации, которые нужно отключить.</td><td><code>—</code></td></tr>
-<tr><td><code>Triggers:Folder:QueueIntevalInMilliseconds</code></td><td>число</td><td>Интервал опроса очереди для формирования единственного события папки При наблюдении за папкой некоторые события сыпятся пачками Интересует только первое такое событие.</td><td><code>500</code></td></tr>
+<tr><td><code>Triggers:Folder:QueueIntevalInMilliseconds</code></td><td>число</td><td>Интервал опроса очереди для формирования единственного события папки При наблюдении за папкой некоторые события поступают группами Интересует только первое такое событие.</td><td><code>500</code></td></tr>
 </table></div>
 <h3>Security:Password</h3>
 <div class="tbl-wrap"><table>
@@ -603,7 +603,7 @@
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
 <tr><td><code>StudioVersionChecker:MinimumStudioVersion</code></td><td>строка</td><td>Строка с минимальным допустимым номером версии Студии, в формате: &quot;1.23.8.4&quot;.</td><td><code>—</code></td></tr>
-<tr><td><code>StudioVersionChecker:StudioVersionExceptionBehaviorType</code></td><td>перечисление</td><td>Тип поведения Студии, если версия не проходит валидацию (передаем в Студию в заголовке ответа). Значения: <code>SilentClose</code>, <code>WarningAndClose</code>, <code>WarningOnly</code>.</td><td><code>—</code></td></tr>
+<tr><td><code>StudioVersionChecker:StudioVersionExceptionBehaviorType</code></td><td>перечисление</td><td>Тип поведения Студии, если версия не проходит валидацию (передаётся в Студию в заголовке ответа). Значения: <code>SilentClose</code>, <code>WarningAndClose</code>, <code>WarningOnly</code>.</td><td><code>—</code></td></tr>
 </table></div>
 <h3>ProjectQueue</h3>
 <div class="tbl-wrap"><table>
@@ -844,9 +844,9 @@
 <h3>Triggers</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Triggers:Folder:QueueIntevalInMilliseconds</code></td><td>число</td><td>Интервал (мсек) опроса очереди для формирования единственного события папки. При наблюдении за папкой некоторые события сыпятся пачками. Интересует только первое такое событие.</td><td><code>500</code></td></tr>
+<tr><td><code>Triggers:Folder:QueueIntevalInMilliseconds</code></td><td>число</td><td>Интервал (мсек) опроса очереди для формирования единственного события папки. При наблюдении за папкой некоторые события поступают группами. Интересует только первое такое событие.</td><td><code>500</code></td></tr>
 <tr><td><code>Triggers:Folder:OrchKnowsIntevalInMilliseconds</code></td><td>число</td><td>Интервал (мсек) опроса кэша с OrchKnows.</td><td><code>500</code></td></tr>
-<tr><td><code>Triggers:Folder:FolderNotifyFilter</code></td><td>NotifyFilters</td><td>Flag enum NotifyFilters FileName = 1, DirectoryName = 2, Attributes = 4, Size = 8, LastWrite = 16, LastAccess = 32, CreationTime = 64, Security = 256 дефолтный 19 заменил на 73 (проблема повторных срабатываний при копировании больших файлов).</td><td><code>NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.CreationTime</code></td></tr>
+<tr><td><code>Triggers:Folder:FolderNotifyFilter</code></td><td>NotifyFilters</td><td>Flag enum NotifyFilters FileName = 1, DirectoryName = 2, Attributes = 4, Size = 8, LastWrite = 16, LastAccess = 32, CreationTime = 64, Security = 256 значение по умолчанию 19 заменено на 73 (проблема повторных срабатываний при копировании больших файлов).</td><td><code>NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.CreationTime</code></td></tr>
 </table></div>
 <h3>DeployRobot</h3>
 <div class="tbl-wrap"><table>
@@ -926,7 +926,7 @@
 <h3>Параметры верхнего уровня</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr data-ver="1.26.7"><td><code>SuppressOutputWhenIdle</code></td><td>bool</td><td>Просить RDP-сервер не отрисовывать рабочий стол, пока сессию никто не смотрит. Экономит трафик и CPU, но GUI-активности робота (скриншоты, поиск по изображению, OCR) в такой сессии перестают работать.</td><td><code>false</code></td></tr>
+<tr data-ver="1.26.7"><td><code>SuppressOutputWhenIdle</code></td><td>bool</td><td>Запрашивать у RDP-сервера отключение отрисовки рабочего стола, пока сессия никем не просматривается. Снижает трафик и нагрузку на CPU, но GUI-активности робота (скриншоты, поиск по изображению, OCR) в такой сессии перестают работать.</td><td><code>false</code></td></tr>
 <tr><td><code>AddressFilter</code></td><td>строка</td><td>Фильтр адресов машин, сессии которых обслуживает этот экземпляр RDP2.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>Host</code></td><td>строка</td><td>Имя/адрес этого экземпляра RDP2.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>RdpClientConnectionUpdateInterval</code></td><td>число</td><td>Период цикла обновления RDP-сессий, мс. Допустимо 1000–60000, иначе приводится к границе.</td><td><code>0 → 1000</code></td></tr>
@@ -993,7 +993,7 @@
 <tr><td><code>ScreenFileUpload:GetZipThreadSleep</code></td><td>число</td><td>Время засыпания потока опроса (в милисекундах) Агента на отдачу готовых Zip-архивов.</td><td><code>2000</code></td></tr>
 <tr><td><code>ScreenFileUpload:ScreenFilePath</code></td><td>строка</td><td>Путь до хранилища файлов скринов. Папку по этому пути желательно создать заранее. На неё должны быть настроены права на чтение и запись для всех. Из папки ScreenFilePath файлы скринов будут отдаваться по запросу к Api.</td><td><code>—</code> <br><small>при чтении в Startup: <code>&quot;&quot;</code></small></td></tr>
 <tr><td><code>ScreenFileUpload:ThumbFactor</code></td><td>число</td><td>Коэффициент уменьшения оригинального изображения скрина. Уменьшенные изображения показываются в журнале робота в UI оркестратора.</td><td><code>4</code></td></tr>
-<tr><td><code>ScreenFileUpload:AgentTimeOut</code></td><td>число</td><td>Таймаут (сек) запроса агента. Не стоит делать большим, чтобы не создать повышенную нагрузку на Агента.</td><td><code>1</code></td></tr>
+<tr><td><code>ScreenFileUpload:AgentTimeOut</code></td><td>число</td><td>Таймаут (сек) запроса агента. Не рекомендуется задавать большое значение, чтобы не создать повышенную нагрузку на Агента.</td><td><code>1</code></td></tr>
 <tr><td><code>ScreenFileUpload:StoreType</code></td><td>перечисление</td><td>Где хранить скриншоты: <code>FileSystem</code> или <code>S3</code>. Значения: <code>FileSystem</code>, <code>S3</code>.</td><td><code>FileSystem</code></td></tr>
 <tr><td><code>ScreenFileUpload:MainBucketName</code></td><td>строка</td><td>Наименование основного (единственного) бакета. Если пустое значение (по умолчанию), то для хранения скриншотов будет создан новый бакет.</td><td><code>&quot;&quot;</code></td></tr>
 </table></div>
@@ -1189,7 +1189,7 @@
 <tr><td><code>Email:UseSsl</code></td><td>bool</td><td>Если задан SecureSocketOption - он перекрывает этот параметр.</td><td><code>false</code></td></tr>
 <tr><td><code>Email:UseProtocolLogger</code></td><td>bool</td><td>Если true, то в папке службы будет создат файл smtp.log с логом протокола.</td><td><code>false</code></td></tr>
 <tr><td><code>Email:ClientTimeOut</code></td><td>число</td><td>120000 ms - default value.</td><td><code>120000</code></td></tr>
-<tr data-ver="1.26.7"><td><code>Email:MaxRetryCount</code></td><td>число</td><td>Сколько раз письмо после ошибки возвращается в очередь отправки; дальше оно теряется. В поставочном конфиге — 100.</td><td><code>50</code></td></tr>
+<tr data-ver="1.26.7"><td><code>Email:MaxRetryCount</code></td><td>число</td><td>Число возвратов письма в очередь отправки после ошибки; после этого письмо отбрасывается. В поставочном конфиге — 100.</td><td><code>50</code></td></tr>
 </table></div>
 <h3>RabbitMQ</h3>
 <div class="tbl-wrap"><table>
@@ -1430,7 +1430,7 @@
 <h3>Files</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr><td><code>Files:Path</code></td><td>строка</td><td>Папка, из которой ArcSight будет забирать логи и префикс имени файла логов. Например, ArcSight-20220521.txt, ArcSight-20220521 1.txt, ArcSight-20220521 2.txt. Нумерация, 1, 2 и т.д. для одной даты.</td><td><code>—</code></td></tr>
+<tr><td><code>Files:Path</code></td><td>строка</td><td>Папка, из которой ArcSight будет считывать логи и префикс имени файла логов. Например, ArcSight-20220521.txt, ArcSight-20220521 1.txt, ArcSight-20220521 2.txt. Нумерация, 1, 2 и т.д. для одной даты.</td><td><code>—</code></td></tr>
 <tr><td><code>Files:MaxCountEvents</code></td><td>число</td><td>Максимальное количество строк в одном файле логов. После этого значения создается новый файл. Для нового файла для одной даты используется автоматическая нумерация. Должно быть согласовано с механизмом чтения файлов из папки обмена ArcSight.</td><td><code>20</code></td></tr>
 <tr><td><code>Files:MaxCountFiles</code></td><td>число</td><td>Максимальное количество файлов в папке обмена. Старые файлы логов удаляются. Должно быть согласовано с механизмом чтения файлов из папки обмена ArcSight.</td><td><code>60</code></td></tr>
 <tr><td><code>Files:DateFormat</code></td><td>строка</td><td>Формат даты в постфиксе имени файла.</td><td><code>yyyyMMdd</code></td></tr>

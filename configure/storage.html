@@ -11,7 +11,7 @@
 <main>
 <h1>Хранилища</h1>
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Где Оркестратор хранит файлы: дистрибутивы робота и агента, архивы RPA-проектов, скриншоты роботов, keytab. Как подключить S3 (MinIO или Ceph), как включить общие папки и куда пишутся дампы журналов.</p>
+<p class="lead">Места хранения файлов Оркестратора: дистрибутивы робота и агента, архивы RPA-проектов, скриншоты роботов, keytab. Подключение S3 (MinIO или Ceph), включение общих папок и папки дампов журналов.</p>
 
 <h2>Что где хранится</h2>
 <div class="tbl-wrap"><table>
@@ -22,7 +22,7 @@
   <tr><td>Скриншоты роботов</td><td>RobotLogs</td><td>папка <code>ScreenFileUpload:ScreenFilePath</code></td><td>бакет <code>screen</code></td></tr>
   <tr><td>Keytab для SSO</td><td>WebApi</td><td>файл, Vault или переменная окружения</td><td><code>FileStore:S3KerberosKeytabs</code></td></tr>
 </table></div>
-<p>Если задан <code>MainBucketName</code>, всё кладётся в один бакет по папкам <code>robotdistr/</code>, <code>agentdistr/</code>, <code>projectarch/</code> (WebApi) и <code>screen/</code> (RobotLogs).</p>
+<p>Если задан <code>MainBucketName</code>, все данные размещаются в одном бакете по папкам <code>robotdistr/</code>, <code>agentdistr/</code>, <code>projectarch/</code> (WebApi) и <code>screen/</code> (RobotLogs).</p>
 
 <h2>S3 для WebApi: секция <code>FileStore</code></h2>
 <div class="tbl-wrap"><table>
@@ -49,7 +49,7 @@
   <tr><td><code>RpaProjectArchiveUpload:TargetFilePath</code></td><td>Папка архивов для устаревшего <code>StoreType=0</code></td><td>—</td><td></td></tr>
   <tr><td><code>RpaProjectArchiveUpload:FileNameTemplate</code></td><td>Шаблон имени файла для <code>StoreType=0</code></td><td><code>{0}.zip</code></td><td></td></tr>
 </table></div>
-<div class="warn" data-ver="1.26.9"><p><code>StoreType=2</code> работает, только если в WebApi включён S3: <code>FileStore:Type=1</code>. Иначе загрузка проекта упадёт — заглушка хранилища не реализует запись. Новый тип действует для новых загрузок; уже загруженные версии читаются из того места, куда были сохранены.</p></div>
+<div class="warn" data-ver="1.26.9"><p><code>StoreType=2</code> работает, только если в WebApi включён S3: <code>FileStore:Type=1</code>. Иначе загрузка проекта завершится ошибкой — заглушка хранилища не реализует запись. Новый тип действует для новых загрузок; уже загруженные версии читаются из того места, куда были сохранены.</p></div>
 <div class="note" data-ver="1.26.9"><p>При обновлении до 1.26.8 старый параметр <code>DbStore</code> больше не учитывается — удалите его или замените на <code>StoreType</code>.</p></div>
 
 <h2>Папки на сервере WebApi</h2>
@@ -68,18 +68,18 @@
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>StoreType</code></td><td><code>0</code> — папка, <code>1</code> — S3</td><td><code>0</code></td></tr>
-  <tr><td><code>ScreenFilePath</code></td><td>Папка скриншотов. Создайте заранее, дайте права на чтение и запись</td><td>—</td></tr>
+  <tr><td><code>ScreenFilePath</code></td><td>Папка скриншотов. Создайте заранее и выдайте права на чтение и запись</td><td>—</td></tr>
   <tr><td><code>S3</code>, <code>Minio:*</code>, <code>Ceph:*</code>, <code>MainBucketName</code></td><td>Как в <code>FileStore</code> у WebApi</td><td>как выше</td></tr>
   <tr><td><code>ThumbFactor</code></td><td>Во сколько раз уменьшать скриншот для превью в журнале робота</td><td><code>4</code></td></tr>
   <tr><td><code>AgentTimeOut</code></td><td>Таймаут запроса скриншотов у агента, с</td><td><code>1</code></td></tr>
-  <tr><td><code>MaxBatch</code></td><td>Если больше 0, скриншоты запрашиваются у агента пачками в ZIP-архивах</td><td><code>0</code></td></tr>
+  <tr><td><code>MaxBatch</code></td><td>Если больше 0, скриншоты запрашиваются у агента пакетами в ZIP-архивах</td><td><code>0</code></td></tr>
 </table></div>
 
 <h2>Общие папки: секция <code>Folders</code></h2>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>Folders:Mode</code></td><td><code>0</code> — выключено, <code>2</code> — общие папки. <code>1</code> зарезервирован</td><td><code>0</code></td></tr>
-  <tr><td><code>Folders:RootFolderDefaultAccess</code></td><td>Полный доступ к корневой папке всем, если права на неё не заданы явно. Нужен, чтобы AD-пользователи сразу работали после включения папок</td><td><code>true</code></td></tr>
+  <tr><td><code>Folders:RootFolderDefaultAccess</code></td><td>Полный доступ к корневой папке всем, если права на неё не заданы явно. Требуется, чтобы AD-пользователи могли работать сразу после включения папок</td><td><code>true</code></td></tr>
   <tr><td><code>Folders:Context</code></td><td>В контексте папки работают: <code>1</code> — робот, <code>2</code> — Студия, <code>3</code> — оба</td><td><code>0</code></td></tr>
   <tr><td><code>Folders:CacheDurationInSeconds</code></td><td>Кэш фильтрации объектов по папкам, с</td><td><code>5</code></td></tr>
 </table></div>

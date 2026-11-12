@@ -11,11 +11,11 @@
 <main>
 <h1>Установка</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Поставьте серверную часть Оркестратора и агенты на машины роботов. Сначала серверная часть — Docker или службы, затем агенты на машинах роботов.</p>
+<p class="lead">Установите серверную часть Оркестратора и агенты на машины роботов. Сначала серверная часть — Docker или службы, затем агенты на машинах роботов.</p>
 <ol class="route">
   <li><span class="stage-t">Серверная часть — выберите один путь</span>
     <ol class="substeps">
-      <li data-only="docker"><a href="install-docker.html">Установка в Docker</a> <span>— всё одним docker-compose.yml, только PostgreSQL, без RDP2</span></li>
+      <li data-only="docker"><a href="install-docker.html">Установка в Docker</a> <span>— все службы в одном docker-compose.yml, только PostgreSQL, без RDP2</span></li>
       <li data-only="linux windows"><a href="install-services.html">Установка служб</a> <span>— Astra Linux, РЕД ОС, Ubuntu, Windows Server</span></li>
     </ol>
   </li>
@@ -25,17 +25,17 @@
     </ol>
   </li>
 </ol>
-<p>Не знаете, что выбрать, — <a href="planning-options.html">Выбор варианта развертывания</a>. Дистрибутивы нужны заранее — где их взять, в <a href="download.html">Дистрибутивы</a>.</p>
+<p>Если вариант не выбран — <a href="planning-options.html">Выбор варианта развертывания</a>. Дистрибутивы требуются заранее — где их скачать, см. <a href="download.html">Дистрибутивы</a>.</p>
 
-<h2>В каком порядке поднимаются компоненты</h2>
-<p>Порядок одинаковый для всех путей — он задан зависимостями служб (так же они описаны в <code>depends_on</code> поставочного compose). В Docker его соблюдает сам compose.</p>
+<h2>Порядок запуска компонентов</h2>
+<p>Порядок одинаковый для всех путей — он задан зависимостями служб (так же они описаны в <code>depends_on</code> поставочного compose). В Docker порядок соблюдается средствами compose.</p>
 <ol class="steps">
-  <li>СУБД (PostgreSQL; на Windows Server можно MS SQL Server) и RabbitMQ. <span class="check">к ним можно подключиться с сервера Оркестратора по портам <code>5432</code> и <code>5672</code></span></li>
+  <li>СУБД (PostgreSQL; на Windows Server допускается MS SQL Server) и RabbitMQ. <span class="check">к ним можно подключиться с сервера Оркестратора по портам <code>5432</code> и <code>5672</code></span></li>
   <li>MachineInfo. <span class="check"><code>/health</code> на порту <code>5051</code> отвечает <code>Healthy</code></span></li>
   <li>WebApi. При старте он применяет миграции к БД <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>. <span class="check"><code>/health</code> на порту <code>5001</code> отвечает <code>Healthy</code>, в журнале нет ошибок миграций</span></li>
   <li>Остальные службы: RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2. <span class="check">каждая отвечает на <code>/health</code></span></li>
   <li>nginx с UI4 и сертификатом. <span class="check">UI открывается по <code>https://&lt;адрес&gt;:44392</code></span></li>
-  <li>RDP2 — нужна, если роботы работают на Windows в RDP-сессиях. <span data-only="docker">В Docker-поставку не входит: её ставят отдельно, службой.</span></li>
+  <li>RDP2 — нужна, если роботы работают на Windows в RDP-сессиях. <span data-only="docker">В Docker-поставку не входит: устанавливается отдельно, службой.</span></li>
   <li>Агенты на машинах роботов.</li>
 </ol>
 

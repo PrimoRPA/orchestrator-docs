@@ -11,7 +11,7 @@
 <main>
 <h1>API</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Где открыть Swagger, как получить токен и какие группы методов есть в WebApi. Полный список методов с параметрами смотрите в Swagger своей установки.</p>
+<p class="lead">Адрес Swagger, получение токена и группы методов WebApi. Полный список методов с параметрами приведён в Swagger установки.</p>
 <div class="note"><p>API Оркестратора не публичный. Swagger есть в каждой установке, но обязательств по обратной совместимости API нет: методы и их параметры могут меняться от версии к версии. Подробное описание API выдаётся по запросу.</p></div>
 
 <h2>Swagger</h2>
@@ -41,7 +41,7 @@
 <tr><td><code>POST /api/Account/AttendedRobot</code>, <code>GET /api/Account/AttendedRobotLoginNegotiate</code></td><td>Вход attended-робота.</td></tr>
 <tr><td><code>POST /api/Account/logout</code></td><td>Выход.</td></tr>
 </table></div>
-<p>Какие способы входа разрешены, задаёт <code>Auth:Type</code>. Доступ к методам проверяется по разрешениям ролей пользователя. Для веб-сокета (SignalR, путь <code>WS:Path</code>, по умолчанию <code>/events</code>) токен можно передать в строке запроса <code>access_token</code>.</p>
+<p>Разрешённые способы входа задаёт <code>Auth:Type</code>. Доступ к методам проверяется по разрешениям ролей пользователя. Для веб-сокета (SignalR, путь <code>WS:Path</code>, по умолчанию <code>/events</code>) токен можно передать в строке запроса <code>access_token</code>.</p>
 
 <h2>Группы методов WebApi</h2>
 <p>Все контроллеры WebApi доступны по пути <code>/api/&lt;Контроллер&gt;</code>. Отметка «без входа» — в контроллере есть методы, доступные без токена.</p>

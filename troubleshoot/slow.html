@@ -11,12 +11,12 @@
 <main>
 <h1>Оркестратор и БД работают медленно</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Чаще всего тормозит БД: растут журналы, нет очистки, не хватает пула соединений. Вторая частая причина — очередь проектов и RabbitMQ под нагрузкой.</p>
+<p class="lead">Чаще всего причина в БД: растут журналы, нет очистки, недостаточен пул соединений. Вторая частая причина — очередь проектов и RabbitMQ под нагрузкой.</p>
 
 <h2>Симптомы</h2>
 <ul>
-  <li>Таблицы в UI4 открываются долго, часть запросов падает по таймауту.</li>
-  <li>Активности робота, работающие с Оркестратором (очереди, ресурсы), падают по таймауту.</li>
+  <li>Таблицы в UI4 открываются долго, часть запросов завершается по таймауту.</li>
+  <li>Активности робота, работающие с Оркестратором (очереди, ресурсы), завершаются по таймауту.</li>
   <li>Сервер БД перегружен, быстро растут БД журналов и журнал WAL.</li>
   <li>В RabbitMQ растут очереди Оркестратора.</li>
   <li>В журналах служб — сообщения о потерянных сообщениях или таймаутах БД.</li>
@@ -28,13 +28,13 @@
   <li>Завершённые запуски не переносятся из основной БД в БД журналов.</li>
   <li>Большие очереди обмена данными без автоочистки.</li>
   <li>Пул соединений или таймауты команд не рассчитаны на нагрузку.</li>
-  <li>Подробный уровень логирования служб в проде.</li>
+  <li>Подробный уровень логирования служб в промышленной среде.</li>
 </ul>
 
 <h2>С чего начать</h2>
 <ol class="steps">
-  <li>Включите метрики WebApi и посмотрите очередь соединений к БД: <code>db_client_connections_pending_requests</code>. <span class="check">Около 0</span></li>
-  <li>Посмотрите размер таблиц БД журналов (<code>ltoolslogs</code>) и есть ли у них секции. <span class="check">Таблицы секционированы, старые секции удаляются</span></li>
+  <li>Включите метрики WebApi и проверьте очередь соединений к БД: <code>db_client_connections_pending_requests</code>. <span class="check">Около 0</span></li>
+  <li>Проверьте размер таблиц БД журналов (<code>ltoolslogs</code>) и наличие у них секций. <span class="check">Таблицы секционированы, старые секции удаляются</span></li>
   <li>Проверьте журнал RobotLogs на «потеряно по причине ограничения входного буфера». <span class="check">Таких строк нет</span></li>
 </ol>
 
@@ -46,7 +46,7 @@
   <tr><td>Автоочистка очередей</td><td>Форма каждой очереди обмена данными</td><td>Для больших очередей задана очистка или архивация</td></tr>
   <tr><td>Пул соединений с БД</td><td><code>DbConnection:Items:&lt;Default|Identity|License|ProcessRepository|Logs&gt;:MaxPoolSize</code>, <code>…:CommandTimeOut</code>, <code>…:Timeout</code></td><td>Заданы под нагрузку. Если не заданы — значения драйвера (в Dockerfile: 200 соединений, 120 с)</td></tr>
   <tr><td>Метрики</td><td><code>Monitoring:Provider=Prometheus</code>, порт <code>Monitoring:Port</code> (10052)</td><td><code>db_client_connections_pending_requests</code> около 0, <code>primo_rl_queue_lost_messages</code> не растёт</td></tr>
-  <tr><td>Уровень логирования служб</td><td><code>Serilog:MinimumLevel:Default</code></td><td>В проде <code>Warning</code>. Если не задан — <code>Information</code>, пишется много</td></tr>
+  <tr><td>Уровень логирования служб</td><td><code>Serilog:MinimumLevel:Default</code></td><td>В промышленной среде <code>Warning</code>. Если не задан — <code>Information</code>, объём записей большой</td></tr>
   <tr><td>Миграции</td><td>Журнал WebApi при старте</td><td>Без «Migration error». Индексы из новых версий создаются миграциями при старте</td></tr>
 </table></div>
 
@@ -55,25 +55,25 @@
 <ol class="steps">
   <li>Секционируйте таблицы журналов по периодам и удаляйте старые секции — <a href="../operate/db-maintenance.html">Обслуживание БД</a>. Созданные секции таблиц <code>Logs</code> и <code>OrchEvents</code> видны в <b>Настройки → Система → Журналы</b> (только PostgreSQL).</li>
   <li>Сократите поток журнала робота. В службе RobotLogs секция <code>RobotEventFilter</code>: <code>Enabled</code>, <code>ParsedElementClasses</code> (какие элементы не разбирать), <code>TextLengthLimit</code> и <code>ParsedMessageLengthLimit</code> (по умолчанию 2000 символов).</li>
-  <li>Если журнал нужно освободить целиком, кнопка <b>Очистить</b> выполняет <code>TRUNCATE</code> всех таблиц журналов. Данные не восстановить.</li>
+  <li>Если журнал нужно освободить целиком, кнопка <b>Очистить</b> выполняет <code>TRUNCATE</code> всех таблиц журналов. Данные не восстанавливаются.</li>
 </ol>
 
 <h3>Запуски и очередь проектов</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию (класс / Dockerfile)</th></tr>
   <tr><td><code>RpaProjectLaunch:Period</code></td><td>Через сколько минут завершённый запуск переносится в БД журналов</td><td>20160 (14 дней) / 80640</td></tr>
-  <tr><td><code>RpaProjectLaunch:MaxBatch</code></td><td>Сколько запусков переносить за проход</td><td>2000 / 500</td></tr>
-  <tr><td><code>ProjectQueue:CleaningDepth</code></td><td>Через сколько дней удалять отработанные записи очереди проектов</td><td>1</td></tr>
+  <tr><td><code>RpaProjectLaunch:MaxBatch</code></td><td>Сколько запусков переносится за проход</td><td>2000 / 500</td></tr>
+  <tr><td><code>ProjectQueue:CleaningDepth</code></td><td>Через сколько дней удаляются отработанные записи очереди проектов</td><td>1</td></tr>
   <tr><td><code>ProjectQueue:StaticProjectQueueLimiterMaxCount</code></td><td>Предел длины очереди: сверх него проект исключается из очереди</td><td>1000</td></tr>
   <tr><td><code>RobotStart:ProjectEventBusService</code></td><td>Алгоритм обработки очереди: <code>Legacy</code>=0, <code>LockFree</code>=1, <code>LockFreeWithCache</code>=2</td><td>0 / 2</td></tr>
-  <tr><td><code>RobotStart:BatchSize</code>, <code>RobotStart:ThreadSleep</code></td><td>Размер пачки и пауза обработки очереди, мс</td><td>10 и 2000 / 5 и 5000</td></tr>
+  <tr><td><code>RobotStart:BatchSize</code>, <code>RobotStart:ThreadSleep</code></td><td>Размер пакета и пауза обработки очереди, мс</td><td>10 и 2000 / 5 и 5000</td></tr>
   <tr><td><code>ProjectQueue:WorkerPerformanceHighDuration</code></td><td>Сколько секунд машина должна быть в зоне высокой нагрузки (по умолчанию CPU выше 95%), чтобы проект вернулся в очередь ожидания (0 — не учитывать)</td><td>60 / 0</td></tr>
 </table></div>
-<p>Проект в очереди ждёт и при нормальной работе — в журнале WebApi видна причина: «отсутствуют свободные лицензии», «отсутствуют свободные роботы…», «машина робота … перегружена». Это не неисправность, подробнее — <a href="project-queue.html">Проект висит в очереди</a>.</p>
-<p>Если активность чтения очереди по фильтру получает HTTP 429 «Rate limit exceeded. Please try again later …», сработало ограничение <code>ExchangeQueue:Limits:RateLimiters:PeekByFilter</code>. Реже опрашивайте очередь из робота или поднимите <code>PermitLimit</code> и <code>Window</code>.</p>
+<p>Проект ожидает в очереди и при штатной работе — в журнале WebApi видна причина: «отсутствуют свободные лицензии», «отсутствуют свободные роботы…», «машина робота … перегружена». Это не неисправность, подробнее — <a href="project-queue.html">Проект висит в очереди</a>.</p>
+<p>Если активность чтения очереди по фильтру получает HTTP 429 «Rate limit exceeded. Please try again later …», сработало ограничение <code>ExchangeQueue:Limits:RateLimiters:PeekByFilter</code>. Реже опрашивайте очередь из робота или увеличьте <code>PermitLimit</code> и <code>Window</code>.</p>
 
 <h3>Потери сообщений</h3>
-<p>Если БД журналов не успевает, RobotLogs отбрасывает записи: «Сообщение … потеряно по причине ограничения входного буфера.» Буферы: <code>InputBufferRobotLogs</code>, <code>InputBufferOrchEvents</code>, <code>InputBufferRobotStatuses</code>, <code>InputBufferAttendedRobotLogs</code> — <code>MaxQueueLength</code> (в классе 50000, в Dockerfile 200000). Увеличивать буфер имеет смысл только вместе с ускорением БД. Очереди RabbitMQ Оркестратора объявлены с ограничением длины (например, <code>dbevents</code> — 10000) без <code>x-overflow</code>: при переполнении RabbitMQ молча удаляет самые старые сообщения.</p>
+<p>Если БД журналов не успевает, RobotLogs отбрасывает записи: «Сообщение … потеряно по причине ограничения входного буфера.» Буферы: <code>InputBufferRobotLogs</code>, <code>InputBufferOrchEvents</code>, <code>InputBufferRobotStatuses</code>, <code>InputBufferAttendedRobotLogs</code> — <code>MaxQueueLength</code> (в классе 50000, в Dockerfile 200000). Увеличение буфера оправдано только вместе с ускорением БД. Очереди RabbitMQ Оркестратора объявлены с ограничением длины (например, <code>dbevents</code> — 10000) без <code>x-overflow</code>: при переполнении RabbitMQ без предупреждения удаляет самые старые сообщения.</p>
 
 
 

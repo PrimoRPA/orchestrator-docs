@@ -14,7 +14,7 @@
 <p class="lead">Передача событий Оркестратора во внешние системы (вебхуки через службу LogEventsWebhook), аналитическая БД и служба Analytic, выгрузки в интеграционные таблицы, доступ к REST API.</p>
 
 <h2>Вебхуки на события Оркестратора</h2>
-<p>Каждое событие журнала Оркестратора WebApi публикует в обменник RabbitMQ типа fanout. Служба LogEventsWebhook читает свою очередь из этого обменника и отправляет событие POST-запросом в JSON на адрес внешней системы. Внешних систем может быть несколько: на каждую — свой экземпляр LogEventsWebhook со своим именем очереди.</p>
+<p>Каждое событие журнала Оркестратора WebApi публикует в обменник RabbitMQ типа fanout. Служба LogEventsWebhook читает свою очередь из этого обменника и отправляет событие POST-запросом в JSON на адрес внешней системы. Внешних систем может быть несколько: на каждую — отдельный экземпляр LogEventsWebhook с отдельным именем очереди.</p>
 <h3>WebApi</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
@@ -26,8 +26,8 @@
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>HttpEndPoint:Url</code></td><td>Адрес приёма событий во внешней системе (POST, JSON, таймаут 10 с)</td><td>—</td></tr>
-  <tr><td><code>HttpEndPoint:LoginUrl</code></td><td>Необязательный адрес авторизации. Служба шлёт туда <code>{"UserName", "Password"}</code>, ждёт ответ <code>{"token": "…"}</code> и передаёт токен в заголовке <code>Authorization: Bearer</code>. При ответе 401 повторяет один раз</td><td>пусто — без авторизации</td></tr>
-  <tr><td><code>HttpEndPoint:UserName</code>, <code>Password</code></td><td>Учётка для <code>LoginUrl</code>, пароль зашифрован</td><td>—</td></tr>
+  <tr><td><code>HttpEndPoint:LoginUrl</code></td><td>Необязательный адрес авторизации. Служба отправляет на него <code>{"UserName", "Password"}</code>, ожидает ответ <code>{"token": "…"}</code> и передаёт токен в заголовке <code>Authorization: Bearer</code>. При ответе 401 запрос повторяется один раз</td><td>пусто — без авторизации</td></tr>
+  <tr><td><code>HttpEndPoint:UserName</code>, <code>Password</code></td><td>Учётная запись для <code>LoginUrl</code>, пароль зашифрован</td><td>—</td></tr>
   <tr><td><code>RabbitMQ:EventWebhookQueueName</code></td><td>Очередь этого экземпляра. Для второй внешней системы — другое имя</td><td><code>eventswebhook</code></td></tr>
   <tr><td><code>RabbitMQ:EventWebhookExchangeName</code></td><td>Обменник, должен совпадать с WebApi</td><td><code>eventswebhook</code></td></tr>
   <tr><td><code>RabbitMQ:Host</code>, <code>Port</code>, <code>VirtualHost</code>, <code>UserName</code>, <code>Password</code></td><td>Подключение к RabbitMQ</td><td>—</td></tr>
@@ -44,7 +44,7 @@
   <tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
   <tr><td><code>Integration:Unloading</code>, <code>Observability:Unloading</code></td><td>Выгрузки в интеграционные таблицы (<code>Enabled</code>, <code>Items</code> с <code>CronString</code>, <code>ObjectFlow</code>, <code>LeaveIterations</code>)</td><td>выключены</td></tr>
 </table></div>
-<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>DpaEvents</code>, <code>RobotsUsage</code>, <code>WorkersUsage</code> — без префикса <code>mv_</code>. Код узнаёт только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>
+<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>DpaEvents</code>, <code>RobotsUsage</code>, <code>WorkersUsage</code> — без префикса <code>mv_</code>. В коде распознаются только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>
 
 <h2>Выгрузки WebApi в интеграционные таблицы</h2>
 <p>WebApi по расписанию копирует справочники в таблицы <code>IntegrationExchange*</code> БД <code>ltools</code>, откуда их забирает внешняя система.</p>
@@ -56,7 +56,7 @@
 </table></div>
 
 <h2>Доступ к REST API</h2>
-<p>Отдельного механизма API-ключей в 1.26.9 нет. Внешняя система входит как обычный пользователь: <code>POST /api/Account</code> с телом <code>{"UserName": "…", "Password": "…"}</code> (для тенанта — заголовок <code>tenantId</code>) и получает в ответе поле <code>token</code>. Дальше — заголовок <code>Authorization: Bearer &lt;token&gt;</code>. Права определяются ролями пользователя, срок токена — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
+<p>Отдельного механизма API-ключей в 1.26.9 нет. Внешняя система входит как обычный пользователь: <code>POST /api/Account</code> с телом <code>{"UserName": "…", "Password": "…"}</code> (для тенанта — заголовок <code>tenantId</code>) и получает в ответе поле <code>token</code>. Далее в запросах передаётся заголовок <code>Authorization: Bearer &lt;token&gt;</code>. Права определяются ролями пользователя, срок токена — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
 <p>Описание API: Swagger UI по адресу <code>/api/doc</code>, спецификация — <code>/api/v1/swagger.json</code>. Подробнее — <a href="../reference/api.html">API</a>.</p>
 
 <h2>Пример (LogEventsWebhook)</h2>
@@ -82,7 +82,7 @@
 <ol class="steps">
   <li>Включите вебхуки, перезапустите WebApi и LogEventsWebhook, войдите в UI4. <span class="check">В RabbitMQ у обменника <code>eventswebhook</code> есть очередь экземпляра; во внешней системе появилось событие входа.</span></li>
   <li>Сравните несколько записей журнала «События оркестратора» с принятыми событиями. <span class="check">Совпадают по <code>Id</code> и времени.</span></li>
-  <li>Через 5–10 минут после старта Analytic выполните в БД <code>ltoolsanalytic</code> запрос к <code>mv_RobotsUsage</code>. <span class="check">Данные свежие; в журнале Analytic нет ошибок обновления представлений.</span></li>
+  <li>Через 5–10 минут после старта Analytic выполните в БД <code>ltoolsanalytic</code> запрос к <code>mv_RobotsUsage</code>. <span class="check">Данные актуальны; в журнале Analytic нет ошибок обновления представлений.</span></li>
 </ol>
 
 

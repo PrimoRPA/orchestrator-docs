@@ -11,10 +11,10 @@
 <main>
 <h1>Проверка установки</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Убедитесь, что Оркестратор работает целиком: службы запущены и отвечают, агенты на связи, а тестовый проект выполняется на роботе и попадает в журнал. Та же проверка нужна после каждого обновления.</p>
+<p class="lead">На странице описана проверка Оркестратора после установки: службы запущены и отвечают, агенты доступны, тестовый проект выполняется на роботе, результат записывается в журнал. Та же проверка выполняется после каждого обновления.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="first-run.html">Первый запуск</a> (после обновления — <a href="../upgrade/order.html">Порядок обновления</a>)</div>
-  <div><b>Результат</b>тестовый проект выполнился, журнал робота открывается</div>
+  <div><b>Результат</b>тестовый проект выполнен, журнал робота открывается</div>
 </div>
 <div class="path">
   <a href="#services">1. Службы запущены</a><span>→</span>
@@ -27,7 +27,7 @@
 <div class="tabs" data-key="server-os">
 <section class="tab" id="docker" data-title="Docker" data-os="">
 <ol class="steps">
-  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose сам опрашивает <code>/health</code> каждые 30 секунд</span></li>
+  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose автоматически опрашивает <code>/health</code> каждые 30 секунд</span></li>
   <li>Если сервис <code>unhealthy</code> — <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
 </ol>
 </section>
@@ -41,7 +41,7 @@
 <section class="tab" id="windows" data-title="Windows Server" data-os="windows">
 <ol class="steps">
   <li><code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
-  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и посмотрите ошибку в консоли.</li>
+  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и проверьте ошибку в консоли.</li>
 </ol>
 </section>
 </div>
@@ -50,23 +50,23 @@
 <h2 id="health">Службы и агенты отвечают</h2>
 <p>Каждая служба (WebApi, MachineInfo, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook, NuGet2, RDP2, ArcSight, агент) отвечает на три адреса без авторизации:</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Адрес</th><th>Что значит</th></tr>
+  <tr><th>Адрес</th><th>Значение</th></tr>
   <tr><td><code>/health</code></td><td>Общее состояние (у большинства служб совпадает с readiness)</td></tr>
   <tr><td><code>/health/readiness</code></td><td>Готова принимать запросы</td></tr>
-  <tr><td><code>/health/liveness</code></td><td>Процесс жив</td></tr>
+  <tr><td><code>/health/liveness</code></td><td>Процесс работает</td></tr>
 </table></div>
 <p>Ответ — <code>Healthy</code> (HTTP 200) или <code>Unhealthy</code> (HTTP 503).</p>
 <details>
 <summary>Когда служба отвечает Unhealthy</summary>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Условие готовности</th></tr>
-  <tr><td>WebApi, MachineInfo, Notifications, LogEventsWebhook, ArcSight</td><td>Всегда <code>Healthy</code>, если процесс отвечает. Подключение к БД и RabbitMQ эта проверка не показывает.</td></tr>
-  <tr><td>RobotLogs, Analytic, States, Queues, Licenses, RDP2</td><td><code>Healthy</code>, когда служба знает адрес WebApi: задан <code>Orchestrator:BaseUrl</code> или адрес пришёл от WebApi.</td></tr>
+  <tr><td>WebApi, MachineInfo, Notifications, LogEventsWebhook, ArcSight</td><td>Всегда <code>Healthy</code>, если процесс отвечает. Подключение к БД и RabbitMQ при этом не проверяется.</td></tr>
+  <tr><td>RobotLogs, Analytic, States, Queues, Licenses, RDP2</td><td><code>Healthy</code>, когда службе известен адрес WebApi: задан <code>Orchestrator:BaseUrl</code> или адрес получен от WebApi.</td></tr>
   <tr><td>Агент</td><td><code>Healthy</code> только после того, как WebApi хотя бы раз к нему обратился (т. е. машина зарегистрирована и опрошена).</td></tr>
   <tr><td>MCP Server</td><td><code>/mcp/health</code>; 503, пока Оркестратор недоступен.</td></tr>
 </table></div>
 </details>
-<p data-only="docker">В Docker порты служб наружу не открыты: их каждые 30 секунд опрашивает сам compose, и состояние <code>healthy</code> из этапа 1 — это и есть результат проверки. С сервера проверьте только вход через nginx:</p>
+<p data-only="docker">В Docker порты служб наружу не открыты: службы каждые 30 секунд опрашивает compose, и состояние <code>healthy</code> из этапа 1 — результат этой проверки. С сервера проверьте только вход через nginx:</p>
 <pre data-only="docker"><code>curl -k -f https://localhost:44392/api/Version   # печатает номер версии</code></pre>
 <p data-only="linux windows">На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
 <pre data-only="linux windows"><code>curl -f http://localhost:5001/health        # WebApi
@@ -79,7 +79,7 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
 
 <span class="stage">Этап 3 из 3</span>
 <h2 id="run">Тестовый запуск</h2>
-<p>Последняя проверка — сквозная: проект проходит весь путь от Оркестратора до робота и обратно в журнал. Понадобится тестовый RPA-проект — архив <code>zip</code>. Подойдёт любой простой проект из Студии или готовый <code>TestUploadProject.zip</code> из <a href="https://github.com/PrimoRPA/Learning/tree/master/UploadProjectWithOrchApi/Data">открытого репозитория с примерами</a>: он только пишет строку в журнал. Нужны также машина и робот из <a href="first-run.html">Первого запуска</a>.</p>
+<p>Последняя проверка — сквозная: проект проходит путь от Оркестратора до робота, результат возвращается в журнал. Требуется тестовый RPA-проект — архив <code>zip</code>. Подходит любой простой проект из Студии или готовый <code>TestUploadProject.zip</code> из <a href="https://github.com/PrimoRPA/Learning/tree/master/UploadProjectWithOrchApi/Data">открытого репозитория с примерами</a>: он только записывает строку в журнал. Требуются также машина и робот из <a href="first-run.html">Первого запуска</a>.</p>
 <ol class="steps">
   <li><b>Настройки → Лицензии</b>. <span class="check">есть действующая лицензия</span></li>
   <li><b>Настройки → Система → Машины роботов</b>. <span class="check">у каждой машины заполнены <b>Доступна</b> и <b>Версия агента</b></span></li>
@@ -87,20 +87,20 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
   <li>Откройте <b>Роботы → Все роботы</b>, в строке робота нажмите кнопку запуска ▷, выберите проект и подтвердите. <span class="check">сообщение о запуске робота с проектом; запуск виден в <b>RPA-проекты → Запуски</b> и в <b>Журналы → События оркестратора</b></span></li>
   <li>Дождитесь окончания. <span class="check">у запуска в <b>RPA-проекты → Запуски</b> заполнен результат, журнал робота открывается кнопкой журнала в строке робота</span></li>
 </ol>
-<p>Готово: Оркестратор, агент и робот работают вместе.</p>
+<p>Проверка завершена: Оркестратор, агент и робот работают совместно.</p>
 
-<h2>Если что-то пошло не так</h2>
-<p>С этими проблемами на проверке чаще всего обращаются в поддержку:</p>
+<h2>Возможные проблемы</h2>
+<p>Наиболее частые причины обращений в поддержку на этапе проверки:</p>
 <div class="pitfalls">
-  <div><b>Служба не стартует или отвечает Unhealthy</b><p>Начните с журнала службы (этап 1). Чаще всего не хватает доступа к БД или RabbitMQ либо не задано окружение <code>ASPNETCORE_ENVIRONMENT</code>. → <a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></p></div>
+  <div><b>Служба не стартует или отвечает Unhealthy</b><p>Начните с журнала службы (этап 1). Наиболее частые причины: нет доступа к БД или RabbitMQ либо не задано окружение <code>ASPNETCORE_ENVIRONMENT</code>. → <a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></p></div>
   <div><b>Запуск завис на 50 % или 75 %</b><p>Робот не получил сессию или не стартовал на машине. → <a href="../troubleshoot/robot-not-starting.html">Робот не запускается: запуск завис на 50 % или 75 %</a></p></div>
-  <div><b>Проект выполнился, а журнал робота пустой</b><p>Причин несколько, их проверяют по порядку. → <a href="../troubleshoot/logs-empty.html">Журнал робота пустой или не открывается</a></p></div>
+  <div><b>Проект выполнился, а журнал робота пустой</b><p>Причин несколько, они проверяются по порядку. → <a href="../troubleshoot/logs-empty.html">Журнал робота пустой или не открывается</a></p></div>
 </div>
 
 <h2>Что дальше</h2>
 <div class="next">
-  <a href="../configure/access.html">Вход и доступ<small>подключить AD или Keycloak и выдать права</small></a>
-  <a href="../operate/monitoring.html">Мониторинг и метрики<small>чтобы узнавать о сбоях раньше пользователей</small></a>
+  <a href="../configure/access.html">Вход и доступ<small>подключение AD или Keycloak, назначение прав</small></a>
+  <a href="../operate/monitoring.html">Мониторинг и метрики<small>обнаружение сбоев до обращений пользователей</small></a>
 </div>
 
 

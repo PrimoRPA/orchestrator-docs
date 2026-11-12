@@ -10,25 +10,25 @@
 <main>
 <h1>MCP Server</h1>
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Docker</span></div>
-<p class="lead">MCP Server — отдельная служба, через которую внешние ИИ-клиенты работают с Оркестратором по протоколу MCP. <span data-ver="1.26.9">В поставке 1.26.9 она есть только в Docker-шаблоне для Ubuntu</span><span data-ver="1.26.7">В 1.26.7 LTS она поставляется отдельными архивами для Windows и Linux (<code>primo-rpa-mcp-1.26.7.1</code>)</span> и доступна через nginx по пути <code>/mcp</code>.</p>
+<p class="lead">MCP Server — отдельная служба, через которую внешние ИИ-клиенты работают с Оркестратором по протоколу MCP. <span data-ver="1.26.9">В поставке 1.26.9 она включена только в Docker-шаблон для Ubuntu</span><span data-ver="1.26.7">В 1.26.7 LTS она поставляется отдельными архивами для Windows и Linux (<code>primo-rpa-mcp-1.26.7.1</code>)</span> и доступна через nginx по пути <code>/mcp</code>.</p>
 
-<h2>Что это за служба</h2>
+<h2>Описание службы</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Что</th><th>Значение</th></tr>
   <tr><td>Исполняемый файл</td><td><code>PrimoRpa.McpServer.Api</code></td></tr>
-  <tr><td>Откуда код</td><td>Не из решения <code>Orchestrator.Backend.sln</code>: скрипт сборки бэкенда её не собирает. Образ строится из готового архива <code>mcp-linux-&lt;версия&gt;.zip</code>, который конвейер забирает из Nexus вместе с архивами остальных служб.</td></tr>
+  <tr><td>Источник кода</td><td>Не из решения <code>Orchestrator.Backend.sln</code>: скрипт сборки бэкенда её не собирает. Образ строится из готового архива <code>mcp-linux-&lt;версия&gt;.zip</code>, который конвейер загружает из Nexus вместе с архивами остальных служб.</td></tr>
   <tr><td>Docker-образ</td><td><code>docker/ubuntu/mcp.Dockerfile</code>, база <code>ubuntu:24.04</code>; сервис <code>mcp</code> в <code>docker/ubuntu/docker-compose.yml.template</code></td></tr>
   <tr><td>Astra Linux</td><td>Dockerfile нет, образ не собирается: конвейер пропускает его с сообщением «No mcp.Dockerfile for …».</td></tr>
   <tr><td>Порт</td><td><code>5080</code> (HTTP) внутри сети compose, на хост не публикуется</td></tr>
   <tr><td>Внешний адрес</td><td><code>https://&lt;сервер&gt;:44392/mcp</code> — через nginx</td></tr>
-  <tr><td>Проверка здоровья</td><td><code>/mcp/health</code>; отвечает <code>503</code>, пока Оркестратор недоступен</td></tr>
+  <tr><td>Проверка состояния</td><td><code>/mcp/health</code>; отвечает <code>503</code>, пока Оркестратор недоступен</td></tr>
   <tr><td>Пользователь в контейнере</td><td><code>orch-user</code>, UID/GID <code>1001</code> (без root)</td></tr>
-  <tr><td>Зависимость</td><td>Стартует после того, как <code>web-api</code> стал здоровым; к Оркестратору обращается по <code>http://web-api:5001/</code></td></tr>
+  <tr><td>Зависимость</td><td>Запускается после того, как <code>web-api</code> прошёл проверку состояния; к Оркестратору обращается по <code>http://web-api:5001/</code></td></tr>
 </table></div>
 <p>MCP Server работает от имени учётной записи Оркестратора, заданной в его настройках. Внешние клиенты подключаются к нему по API-ключу из списка <code>Mcp:ApiKeys</code>.</p>
 
 <h2>Параметры</h2>
-<p>Настройки задаются переменными окружения. Файл <code>appsettings.ProdLinux.json</code> из архива в образ не попадает и заменяется пустым.</p>
+<p>Настройки задаются переменными окружения. Файл <code>appsettings.ProdLinux.json</code> из архива в образ не включается и заменяется пустым.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр (переменная окружения)</th><th>Назначение</th><th>По умолчанию в образе</th></tr>
   <tr><td><code>Orchestrator__BaseUrl</code></td><td>Адрес WebApi, к которому обращается MCP Server.</td><td><code>http://web-api:5001/</code></td></tr>
@@ -50,17 +50,17 @@ location /mcp {
   proxy_buffering off;        # ответ на tools/call идёт потоком SSE
   proxy_read_timeout 180s;    # больше таймаута диспетчера MCP Server (120 с)
 }</code></pre>
-<p>Все пути службы начинаются с <code>/mcp</code>. Если меняете конфиг, не включайте буферизацию и не уменьшайте <code>proxy_read_timeout</code> ниже 120 секунд.</p>
+<p>Все пути службы начинаются с <code>/mcp</code>. При изменении конфига не включайте буферизацию и не уменьшайте <code>proxy_read_timeout</code> ниже 120 секунд.</p>
 
-<h2>Как включить (Docker, Ubuntu)</h2>
+<h2>Включение (Docker, Ubuntu)</h2>
 <ol class="steps">
   <li>В <code>x-secrets</code> compose-файла задайте <code>mcp-orch-user</code> и <code>mcp-orch-pass</code> — учётную запись Оркестратора для службы. <span class="check">в файле нет значений из примера</span></li>
-  <li>Задайте <code>mcp-api-key</code> — ключ, который вы выдадите ИИ-клиентам. <span class="check">ключ не совпадает с паролями из <code>x-secrets</code></span></li>
+  <li>Задайте <code>mcp-api-key</code> — ключ, который выдаётся ИИ-клиентам. <span class="check">ключ не совпадает с паролями из <code>x-secrets</code></span></li>
   <li>Проверьте, что у сервиса <code>mcp</code> указан образ, а не заготовка <code>image: &lt;mcp&gt;</code>. <span class="check">в строке <code>image:</code> есть реестр и тег</span></li>
   <li>Запустите службу:
 <pre><code>docker compose up -d mcp</code></pre>
     <span class="check"><code>docker compose ps</code> показывает <code>mcp</code> в состоянии <code>healthy</code></span></li>
-  <li>Проверьте доступ через nginx: откройте <code>https://&lt;сервер&gt;:44392/mcp/health</code>. <span class="check">ответ <code>200</code>; <code>503</code> значит, что MCP Server не может достучаться до Оркестратора — проверьте учётную запись и <code>Orchestrator__BaseUrl</code></span></li>
+  <li>Проверьте доступ через nginx: откройте <code>https://&lt;сервер&gt;:44392/mcp/health</code>. <span class="check">ответ <code>200</code>; <code>503</code> означает, что Оркестратор недоступен для MCP Server — проверьте учётную запись и <code>Orchestrator__BaseUrl</code></span></li>
 </ol>
 <div class="warn"><p>В шаблоне служба работает от имени <code>admin</code>. Все действия ИИ-клиентов в Оркестраторе выполняются с правами этой учётной записи.</p></div>
 

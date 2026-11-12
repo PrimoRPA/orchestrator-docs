@@ -11,8 +11,8 @@
 <main>
 <h1>Порты и сетевой трафик</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Всё для заявки на открытие портов: сначала короткий список того, что нужно открыть между машинами, ниже — справка по всем портам.</p>
-<p>Согласование портов с сетевыми администраторами и службой безопасности обычно идёт дольше всего остального — отправьте заявку, как только определитесь с вариантом установки.</p>
+<p class="lead">Сведения для заявки на открытие портов: сначала краткий список портов, которые требуется открыть между машинами, ниже — справка по всем портам.</p>
+<p>Согласование портов с сетевыми администраторами и службой безопасности обычно занимает больше времени, чем остальные этапы, — отправьте заявку сразу после выбора варианта установки.</p>
 
 <h2 id="request">Что открыть между машинами</h2>
 <figure class="diagram">
@@ -54,13 +54,13 @@
   <tr><td>Сервер Оркестратора</td><td>Сервер БД</td><td><code>5432</code></td><td>только если PostgreSQL на отдельном сервере</td></tr>
   <tr><td>Сервер Оркестратора</td><td>RabbitMQ</td><td><code>5672</code></td><td>только если RabbitMQ на отдельном сервере</td></tr>
   <tr><td>Сервер Оркестратора</td><td>Машина с RDP2</td><td><code>5102</code>, HTTPS</td><td>только если RDP2 на отдельной машине</td></tr>
-  <tr><td>Сервер Оркестратора</td><td>Почтовый сервер</td><td>порт вашего SMTP-сервера</td><td>только если нужны письма с оповещениями</td></tr>
-  <tr><td>Ваш Prometheus</td><td>Сервер Оркестратора</td><td><code>10052</code></td><td>только если собираете метрики</td></tr>
+  <tr><td>Сервер Оркестратора</td><td>Почтовый сервер</td><td>порт SMTP-сервера</td><td>только если нужны письма с оповещениями</td></tr>
+  <tr><td>Сервер Prometheus</td><td>Сервер Оркестратора</td><td><code>10052</code></td><td>только если выполняется сбор метрик</td></tr>
 </table></div>
-<div class="warn" data-only="docker"><p><b>Docker публикует на сервере больше портов, чем нужно снаружи.</b> Кроме <code>44392</code> (веб-интерфейс) и <code>8081</code> (NuGet2), compose-файл открывает <code>5432</code> (PostgreSQL) и <code>15672</code> (консоль RabbitMQ). Если они не должны быть видны из сети — уберите их из <code>ports</code> в compose-файле или закройте файерволом.</p></div>
+<div class="warn" data-only="docker"><p><b>Docker публикует на сервере больше портов, чем нужно снаружи.</b> Кроме <code>44392</code> (веб-интерфейс) и <code>8081</code> (NuGet2), compose-файл открывает <code>5432</code> (PostgreSQL) и <code>15672</code> (консоль RabbitMQ). Если они не должны быть видны из сети — удалите их из <code>ports</code> в compose-файле или закройте файерволом.</p></div>
 
 <h2 id="reference">Справка: все порты</h2>
-<p>Значения из поставки по умолчанию, одинаковые для Windows и Linux. Если все службы стоят на одном сервере, открывать эти порты наружу не нужно: службы обращаются друг к другу внутри сервера<span data-only="docker">, а в Docker — внутри сети compose по именам контейнеров</span>.</p>
+<p>Значения из поставки по умолчанию, одинаковые для Windows и Linux. Если все службы установлены на одном сервере, открывать эти порты наружу не требуется: службы обращаются друг к другу внутри сервера<span data-only="docker">, а в Docker — внутри сети compose по именам контейнеров</span>.</p>
 <h3>Службы Оркестратора</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
@@ -77,16 +77,16 @@
   <tr><td>NuGet2</td><td><code>8081</code></td><td>HTTP</td><td>nginx</td></tr>
   <tr><td>RDP2</td><td><code>5102</code></td><td>HTTPS, WebSocket</td><td>nginx</td></tr>
   <tr><td>MCP Server</td><td><code>5080</code></td><td>HTTP</td><td>nginx</td></tr>
-  <tr><td>Метрики Prometheus (каждая служба)</td><td><code>10052</code></td><td>HTTP</td><td>Ваш Prometheus. Параметр <code>Monitoring:Port</code></td></tr>
+  <tr><td>Метрики Prometheus (каждая служба)</td><td><code>10052</code></td><td>HTTP</td><td>Сервер Prometheus. Параметр <code>Monitoring:Port</code></td></tr>
 </table></div>
-<p>Analytic, States, Notifications и LogEventsWebhook получают работу через RabbitMQ; их HTTP-порт нужен только для проверки состояния.</p>
+<p>Analytic, States, Notifications и LogEventsWebhook получают задачи через RabbitMQ; их HTTP-порт используется только для проверки состояния.</p>
 <h3>Агент и робот</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Кто слушает</th><th>Порт</th><th>Протокол</th><th>Кто обращается</th></tr>
   <tr><td>Агент на машине робота</td><td><code>5002</code></td><td>HTTPS</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code> (по умолчанию <code>5002</code>) и <code>Tenants:Agent:Https</code> (<code>true</code>)</td></tr>
   <tr><td>Робот</td><td>порт робота</td><td>HTTPS</td><td>WebApi обращается напрямую: <code>https://&lt;IP машины&gt;:&lt;порт робота&gt;/LTools.Robot/RobotService/api/…</code></td></tr>
 </table></div>
-<p>В обратную сторону агент и роботы ходят только на внешний адрес Оркестратора (nginx, <code>44392</code>). Этот адрес WebApi передаёт им из <code>RobotDeployment:OrchBaseUrl</code> и <code>RobotDeployment:RobotLogsBaseUrl</code>; агент получает его в заголовке <code>orchestrator-url</code>, если в его конфиге не задан <code>Orchestrator:BaseUrl</code>.</p>
+<p>В обратном направлении агент и роботы обращаются только к внешнему адресу Оркестратора (nginx, <code>44392</code>). Этот адрес WebApi передаёт им из <code>RobotDeployment:OrchBaseUrl</code> и <code>RobotDeployment:RobotLogsBaseUrl</code>; агент получает его в заголовке <code>orchestrator-url</code>, если в его конфиге не задан <code>Orchestrator:BaseUrl</code>.</p>
 <h3>Инфраструктура</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Сервис</th><th>Порт</th><th>Кто обращается</th></tr>
@@ -98,7 +98,7 @@
 
 <h2>Что дальше</h2>
 <div class="next">
-  <a href="service-accounts.html">Учётные записи и права служб<small>от кого будут работать службы и агент</small></a>
+  <a href="service-accounts.html">Учётные записи и права служб<small>от чьего имени работают службы и агент</small></a>
 </div>
 
 

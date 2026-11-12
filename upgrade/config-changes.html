@@ -10,18 +10,18 @@
 <main>
 <h1>Изменения в конфигах между LTS</h1>
 <div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Какие параметры появились, переименованы, удалены или получили другое значение по умолчанию на пути 1.25.7 LTS → 1.26.7 LTS → 1.26.9. Сравнивались классы опций, <code>appsettings*.json</code>, Dockerfile, compose и юниты в ветках <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.9.0</code> (состояние на 06.11.2026, то есть с последними патчами LTS).</p>
+<p class="lead">На странице перечислены параметры, которые появились, переименованы, удалены или получили другое значение по умолчанию на пути 1.25.7 LTS → 1.26.7 LTS → 1.26.9. Сравнивались классы опций, <code>appsettings*.json</code>, Dockerfile, compose и юниты в ветках <code>v1.25.7.0</code>, <code>releases/v1.26.7.0</code>, <code>releases/v1.26.9.0</code> (состояние на 06.11.2026, то есть с последними патчами LTS).</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
-  <div><b>Результат</b>список правок конфигов для вашего перехода</div>
+  <div><b>Результат</b>список изменений конфигов для выбранного перехода</div>
 </div>
 
 <h2>Главное правило</h2>
-<p>Не копируйте старый файл конфигурации поверх нового. В каждом пакете лежит свой <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> или <code>appsettings.ProdLinux.json</code> с актуальными ключами — переносите в него только свои значения: подключения к БД, RabbitMQ, адреса, пароли.</p>
+<p>Не копируйте старый файл конфигурации поверх нового. В каждом пакете находится свой <code>appsettings.json</code> и <code>appsettings.ProdWin.json</code> или <code>appsettings.ProdLinux.json</code> с актуальными ключами — переносите в него только свои значения: подключения к БД, RabbitMQ, адреса, пароли.</p>
 <p>Колонка «В какой версии»: <b>1.26.7 LTS</b> — изменение есть в 1.26.7 LTS, но не в 1.25.7 LTS; <b>1.26.9</b> — есть в 1.26.9, но не в 1.26.7 LTS; <b>только LTS</b> — есть в последних патчах LTS, но нет в 1.26.9.0.</p>
 
 <h2>Есть в LTS, но нет в 1.26.9.0</h2>
-<p>Эти параметры добавлены в патчи LTS позже, чем ответвилась 1.26.9. После перехода на 1.26.9.0 они перестают читаться, и служба ведёт себя как до исправления.</p>
+<p>Эти параметры добавлены в патчи LTS после ответвления 1.26.9. После перехода на 1.26.9.0 они перестают читаться, и служба работает как до исправления.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
   <tr><td>WebApi</td><td><code>Scheduler:TimeZoneId</code> — часовой пояс расписаний и производственного календаря</td><td>есть с 1.25.7.64 и 1.26.7.6; в поставочном конфиге <code>Russian Standard Time</code></td><td>не читается: используется часовой пояс ОС сервера</td><td>только LTS</td></tr>
@@ -31,23 +31,23 @@
   <tr><td>Агент</td><td><code>Agent:CredentialsCheckDelayMsec</code></td><td><code>3000</code></td><td>не читается</td><td>только LTS</td></tr>
   <tr><td>RDP2</td><td><code>SuppressOutputWhenIdle</code></td><td><code>false</code></td><td>не читается</td><td>только LTS</td></tr>
 </table></div>
-<div class="warn"><p>Если вы задавали <code>Scheduler:TimeZoneId</code>, после перехода на 1.26.9.0 расписания считаются по часовому поясу ОС. Проверьте его на сервере WebApi до обновления.</p></div>
+<div class="warn"><p>Если параметр <code>Scheduler:TimeZoneId</code> был задан, после перехода на 1.26.9.0 расписания считаются по часовому поясу ОС. Проверьте его на сервере WebApi до обновления.</p></div>
 
 <h2>Переименованы или удалены</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
   <tr><td>WebApi</td><td><code>RpaProjectArchiveUpload:DbStore</code> → <code>RpaProjectArchiveUpload:StoreType</code></td><td><code>DbStore=true</code> (архивы в БД)</td><td><code>StoreType</code>: <code>0</code> — файлы, <code>1</code> — БД (по умолчанию), <code>2</code> — S3. Старый флаг не читается</td><td>1.26.9</td></tr>
   <tr><td>WebApi</td><td><code>FileStore:MinioKerberosKeytabs</code> → <code>FileStore:S3KerberosKeytabs</code></td><td>появился в 1.26.7 LTS</td><td>старое имя не читается</td><td>1.26.9</td></tr>
-  <tr><td>WebApi</td><td><code>Secrets:External</code></td><td><code>true</code>/<code>false</code>; в поставочных конфигах <code>false</code></td><td>тип: <code>0</code> — БД секретов, <code>1</code> — Vault. Старое <code>true</code> понимается как <code>0</code> с предупреждением в журнале. Строка убрана из конфигов WebApi, Analytic, Notifications, RobotLogs, States</td><td>1.26.7 LTS</td></tr>
+  <tr><td>WebApi</td><td><code>Secrets:External</code></td><td><code>true</code>/<code>false</code>; в поставочных конфигах <code>false</code></td><td>тип: <code>0</code> — БД секретов, <code>1</code> — Vault. Старое <code>true</code> обрабатывается как <code>0</code> с предупреждением в журнале. Строка убрана из конфигов WebApi, Analytic, Notifications, RobotLogs, States</td><td>1.26.7 LTS</td></tr>
   <tr><td>Analytic</td><td><code>Schedules:RefreshMaterializedViews:*</code></td><td>ключи <code>WorkersUsage</code>, <code>RobotsUsage</code>, <code>DpaEvents</code></td><td>ключи <code>mv_WorkersUsage</code>, <code>mv_RobotsUsage</code>, <code>mv_DpaEvents</code>; старые ключи не запускают обновление</td><td>1.26.7 LTS</td></tr>
   <tr><td>Агент (Linux)</td><td><code>Agent:RobotStartMethod</code></td><td><code>systemd</code></td><td>удалён; AgentUpdater его больше не переносит</td><td>1.26.7 LTS</td></tr>
   <tr><td>WebApi</td><td><code>InstanceInfo:UpdateStatusGap</code></td><td><code>2000</code></td><td>удалён</td><td>1.26.7 LTS</td></tr>
   <tr><td>WebApi</td><td><code>MaxWorkerThreads</code>, <code>MaxCompletionPortThreads</code></td><td><code>32767</code>, <code>1000</code></td><td>удалены из <code>appsettings.json</code></td><td>1.26.7 LTS</td></tr>
 </table></div>
-<div class="note"><p>Если переносите старый <code>appsettings.json</code> Analytic целиком, материализованные представления аналитики перестанут обновляться: в новой версии имена расписаний начинаются с <code>mv_</code>.</p></div>
+<div class="note"><p>При переносе старого <code>appsettings.json</code> Analytic целиком материализованные представления аналитики перестают обновляться: в новой версии имена расписаний начинаются с <code>mv_</code>.</p></div>
 
 <h2>Изменились значения по умолчанию</h2>
-<p>Если вы перенесёте старое значение, сохранится старое поведение.</p>
+<p>При переносе старого значения сохраняется старое поведение.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
   <tr><td>WebApi</td><td><code>RobotStart:WaitUserProfileLoaded</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
@@ -68,7 +68,7 @@
 </table></div>
 
 <h2>Новые параметры</h2>
-<p>Значения по умолчанию подходят, если вы не используете соответствующую функцию.</p>
+<p>Значения по умолчанию подходят, если соответствующая функция не используется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметр</th><th>Было</th><th>Стало</th><th>В какой версии</th></tr>
   <tr><td>WebApi</td><td><code>WS:Path</code>, <code>WS:LongPolling</code></td><td>—</td><td><code>/events</code>, <code>false</code></td><td>1.26.7 LTS</td></tr>
@@ -106,7 +106,7 @@
   <tr><td>юниты Linux</td><td>nginx: <code>Primo.Orchestrator.Nginx.service</code>, <code>Primo.Orchestrator.Nginx.user.service</code></td><td>—</td><td>добавлены</td><td>1.26.7 LTS</td></tr>
   <tr><td>юниты агента</td><td><code>#Environment=PRIMOSALT=</code>, <code>#Environment=PRIMOSIGNINGKEY=</code></td><td>—</td><td>добавлены закомментированными</td><td>1.26.7 LTS</td></tr>
 </table></div>
-<p>Что делать с MinIO при переходе с compose 1.25.7 — на странице <a href="order.html">Порядок обновления</a>, раздел Docker.</p>
+<p>Действия с MinIO при переходе с compose 1.25.7 описаны на странице <a href="order.html">Порядок обновления</a>, раздел Docker.</p>
 </div>
 
 <h2>Агент при автообновлении</h2>

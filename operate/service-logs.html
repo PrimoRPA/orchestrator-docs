@@ -11,16 +11,16 @@
 <main>
 <h1>Журналы служб</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Где искать технические журналы служб Оркестратора и как поменять уровень детализации. Это не журнал Оркестратора и не журналы роботов в UI — те описаны в <a href="events.html">Событиях</a> и <a href="../work/logs.html">Журналах</a>.</p>
+<p class="lead">На странице описано, где находятся технические журналы служб Оркестратора и как изменить уровень детализации. Журнал Оркестратора и журналы роботов в UI описаны отдельно — в <a href="events.html">Событиях</a> и <a href="../work/logs.html">Журналах</a>.</p>
 
 <h2>Как устроено</h2>
-<p>Все службы (WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, Агент) пишут журнал через Serilog. Куда и с каким уровнем — целиком задаётся секцией <code>Serilog</code> конфига службы. В коде своих путей к файлам журналов нет.</p>
+<p>Все службы (WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, Агент) пишут журнал через Serilog. Место и уровень записи полностью задаются секцией <code>Serilog</code> конфига службы. В коде пути к файлам журналов не заданы.</p>
 <p>К каждой записи добавляется версия службы (<code>ApplicationVersion</code>); у WebApi — ещё идентификатор узла кластера.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>Serilog:MinimumLevel:Default</code></td><td>Общий уровень: <code>Verbose</code>, <code>Debug</code>, <code>Information</code>, <code>Warning</code>, <code>Error</code>, <code>Fatal</code>.</td><td><code>Information</code> (если не задан или задан с ошибкой)</td></tr>
   <tr><td><code>Serilog:MinimumLevel:Override:&lt;источник&gt;</code></td><td>Уровень для отдельного источника, например <code>Microsoft</code>.</td><td>—</td></tr>
-  <tr><td><code>Serilog:WriteTo</code></td><td>Куда писать (sink) и его параметры.</td><td>—</td></tr>
+  <tr><td><code>Serilog:WriteTo</code></td><td>Приёмник записи (sink) и его параметры.</td><td>—</td></tr>
   <tr><td><code>UseHttpLogging</code></td><td>Только WebApi: подробное журналирование HTTP-запросов.</td><td><code>false</code></td></tr>
 </table></div>
 
@@ -29,23 +29,23 @@
 <pre><code>Serilog__MinimumLevel__Default=Warning
 Serilog__WriteTo__0__Name=Console
 Serilog__WriteTo__0__Args__Formatter=Serilog.Formatting.Compact.RenderedCompactJsonFormatter,Serilog.Formatting.Compact</code></pre>
-<p>Смотреть: <code>docker logs &lt;контейнер&gt;</code> или <code>kubectl logs &lt;под&gt;</code>. Журналы nginx в контейнере UI тоже идут в stdout/stderr.</p>
+<p>Просмотр: <code>docker logs &lt;контейнер&gt;</code> или <code>kubectl logs &lt;под&gt;</code>. Журналы nginx в контейнере UI также выводятся в stdout/stderr.</p>
 
 <h2>Linux (systemd)</h2>
-<p>Службы ставятся в <code>/opt/Primo/&lt;Служба&gt;</code> и запускаются с ключом <code>--console</code>. В unit-файлах задан <code>SyslogIdentifier</code> вида <code>Primo.Orchestrator.&lt;Служба&gt;</code>, поэтому всё, что служба пишет в консоль, попадает в journald:</p>
+<p>Службы устанавливаются в <code>/opt/Primo/&lt;Служба&gt;</code> и запускаются с ключом <code>--console</code>. В unit-файлах задан <code>SyslogIdentifier</code> вида <code>Primo.Orchestrator.&lt;Служба&gt;</code>, поэтому всё, что служба пишет в консоль, попадает в journald:</p>
 <pre><code>journalctl -t Primo.Orchestrator.WebApi --since "1 hour ago"
 journalctl -u Primo.Orchestrator.RobotLogs -f</code></pre>
-<p>Если в секции <code>Serilog</code> настроен вывод в файл, путь смотрите в <code>Serilog:WriteTo:…:Args:path</code>. Относительный путь считается от папки службы.</p>
+<p>Если в секции <code>Serilog</code> настроен вывод в файл, путь указан в <code>Serilog:WriteTo:…:Args:path</code>. Относительный путь считается от папки службы.</p>
 <p>Агент на Linux-машине робота при установке скриптом <code>k8s/agent/install.sh</code> пишет в файл <code>~/primo/log/log-.txt</code> пользователя робота: новый файл каждый день, хранятся 20 последних, уровень <code>Warning</code>.</p>
 
 <h2>Windows</h2>
 <p>Службы работают как службы Windows; рабочая папка — папка службы. Куда пишется журнал, определяется секцией <code>Serilog</code> в <code>appsettings.json</code> / <code>appsettings.ProdWin.json</code>.</p>
 
 <h2>Уровень без перезапуска</h2>
-<p>Службы отдают текущие уровни по HTTP и позволяют менять их на лету (до перезапуска):</p>
+<p>Текущие уровни доступны по HTTP и изменяются без перезапуска службы (изменение действует до перезапуска):</p>
 <ul>
   <li><code>GET /loggers</code> — список: <code>default</code> и все переопределения из <code>Serilog:MinimumLevel:Override</code>.</li>
-  <li><code>POST /loggers/&lt;имя&gt;/&lt;уровень&gt;</code> — сменить уровень, например <code>POST /loggers/default/Debug</code>.</li>
+  <li><code>POST /loggers/&lt;имя&gt;/&lt;уровень&gt;</code> — изменить уровень, например <code>POST /loggers/default/Debug</code>.</li>
 </ul>
 <p>Как проверить: после <code>POST</code> ответ содержит новый уровень, в журнале службы появляются записи этого уровня.</p>
 

@@ -11,12 +11,12 @@
 <main>
 <h1>Переход с root на работу без root</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Linux</span></div>
-<p class="lead">Старые руководства ставили службы Оркестратора на Linux от root. Начиная с поставки 1.26 основной вариант — пользовательские юниты systemd от обычного пользователя. Здесь — как перевести действующую установку.</p>
+<p class="lead">По старым руководствам службы Оркестратора на Linux устанавливались от root. Начиная с поставки 1.26 основной вариант — пользовательские юниты systemd от обычного пользователя. На странице описан перевод действующей установки.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
-  <div><b>Результат</b>службы и агент работают от пользователя, поднимаются после перезагрузки без его входа</div>
+  <div><b>Результат</b>службы и агент работают от пользователя, запускаются после перезагрузки без его входа</div>
 </div>
-<p>Что нужно для работы без root и чем юниты отличаются — <a href="../deploy/install-services.html#linux-rootless">Установка служб → Linux: службы работают без root</a>.</p>
+<p>Требования для работы без root и отличия юнитов — <a href="../deploy/install-services.html#linux-rootless">Установка служб → Linux: службы работают без root</a>.</p>
 
 <h2>Службы и nginx</h2>
 <ol class="steps">
@@ -24,11 +24,11 @@
 <pre><code>sudo systemctl disable --now Primo.Orchestrator.WebApi
 sudo rm /etc/systemd/system/Primo.Orchestrator.WebApi.service
 sudo systemctl daemon-reload</code></pre>
-    <span class="check"><code>systemctl list-units 'Primo.Orchestrator.*'</code> ничего не показывает</span></li>
+    <span class="check"><code>systemctl list-units 'Primo.Orchestrator.*'</code> ничего не выводит</span></li>
   <li>Создайте пользователя служб (если его нет) и включите linger:
 <pre><code>sudo useradd -m -s /bin/bash orch-user
 sudo loginctl enable-linger orch-user</code></pre></li>
-  <li>Отдайте пользователю каталоги служб, nginx (включая созданные от root <code>logs</code> и <code>temp</code>) и каталоги данных:
+  <li>Назначьте пользователя владельцем каталогов служб, nginx (включая созданные от root <code>logs</code> и <code>temp</code>) и каталогов данных:
 <pre><code>sudo chown -R orch-user:orch-user /opt/Primo
 sudo chown -R orch-user:orch-user &lt;каталоги данных из конфигов&gt;</code></pre>
     <span class="check"><code>find /opt/Primo ! -user orch-user</code> ничего не выводит</span></li>
@@ -39,10 +39,10 @@ systemctl --user daemon-reload
 systemctl --user enable --now Primo.Orchestrator.WebApi</code></pre>
     Юнит NuGet2 — <code>/opt/Primo/NuGet2/Primo.Orchestrator.NuGet.user.service</code>, nginx — <code>Primo.Orchestrator.Nginx.user.service</code> из поставки.
     <span class="check"><code>systemctl --user list-units 'Primo.Orchestrator.*'</code> — все <code>active running</code>; <code>ps -eo user,cmd | grep Primo.Orchestrator</code> показывает <code>orch-user</code></span></li>
-  <li>Перезагрузите сервер. <span class="check">службы поднялись без входа <code>orch-user</code> в систему</span></li>
+  <li>Перезагрузите сервер. <span class="check">службы запустились без входа <code>orch-user</code> в систему</span></li>
 </ol>
-<p>Агент переключается так же: остановите и удалите <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>, включите linger для <code>agent</code> и под ним установите <code>Primo.Orchestrator.Agent.user.service</code> в <code>~/.config/systemd/user/</code>.</p>
-<p>Обратно на root — наоборот: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
+<p>Агент переводится аналогично: остановите и удалите <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>, включите linger для <code>agent</code> и под ним установите <code>Primo.Orchestrator.Agent.user.service</code> в <code>~/.config/systemd/user/</code>.</p>
+<p>Обратный переход на root выполняется в обратном порядке: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
 
 
 <h2>Что дальше</h2>

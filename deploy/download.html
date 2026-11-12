@@ -11,42 +11,42 @@
 <main>
 <h1>Дистрибутивы</h1>
 <div class="applies" data-sw="ver platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Где скачать дистрибутивы Оркестратора, агента и робота и что из них нужно под ваш вариант установки.</p>
+<p class="lead">Где скачать дистрибутивы Оркестратора, агента и робота и какие из них требуются для выбранного варианта установки.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="planning-options.html">Выбор варианта развертывания</a></div>
   <div><b>Результат</b>архивы нужной версии скачаны</div>
 </div>
 
-<h2>Где лежат</h2>
-<p>Все дистрибутивы Primo RPA лежат в открытом репозитории <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>, вход не нужен. Релизы — в папке <code>raw-hosted-release</code>, LTS-версии — в <code>raw-hosted-lts</code>; внутри — папка с номером версии, например <code>1.26.9</code> или <code>1.26.7</code>.</p>
-<p>Папку можно открыть в браузере: <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-release">релизы</a>, <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-lts">LTS-версии</a>. Любой файл скачивается и напрямую, без браузера, по адресу <code>https://nexus.primo-rpa.ru/repository/&lt;папка&gt;/&lt;версия&gt;/&lt;путь к файлу&gt;</code> — так удобно забирать файлы сразу на сервер командой <code>curl -fsSL -O &lt;адрес&gt;</code>.</p>
+<h2>Где находятся</h2>
+<p>Все дистрибутивы Primo RPA находятся в открытом репозитории <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>, вход не требуется. Релизы — в папке <code>raw-hosted-release</code>, LTS-версии — в <code>raw-hosted-lts</code>; внутри — папка с номером версии, например <code>1.26.9</code> или <code>1.26.7</code>.</p>
+<p>Папку можно открыть в браузере: <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-release">релизы</a>, <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-lts">LTS-версии</a>. Любой файл скачивается и напрямую, без браузера, по адресу <code>https://nexus.primo-rpa.ru/repository/&lt;папка&gt;/&lt;версия&gt;/&lt;путь к файлу&gt;</code> — так файлы скачиваются сразу на сервер командой <code>curl -fsSL -O &lt;адрес&gt;</code>.</p>
 <p>Если у сервера нет доступа в интернет, скачайте архивы на компьютере с доступом и перенесите их на сервер.</p>
 
-<h2 id="set">Что скачать под ваш вариант</h2>
+<h2 id="set">Что скачать для выбранного варианта</h2>
 <ul data-only="docker">
   <li>compose-файл;</li>
   <li>конфиг nginx;</li>
   <li>архив агента — для машин роботов;</li>
   <li>дистрибутив робота.</li>
 </ul>
-<p data-only="docker">Образы служб Docker скачает сам: службы Оркестратора — из реестра Primo RPA <code>nexus.primo-rpa.ru:8000</code>, PostgreSQL и RabbitMQ — с Docker Hub. Сертификат для стенда создаётся одной командой при установке. Агент и дистрибутив робота нужны, когда дойдёте до машин роботов; для запуска серверной части хватит первых двух пунктов.</p>
+<p data-only="docker">Образы служб Docker скачивает автоматически: службы Оркестратора — из реестра Primo RPA <code>nexus.primo-rpa.ru:8000</code>, PostgreSQL и RabbitMQ — с Docker Hub. Сертификат для стенда создаётся одной командой при установке. Агент и дистрибутив робота требуются на этапе подготовки машин роботов; для запуска серверной части достаточно первых двух пунктов.</p>
 <ul data-only="linux">
-  <li>архивы служб для Linux — какие именно, см. <a href="know.html#services">Какие службы ставить</a>;</li>
+  <li>архивы служб для Linux — какие именно, см. <a href="know.html#services">Какие службы устанавливать</a>;</li>
   <li>архив веб-интерфейса UI4;</li>
   <li>конфиг и юниты nginx, сертификат;</li>
   <li>архив агента — для машин роботов;</li>
   <li>дистрибутив робота.</li>
 </ul>
 <ul data-only="windows">
-  <li>архивы служб для Windows — какие именно, см. <a href="know.html#services">Какие службы ставить</a>;</li>
+  <li>архивы служб для Windows — какие именно, см. <a href="know.html#services">Какие службы устанавливать</a>;</li>
   <li>архив веб-интерфейса UI4;</li>
   <li>конфиг nginx и сертификат;</li>
   <li>архив агента — для машин роботов;</li>
   <li>дистрибутив робота.</li>
 </ul>
-<p>Архив агента и дистрибутив робота берите под ОС машин роботов, а не сервера.</p>
+<p>Архив агента и дистрибутив робота выбирайте под ОС машин роботов, а не сервера.</p>
 
-<h2>Где что лежит в папке версии</h2>
+<h2>Расположение файлов в папке версии</h2>
 <div class="tbl-wrap"><table>
   <tr><th>Что</th><th>Где в папке версии</th></tr>
   <tr><td>Архивы служб Оркестратора, агента и AgentUpdater<span data-ver="1.26.7"> (у каждого архива свой номер патча, например <code>webapi-1.26.7.25</code>)</span></td><td><code>orchestrator/linux/</code> или <code>orchestrator/windows/</code>, имена <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-&lt;linux|windows&gt;.zip</code></td></tr>

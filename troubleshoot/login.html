@@ -18,8 +18,8 @@
   <li>На странице входа нет нужного способа в списке <b>Другие способы входа</b>.</li>
   <li>«Ошибка аутентификации.», «Ошибка аутентификации в AD …».</li>
   <li>«Ошибка авторизации. Группа в AD … не имеет привязки к роли.»</li>
-  <li>SSO не входит автоматически: «Ошибка валидации Negotiate-токена.»</li>
-  <li>Вход через Keycloak возвращает на страницу входа, не перебрасывает на Keycloak или пишет «KeyCloak авторизация не настроена».</li>
+  <li>Автоматический вход через SSO не выполняется: «Ошибка валидации Negotiate-токена.»</li>
+  <li>При входе через Keycloak происходит возврат на страницу входа, нет перехода на Keycloak или выводится «KeyCloak авторизация не настроена».</li>
 </ul>
 <p>Если вход прошёл, но пользователь не видит разделов, папок или видит не свой тенант, см. <a href="access.html">Пользователь не видит папки, проекты или разделы</a>.</p>
 
@@ -29,7 +29,7 @@
   <li>Контроллер домена недоступен с сервера WebApi или закрыт порт 389/636.</li>
   <li>Пользователь вне области поиска (<code>StartPoint</code>, фильтр) или его группа не привязана к роли.</li>
   <li>SSO: нет keytab для домена, или браузер не передаёт билет Kerberos.</li>
-  <li>Keycloak: неверный <code>RedirectUrl</code> или <code>OrchBaseUrl</code>, роли пользователя лежат не там, где их ищет WebApi.</li>
+  <li>Keycloak: неверный <code>RedirectUrl</code> или <code>OrchBaseUrl</code>, роли пользователя находятся не там, где их ищет WebApi.</li>
 </ul>
 
 <h2>Способы входа</h2>
@@ -48,16 +48,16 @@
   <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
   <tr><td>Способ включён</td><td><code>Auth:Type</code></td><td>Содержит <code>2</code> (LDAP) и/или <code>4</code> (Negotiate)</td></tr>
   <tr><td>Домен описан</td><td><code>ActiveDirectory:MultyForest:&lt;домен&gt;:Host</code></td><td>Контроллер домена доступен с сервера WebApi</td></tr>
-  <tr><td>Порт и TLS</td><td><code>…:UseSsl</code>, <code>…:AcceptUntrustedCertificate</code></td><td>Порт задать нельзя: 389, при <code>UseSsl=true</code> — 636. Открыт в сетевом экране</td></tr>
-  <tr><td>Сервисная учётка</td><td><code>…:AdminUserName</code>, <code>…:AdminPassword</code> (зашифрован)</td><td>Учётка может искать пользователей и группы</td></tr>
-  <tr><td>Где искать</td><td><code>…:StartPoint</code>, <code>…:UsersStartPoint</code>, <code>…:GroupsStartPoint</code>, <code>…:UserFilterTemplate</code></td><td>Пользователь попадает в область поиска. Фильтр по умолчанию ищет по <code>userPrincipalName</code></td></tr>
+  <tr><td>Порт и TLS</td><td><code>…:UseSsl</code>, <code>…:AcceptUntrustedCertificate</code></td><td>Порт не настраивается: 389, при <code>UseSsl=true</code> — 636. Открыт в сетевом экране</td></tr>
+  <tr><td>Сервисная учётная запись</td><td><code>…:AdminUserName</code>, <code>…:AdminPassword</code> (зашифрован)</td><td>Учётной записи разрешён поиск пользователей и групп</td></tr>
+  <tr><td>Область поиска</td><td><code>…:StartPoint</code>, <code>…:UsersStartPoint</code>, <code>…:GroupsStartPoint</code>, <code>…:UserFilterTemplate</code></td><td>Пользователь попадает в область поиска. Фильтр по умолчанию ищет по <code>userPrincipalName</code></td></tr>
   <tr><td>Таймаут</td><td><code>…:ConnectionTimeout</code></td><td>По умолчанию 2000 мс</td></tr>
   <tr><td>Привязка ролей</td><td>UI4: роль → <b>Группы AD</b></td><td>Хотя бы одна группа пользователя привязана к роли</td></tr>
-  <tr><td>Тенанты домена</td><td><code>…:Tenants</code></td><td>Для тенанта по умолчанию — пустая строка в списке. Без списка падает выбор AD в общих папках</td></tr>
+  <tr><td>Тенанты домена</td><td><code>…:Tenants</code></td><td>Для тенанта по умолчанию — пустая строка в списке. Без списка выбор AD в общих папках завершается ошибкой</td></tr>
 </table></div>
 
 <h3>Negotiate (SSO)</h3>
-<p>Для SSO нужен keytab: <code>…:KerberosKeytabPath</code> для домена или <code>ActiveDirectory:KerberosKeytabVault</code>. При значении <code>Env</code> keytab в Base64 берётся из переменной <code>KEYTAB_&lt;ДОМЕН_ЧЕРЕЗ_ПОДЧЁРКИВАНИЯ&gt;</code>. Ошибки: «Ошибка конфигурации: не определен KerberosKeytab.», «Ошибка валидации Negotiate-токена.» Пользователь из доверенного домена ищется через <code>…:TrustedDomains</code>.</p>
+<p>Для SSO требуется keytab: <code>…:KerberosKeytabPath</code> для домена или <code>ActiveDirectory:KerberosKeytabVault</code>. При значении <code>Env</code> keytab в Base64 берётся из переменной <code>KEYTAB_&lt;ДОМЕН_ЧЕРЕЗ_ПОДЧЁРКИВАНИЯ&gt;</code>. Ошибки: «Ошибка конфигурации: не определен KerberosKeytab.», «Ошибка валидации Negotiate-токена.» Пользователь из доверенного домена ищется через <code>…:TrustedDomains</code>.</p>
 
 <h2>Что проверить: Keycloak</h2>
 <div class="tbl-wrap"><table>
@@ -65,16 +65,16 @@
   <tr><td>Realm описан</td><td><code>OpenId:KeyCloak:&lt;realm&gt;</code></td><td>Иначе «Ключ … отсутствует в секции OpenId:KeyCloak.»</td></tr>
   <tr><td>Клиент</td><td><code>…:ClientId</code> (по умолчанию <code>orch</code>), <code>…:ClientSecret</code> (зашифрован)</td><td>Совпадают с клиентом в Keycloak</td></tr>
   <tr><td>Адреса</td><td><code>…:ConfigurationUrl</code> или <code>…:AuthUrl</code>, <code>…:TokenUrl</code>, <code>…:LogoutUrl</code></td><td>Доступны с сервера WebApi</td></tr>
-  <tr><td>Возврат после входа (PKCE)</td><td><code>…:RedirectUrl</code> и <code>RobotDeployment:OrchBaseUrl</code></td><td><code>RedirectUrl</code> ведёт на <code>…/api/Account/KeyCloak2/Login</code> и разрешён в Keycloak; <code>OrchBaseUrl</code> — внешний адрес UI4, туда WebApi вернёт браузер</td></tr>
-  <tr><td>Откуда брать роли</td><td><code>…:KeycloakTokenRolesSource</code>: <code>Realm</code> (по умолчанию), <code>Client</code>, <code>AnotherClient</code> + <code>RoleClientId</code></td><td>Роли пользователя есть в токене в этом месте</td></tr>
+  <tr><td>Возврат после входа (PKCE)</td><td><code>…:RedirectUrl</code> и <code>RobotDeployment:OrchBaseUrl</code></td><td><code>RedirectUrl</code> ведёт на <code>…/api/Account/KeyCloak2/Login</code> и разрешён в Keycloak; <code>OrchBaseUrl</code> — внешний адрес UI4, на него WebApi возвращает браузер</td></tr>
+  <tr><td>Источник ролей</td><td><code>…:KeycloakTokenRolesSource</code>: <code>Realm</code> (по умолчанию), <code>Client</code>, <code>AnotherClient</code> + <code>RoleClientId</code></td><td>Роли пользователя есть в токене в этом месте</td></tr>
   <tr><td>Привязка ролей</td><td>UI4: роль Оркестратора ↔ роли realm</td><td>Иначе «Отсутствует привязка KeyCloak-ролей.»</td></tr>
 </table></div>
 <p>Имя пользователя берётся из <code>preferred_username</code>. Группы Keycloak для прав не используются — только роли.</p>
 
 <h2>Как исправить</h2>
 <ol class="steps">
-  <li>Найдите точную причину в журнале WebApi. Пользователю при неверном пароле, отсутствии учётки, блокировке или отключённом тенанте показывается одно и то же «Ошибка аутентификации.», а различаются только записи в журнале.</li>
-  <li>Для AD смотрите «Ошибка логина пользователя … в AD …», «Ошибка получения групп AD …». Строки «AD group SID: …» показывают, какие группы пришли, — сверьте их с привязкой в роли.</li>
+  <li>Найдите точную причину в журнале WebApi. Пользователю при неверном пароле, отсутствии учётной записи, блокировке или отключённом тенанте показывается одно и то же сообщение «Ошибка аутентификации.»; различаются только записи в журнале.</li>
+  <li>Для AD найдите строки «Ошибка логина пользователя … в AD …», «Ошибка получения групп AD …». Строки «AD group SID: …» содержат полученные группы пользователя — сверьте их с привязкой в роли.</li>
   <li>Исправьте конфигурацию и перезапустите WebApi. <span class="check">Нужный способ появился на странице входа, вход проходит, разделы меню соответствуют роли</span></li>
 </ol>
 <p>«Пользователь временно заблокирован.» — сработала блокировка после неудачных попыток: <code>Security:Lockout:MaxFailedAccessAttempts</code> (5), <code>DefaultLockoutTimeSpan</code> (300 с по умолчанию в коде; в Dockerfile — 1 мин).</p>

@@ -11,25 +11,25 @@
 <main>
 <h1>Резервное копирование и восстановление</h1>
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Что входит в резервную копию Оркестратора: базы данных, файлы, конфиги и секреты. Встроенных средств резервного копирования в Оркестраторе нет — копии делаются средствами СУБД, S3 и ОС.</p>
+<p class="lead">В резервную копию Оркестратора входят базы данных, файлы, конфиги и секреты. Встроенных средств резервного копирования в Оркестраторе нет — копии создаются средствами СУБД, S3 и ОС.</p>
 
 <h2>Базы данных</h2>
-<p>Каждая БД задаётся элементом секции <code>DbConnection:Items</code> конфига службы. Имена БД ниже — из Docker-образов поставки; в вашей установке они могут отличаться, смотрите <code>DbConnection:Items:&lt;имя&gt;:DbName</code>.</p>
+<p>Каждая БД задаётся элементом секции <code>DbConnection:Items</code> конфига службы. Имена БД ниже — из Docker-образов поставки; в конкретной установке они могут отличаться, проверьте <code>DbConnection:Items:&lt;имя&gt;:DbName</code>.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Элемент <code>DbConnection:Items</code></th><th>БД (как в образах)</th><th>Что внутри</th><th>Чья</th></tr>
-  <tr><td><code>Default</code></td><td><code>ltools</code></td><td>Оперативные данные: машины, роботы, проекты и архивы проектов (при хранении в БД), задания, очереди обмена данными и их архив, тенанты, настройки, хэши конфигов.</td><td>WebApi и другие службы; служба Licenses ходит в неё же через элемент <code>Licenses</code></td></tr>
+  <tr><td><code>Default</code></td><td><code>ltools</code></td><td>Оперативные данные: машины, роботы, проекты и архивы проектов (при хранении в БД), задания, очереди обмена данными и их архив, тенанты, настройки, хэши конфигов.</td><td>WebApi и другие службы; служба Licenses обращается к ней же через элемент <code>Licenses</code></td></tr>
   <tr><td><code>Identity</code></td><td><code>ltoolsidentity</code></td><td>Пользователи, роли, права, привязка ролей к группам AD.</td><td>WebApi</td></tr>
   <tr><td><code>License</code></td><td><code>ltoolslicense</code></td><td>Установленные лицензии.</td><td>WebApi</td></tr>
   <tr><td><code>Logs</code></td><td><code>ltoolslogs</code></td><td>Журналы робота и Оркестратора, перенесённые старые запуски, прошлые версии конфигов.</td><td>RobotLogs, WebApi</td></tr>
   <tr><td><code>ProcessRepository</code></td><td><code>ltoolsltwrepo</code></td><td>Репозиторий процессов.</td><td>WebApi</td></tr>
   <tr><td><code>Analytic</code></td><td><code>ltoolsanalytic</code></td><td>Аналитическая БД.</td><td>Analytic</td></tr>
-  <tr><td>—</td><td>своя, задаётся <code>Secrets:ConnectionString</code></td><td>Хранилище секретов, если <code>Secrets:External</code> = БД.</td><td>все службы</td></tr>
+  <tr><td>—</td><td>отдельная, задаётся <code>Secrets:ConnectionString</code></td><td>Хранилище секретов, если <code>Secrets:External</code> = БД.</td><td>все службы</td></tr>
   <tr><td><code>Database:DbConnection</code> (служба NuGet)</td><td><code>ltoolsnuget</code></td><td>Метаданные NuGet-пакетов.</td><td>NuGet</td></tr>
 </table></div>
-<p><code>ltools</code>, <code>ltoolsidentity</code> и <code>ltoolslicense</code> связаны между собой (идентификаторы тенантов, пользователей, лицензий), поэтому снимайте их в одно окно и восстанавливайте вместе.</p>
+<p><code>ltools</code>, <code>ltoolsidentity</code> и <code>ltoolslicense</code> связаны между собой (идентификаторы тенантов, пользователей, лицензий), поэтому создавайте их копии в одном окне и восстанавливайте вместе.</p>
 
 <h2>Файлы и объектное хранилище</h2>
-<p>Где хранятся файлы, зависит от настроек хранилища — см. <a href="../configure/storage.html">Хранилища</a>.</p>
+<p>Расположение файлов зависит от настроек хранилища — см. <a href="../configure/storage.html">Хранилища</a>.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Что</th><th>Где задаётся</th><th>Комментарий</th></tr>
   <tr><td>Дистрибутивы робота</td><td><code>RobotDistrUpload:TargetFilePath</code> (WebApi)</td><td>При <code>FileStore:Type</code> = <code>1</code> (S3) — в бакете S3.</td></tr>
@@ -44,7 +44,7 @@
 
 <h2>Конфиги, сертификаты, секреты</h2>
 <ul>
-  <li>Конфиги каждой службы: <code>appsettings.json</code> и <code>appsettings.&lt;окружение&gt;.json</code>. Окружение задаёт <code>ASPNETCORE_ENVIRONMENT</code>: в unit-файлах Linux и образах — <code>ProdLinux</code>, на Windows — <code>ProdWin</code>. На Linux службы лежат в <code>/opt/Primo/&lt;Служба&gt;</code>.</li>
+  <li>Конфиги каждой службы: <code>appsettings.json</code> и <code>appsettings.&lt;окружение&gt;.json</code>. Окружение задаёт <code>ASPNETCORE_ENVIRONMENT</code>: в unit-файлах Linux и образах — <code>ProdLinux</code>, на Windows — <code>ProdWin</code>. На Linux службы находятся в <code>/opt/Primo/&lt;Служба&gt;</code>.</li>
   <li>Unit-файлы systemd <code>Primo.Orchestrator.*.service</code> (Linux) или параметры служб Windows.</li>
   <li>Конфиг nginx и сертификат с ключом, на которые он ссылается (<code>ssl_certificate</code>, <code>ssl_certificate_key</code>).</li>
   <li>Переменные окружения <code>PRIMOSALT</code> (соль шифрования паролей в конфигах) и <code>PRIMOSIGNINGKEY</code> (ключ подписи токенов). Без той же соли зашифрованные пароли в конфигах не расшифруются.</li>
@@ -54,8 +54,8 @@
 
 <h2>Восстановление: на что обратить внимание</h2>
 <ul>
-  <li>После восстановления конфигов служба при старте сравнит их с хэшем в БД и, если файл отличается, запишет событие 2 «Конфигурационный файл изменен» (класс «Инцидент безопасности»). Это ожидаемо.</li>
-  <li>Лицензии привязываются к серверу через службу MachineInfo (<code>License:MachineInfoUrl</code>, <code>License:MachineInfoUrls</code>). При восстановлении на другое железо лицензии могут стать недействительными.</li>
+  <li>После восстановления конфигов служба при старте сравнит их с хэшем в БД и, если файл отличается, запишет событие 2 «Конфигурационный файл изменен» (класс «Инцидент безопасности»). Это штатное поведение.</li>
+  <li>Лицензии привязываются к серверу через службу MachineInfo (<code>License:MachineInfoUrl</code>, <code>License:MachineInfoUrls</code>). При восстановлении на другом оборудовании лицензии могут стать недействительными.</li>
 </ul>
 
 

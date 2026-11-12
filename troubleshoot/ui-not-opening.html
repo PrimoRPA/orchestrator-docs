@@ -15,16 +15,16 @@
 
 <h2>Симптомы</h2>
 <ul>
-  <li>Браузер не может подключиться или ругается на сертификат.</li>
+  <li>Браузер не может подключиться или сообщает об ошибке сертификата.</li>
   <li>Пустая страница или 404.</li>
   <li>Страница входа открылась, но после действия — «Истек таймаут запроса. Попробуйте повторить запрос!» или «Proxy configuration error».</li>
-  <li>Сразу после входа снова выбрасывает на страницу входа.</li>
-  <li>Служба WebApi не стартует после установки, обновления или перезагрузки сервера, либо периодически падает.</li>
+  <li>Сразу после входа происходит возврат на страницу входа.</li>
+  <li>Служба WebApi не стартует после установки, обновления или перезагрузки сервера, либо периодически аварийно завершается.</li>
 </ul>
 
 <h2>Вероятные причины</h2>
 <ul>
-  <li>nginx не запущен, не тот порт или сертификат.</li>
+  <li>nginx не запущен, указан неверный порт или сертификат.</li>
   <li>WebApi не запущен: не задано окружение, нет доступа к БД или RabbitMQ при старте.</li>
   <li>После перезагрузки сервера службы стартуют раньше БД или RabbitMQ.</li>
   <li>Неверный <code>location /api/</code> в nginx.</li>
@@ -34,14 +34,14 @@
 <div class="tbl-wrap"><table>
   <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
   <tr><td>nginx слушает порт</td><td><code>nginx.conf</code>: <code>listen 44392 ssl</code></td><td>Порт открыт на сервере и в сетевом экране</td></tr>
-  <tr><td>Сертификат</td><td><code>ssl_certificate cert1.crt</code>, <code>ssl_certificate_key cert1.rsa</code> (пути относительно каталога nginx)</td><td>Файлы на месте, ключ подходит к сертификату</td></tr>
-  <tr><td>Файлы UI</td><td>Linux: <code>/opt/Primo/nginx/www</code>; Windows: <code>html</code> в каталоге nginx</td><td><code>index.html</code> лежит в корне каталога</td></tr>
-  <tr><td>WebApi жив</td><td>На сервере: <code>curl http://127.0.0.1:5001/health</code></td><td><code>Healthy</code></td></tr>
+  <tr><td>Сертификат</td><td><code>ssl_certificate cert1.crt</code>, <code>ssl_certificate_key cert1.rsa</code> (пути относительно каталога nginx)</td><td>Файлы существуют, ключ подходит к сертификату</td></tr>
+  <tr><td>Файлы UI</td><td>Linux: <code>/opt/Primo/nginx/www</code>; Windows: <code>html</code> в каталоге nginx</td><td><code>index.html</code> находится в корне каталога</td></tr>
+  <tr><td>WebApi работает</td><td>На сервере: <code>curl http://127.0.0.1:5001/health</code></td><td><code>Healthy</code></td></tr>
   <tr><td>Прокси API</td><td>В браузере: <code>https://&lt;сервер&gt;:44392/api/Account/type</code></td><td>Ответ JSON (метод анонимный), не HTML</td></tr>
   <tr><td>Swagger</td><td><code>https://&lt;сервер&gt;:44392/api/doc</code></td><td>Открывается описание API</td></tr>
   <tr><td>Окружение WebApi</td><td>Переменная <code>ASPNETCORE_ENVIRONMENT</code> (в unit-файле Linux — <code>ProdLinux</code>)</td><td>Задана; иначе WebApi завершается с «Environment variable 'ASPNETCORE_ENVIRONMENT' not set. Aborting.»</td></tr>
 </table></div>
-<div class="note"><p><code>/health</code> всегда отвечает <code>Healthy</code> и не проверяет БД. Если он отвечает, а UI4 не работает, смотрите журнал WebApi.</p></div>
+<div class="note"><p><code>/health</code> всегда отвечает <code>Healthy</code> и не проверяет БД. Если он отвечает, а UI4 не работает, проверьте журнал WebApi.</p></div>
 
 <h2>Как исправить</h2>
 <h3>Linux</h3>
@@ -52,9 +52,9 @@
   <li>WebApi: служба <code>Primo.Orchestrator.WebApi</code>, каталог <code>/opt/Primo/WebApi</code>.</li>
 </ol>
 <h3>Windows</h3>
-<p>Вариант с nginx — то же, что выше, конфигурация <code>nginx.win.conf</code>.</p>
+<p>Вариант с nginx — те же действия, что выше, конфигурация <code>nginx.win.conf</code>.</p>
 <h3>Docker</h3>
-<p>Контейнер UI собирает конфигурацию nginx из шаблона через переменные <code>NGINX_LISTEN_PORT</code>, <code>NGINX_APP_SERVER_HOSTNAME</code>, <code>NGINX_APP_SERVER_PORT</code> и другие. TLS внутри контейнера нет. nginx сам отвечает на <code>/health</code>, поэтому живой контейнер UI не означает, что WebApi доступен.</p>
+<p>Контейнер UI собирает конфигурацию nginx из шаблона через переменные <code>NGINX_LISTEN_PORT</code>, <code>NGINX_APP_SERVER_HOSTNAME</code>, <code>NGINX_APP_SERVER_PORT</code> и другие. TLS внутри контейнера нет. nginx отвечает на <code>/health</code> самостоятельно, поэтому работающий контейнер UI не означает, что WebApi доступен.</p>
 
 <h3>WebApi не стартует или падает</h3>
 <p>Найдите в журнале WebApi последние записи перед остановкой.</p>
@@ -67,23 +67,23 @@
   <tr><td>«Ошибка проверки состояния конфигурационного файла.»</td><td>Служба каждые 5 с проверяет <code>appsettings.json</code> и <code>appsettings.{ASPNETCORE_ENVIRONMENT}.json</code>; файла нет или он не читается</td></tr>
 </table></div>
 <ol class="steps">
-  <li>Если служба не поднялась после перезагрузки сервера, проверьте, что БД и RabbitMQ уже работают, и запустите WebApi вручную. <span class="check">В журнале нет ошибок подключения, <code>/health</code> отвечает</span></li>
-  <li>Если служба падает периодически, сопоставьте время падений с журналами СУБД и RabbitMQ и с нехваткой памяти на сервере.</li>
+  <li>Если служба не запустилась после перезагрузки сервера, проверьте, что БД и RabbitMQ уже работают, и запустите WebApi вручную. <span class="check">В журнале нет ошибок подключения, <code>/health</code> отвечает</span></li>
+  <li>Если служба периодически аварийно завершается, сопоставьте время сбоев с журналами СУБД и RabbitMQ и с нехваткой памяти на сервере.</li>
 </ol>
 
-<h3>Ошибки в UI4 и что они значат</h3>
+<h3>Ошибки в UI4 и что они означают</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Что видно</th><th>Причина</th></tr>
   <tr><td>«Истек таймаут запроса. Попробуйте повторить запрос!»</td><td>Сеть или 502 от nginx: WebApi не запущен или не слушает 5001.</td></tr>
   <tr><td>«Proxy configuration error»</td><td>На <code>/api/…</code> вернулась HTML-страница 404. Нет или неверен <code>location /api/</code> в nginx.</td></tr>
-  <tr><td>«Server error - check the terminal for more info!»</td><td>Ошибка 500 в WebApi, смотрите его журнал.</td></tr>
-  <tr><td>Выбрасывает на вход</td><td>401: токен недействителен. После обновления WebApi все входят заново — версия зашита в токен. Сетевая ошибка (API недоступен) тоже выполняет выход.</td></tr>
+  <tr><td>«Server error - check the terminal for more info!»</td><td>Ошибка 500 в WebApi, проверьте его журнал.</td></tr>
+  <tr><td>Возврат на страницу входа</td><td>401: токен недействителен. После обновления WebApi всем пользователям требуется повторный вход: версия записана в токен. При сетевой ошибке (API недоступен) также выполняется выход.</td></tr>
   <tr><td>«Permission error»</td><td>403: у роли нет нужного права.</td></tr>
 </table></div>
 
 <h3>Нестандартное размещение</h3>
 <p>UI4 собран с <code>&lt;base href="/"&gt;</code> и адресом API <code>/api</code>, поэтому работает только в корне сайта, не в подкаталоге. Если UI отдаётся с другого адреса, чем WebApi, перечислите адреса UI в <code>Security:EnabledOrigins</code> (по умолчанию пусто, CORS выключен).</p>
-<p>WebApi не стартует второй копией на том же порту. Проверьте, что старый процесс завершён.</p>
+<p>Вторая копия WebApi на том же порту не запускается. Проверьте, что старый процесс завершён.</p>
 
 
 

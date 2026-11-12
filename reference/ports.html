@@ -13,7 +13,7 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Порты служб Оркестратора и внешних компонентов: кто слушает, по какому протоколу и кто подключается. Значения взяты из конфигов nginx, Dockerfile, шаблона docker-compose и кода.</p>
 
-<p>Порт службы задаётся адресом точки Kestrel: <code>Kestrel:EndPoints:InternalHttp:Url</code> (HTTP) или <code>Kestrel:EndPoints:ExternalHttps:Url</code> (HTTPS). Номера ниже — те, на которые настроены поставляемые nginx-конфиги и Docker-образы для Ubuntu. Если вы меняете порт службы, поменяйте и <code>upstream</code> в nginx.</p>
+<p>Порт службы задаётся адресом точки Kestrel: <code>Kestrel:EndPoints:InternalHttp:Url</code> (HTTP) или <code>Kestrel:EndPoints:ExternalHttps:Url</code> (HTTPS). Номера ниже — те, на которые настроены поставляемые nginx-конфиги и Docker-образы для Ubuntu. При изменении порта службы измените и <code>upstream</code> в nginx.</p>
 
 <h2>Точка входа</h2>
 <div class="tbl-wrap"><table>
@@ -25,7 +25,7 @@
 <tr><th>Путь</th><th>Куда</th></tr>
 <tr><td><code>/</code></td><td>Файлы UI</td></tr>
 <tr><td><code>/api/</code>, <code>/events/</code></td><td>WebApi</td></tr>
-<tr><td><code>/api/robotlogs</code> (POST, PUT), <code>/api/robotlogs/…/ScreenFile</code>, <code>/logs/</code></td><td>RobotLogs. GET-запросы <code>/api/robotlogs</code> идут в WebApi.</td></tr>
+<tr><td><code>/api/robotlogs</code> (POST, PUT), <code>/api/robotlogs/…/ScreenFile</code>, <code>/logs/</code></td><td>RobotLogs. GET-запросы <code>/api/robotlogs</code> направляются в WebApi.</td></tr>
 <tr><td><code>/api/robotnotificationevents</code>, <code>/queues/</code></td><td>Queues</td></tr>
 <tr><td><code>/api/robotlicenseresponses</code>, <code>/licenses/</code></td><td>Licenses</td></tr>
 <tr><td><code>/nuget/</code></td><td>NuGet2</td></tr>

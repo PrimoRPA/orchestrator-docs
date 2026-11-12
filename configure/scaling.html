@@ -11,25 +11,25 @@
 <main>
 <h1>Масштабирование и отказоустойчивость</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Что в коде 1.26.9 есть для работы нескольких экземпляров служб: узлы WebApi, балансировка через nginx, прямые адреса между службами, кластер RabbitMQ, Redis, привязка лицензий к нескольким серверам, helm-чарты.</p>
+<p class="lead">Возможности кода 1.26.9 для работы нескольких экземпляров служб: узлы WebApi, балансировка через nginx, прямые адреса между службами, кластер RabbitMQ, Redis, привязка лицензий к нескольким серверам, helm-чарты.</p>
 
 <h2>Несколько экземпляров WebApi</h2>
-<p>Экземпляры WebApi работают с общими БД и общим RabbitMQ. Каждый экземпляр — узел со своим номером. Узлы раз в несколько секунд отмечаются в БД; по этим отметкам Оркестратор видит состав кластера и пишет события «Добавился узел» (<code>90500</code>) и «Потерян узел» (<code>90501</code>). Часть очередей RabbitMQ создаётся на каждый узел отдельно — имя очереди дополняется номером узла (события для веб-сокетов, KeepAlive роботов, сброс кэшей).</p>
+<p>Экземпляры WebApi работают с общими БД и общим RabbitMQ. Каждый экземпляр — узел со своим номером. Узлы раз в несколько секунд отмечаются в БД; по этим отметкам определяется состав кластера и записываются события «Добавился узел» (<code>90500</code>) и «Потерян узел» (<code>90501</code>). Часть очередей RabbitMQ создаётся на каждый узел отдельно — имя очереди дополняется номером узла (события для веб-сокетов, KeepAlive роботов, сброс кэшей).</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr><td><code>InstanceInfo:Id</code></td><td>Номер узла. У каждого экземпляра — свой. Отрицательное значение — номер генерируется сам и сохраняется в файл <code>InstanceInfoId</code> в рабочей папке службы</td><td><code>0</code> (в Docker <code>0</code>)</td></tr>
+  <tr><td><code>InstanceInfo:Id</code></td><td>Номер узла. У каждого экземпляра — свой. Отрицательное значение — номер генерируется автоматически и сохраняется в файл <code>InstanceInfoId</code> в рабочей папке службы</td><td><code>0</code> (в Docker <code>0</code>)</td></tr>
   <tr><td><code>InstanceInfo:RunInBackgroundContextThreadSleep</code></td><td>Период отметки узла, мс. Узел считается потерянным, если не отмечался дольше периода + 2 с</td><td><code>2000</code></td></tr>
   <tr><td><code>InstanceInfo:DisableUpdateStatus</code></td><td>Отключить отслеживание узлов</td><td><code>false</code></td></tr>
-  <tr><td><code>InstanceInfo:NodesDesynchronizationTimeout</code></td><td>Сколько секунд ждать, пока все узлы подтвердят наличие файла дистрибутива робота. Потом — событие «Рассинхронизация дистрибутива робота на узлах» (<code>1204</code>)</td><td><code>60</code></td></tr>
+  <tr><td><code>InstanceInfo:NodesDesynchronizationTimeout</code></td><td>Сколько секунд ждать, пока все узлы подтвердят наличие файла дистрибутива робота. После этого — событие «Рассинхронизация дистрибутива робота на узлах» (<code>1204</code>)</td><td><code>60</code></td></tr>
   <tr><td><code>InstanceInfo:MaxSequentialSwitching</code></td><td>Сколько переключений подтверждения подряд считать «мерцанием» (событие <code>1205</code>)</td><td><code>10</code></td></tr>
   <tr><td><code>Assignment:LockTimeout</code>, <code>ReleaseLockTimeoutPeriod</code></td><td>Блокировка заданий между узлами: через сколько секунд снимается зависшая блокировка и как часто это проверяется</td><td><code>5</code>, <code>60</code></td></tr>
   <tr><td><code>MinWorkerThreads</code>, <code>MinCompletionPortThreads</code></td><td>Минимум потоков пула .NET; значение ≤ 0 — системное</td><td><code>-1</code></td></tr>
 </table></div>
-<div class="warn"><p>В Docker-образе WebApi <code>InstanceInfo__Id=0</code>. При нескольких репликах переопределите его — уникальным числом или отрицательным значением, — иначе узлы будут делить одни и те же очереди.</p></div>
-<p>Дистрибутивы робота и агента без S3 лежат в папке каждого узла, и каждый узел проверяет их у себя. Для нескольких узлов удобнее S3 (см. <a href="storage.html">Хранилища</a>).</p>
+<div class="warn"><p>В Docker-образе WebApi <code>InstanceInfo__Id=0</code>. При нескольких репликах переопределите его — уникальным числом или отрицательным значением, — иначе узлы будут использовать одни и те же очереди.</p></div>
+<p>Дистрибутивы робота и агента без S3 хранятся в папке каждого узла, и каждый узел проверяет их локально. Для нескольких узлов предпочтительнее S3 (см. <a href="storage.html">Хранилища</a>).</p>
 
 <h2>Балансировка и nginx</h2>
-<p>В поставочных <code>nginx/nginx.*.conf</code> каждая служба описана блоком <code>upstream</code> с одним сервером (<code>app_server</code> — WebApi, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>rdpstream</code> и др.). Чтобы балансировать, добавьте серверы в нужный <code>upstream</code>. Веб-сокеты UI4 идут через <code>/events/</code> к WebApi; вместо веб-сокетов можно включить long polling: <code>WS:LongPolling=true</code> (путь — <code>WS:Path</code>, по умолчанию <code>/events</code>).</p>
+<p>В поставочных <code>nginx/nginx.*.conf</code> каждая служба описана блоком <code>upstream</code> с одним сервером (<code>app_server</code> — WebApi, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>rdpstream</code> и др.). Для балансировки добавьте серверы в нужный <code>upstream</code>. Веб-сокеты UI4 проходят через <code>/events/</code> к WebApi; вместо веб-сокетов можно включить long polling: <code>WS:LongPolling=true</code> (путь — <code>WS:Path</code>, по умолчанию <code>/events</code>).</p>
 <p>Проверка живости для балансировщика — <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code> у каждой службы.</p>
 
 <h2>Прямые адреса между службами</h2>
@@ -48,7 +48,7 @@
   <tr><td><code>RabbitMQ:VirtualHost</code></td><td>Виртуальный хост — несколько Оркестраторов на одном RabbitMQ (с 1.25.7)</td><td>пусто</td></tr>
   <tr><td><code>RabbitMQ:RetryCount</code>, <code>RetryTimeOutInSeconds</code></td><td>Повторы подключения при недоступности брокера</td><td><code>5</code>, <code>10</code> (WebApi)</td></tr>
 </table></div>
-<p>Задавайте одинаковые <code>VirtualHost</code> и учётку во всех службах одного Оркестратора.</p>
+<p>Задайте одинаковые <code>VirtualHost</code> и учётную запись во всех службах одного Оркестратора.</p>
 
 <h2>Redis</h2>
 <p>Redis не обязателен. Без него отозванные токены хранятся в БД <code>ltoolsidentity</code> (таблица <code>RevokedTokens</code>) с кэшем в памяти на минуту, а кэши — в памяти каждого узла. С Redis токены и часть кэшей становятся общими для узлов.</p>
@@ -68,7 +68,7 @@
 </table></div>
 
 <h2>RDP2</h2>
-<p>Несколько экземпляров RDP2 делят машины роботов через <code>AddressFilter</code>, WebApi сопоставляет их по <code>RDP:RdpBaseUrls</code> — см. <a href="robots-rdp.html">Запуск роботов и RDP-сессии</a>.</p>
+<p>Несколько экземпляров RDP2 распределяют машины роботов через <code>AddressFilter</code>, WebApi сопоставляет их по <code>RDP:RdpBaseUrls</code> — см. <a href="robots-rdp.html">Запуск роботов и RDP-сессии</a>.</p>
 
 <h2>Kubernetes (helm)</h2>
 <p>В <code>k8s/helm</code> есть чарты <code>webapi</code>, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>machineinfo</code>, <code>nuget2</code>, <code>ui</code>. Чарт создаёт Deployment и Service: порт <code>8080</code> (http, сервис — 80) и <code>10052</code> (метрики), пробы <code>/health</code>, <code>/health/liveness</code>, <code>/health/readiness</code>. Параметры службы передаются переменными окружения из <code>values.yaml</code> (<code>env:</code>).</p>
