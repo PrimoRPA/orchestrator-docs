@@ -19,16 +19,17 @@
 
 <h2>Где лежат</h2>
 <p>Все дистрибутивы Primo RPA лежат в открытом репозитории <a href="https://nexus.primo-rpa.ru/#browse/browse:raw">nexus.primo-rpa.ru</a>, вход не нужен. Релизы — в папке <code>raw-hosted-release</code>, LTS-версии — в <code>raw-hosted-lts</code>; внутри — папка с номером версии, например <code>1.26.9</code> или <code>1.26.7</code>.</p>
+<p>Папку можно открыть в браузере: <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-release">релизы</a>, <a href="https://nexus.primo-rpa.ru/#browse/browse:raw-hosted-lts">LTS-версии</a>. Любой файл скачивается и напрямую, без браузера, по адресу <code>https://nexus.primo-rpa.ru/repository/&lt;папка&gt;/&lt;версия&gt;/&lt;путь к файлу&gt;</code> — так удобно забирать файлы сразу на сервер командой <code>curl -fsSL -O &lt;адрес&gt;</code>.</p>
 <p>Если у сервера нет доступа в интернет, скачайте архивы на компьютере с доступом и перенесите их на сервер.</p>
 
 <h2 id="set">Что скачать под ваш вариант</h2>
 <ul data-only="docker">
   <li>compose-файл;</li>
-  <li>конфиг nginx и сертификат;</li>
+  <li>конфиг nginx;</li>
   <li>архив агента — для машин роботов;</li>
   <li>дистрибутив робота.</li>
 </ul>
-<p data-only="docker">Образы служб Docker скачает сам из реестра образов Primo RPA <code>nexus.primo-rpa.ru:8000</code>; для входа в реестр нужны логин и пароль, их выдаёт Primo RPA. Агент и дистрибутив робота нужны, когда дойдёте до машин роботов; для запуска серверной части хватит первых двух пунктов.</p>
+<p data-only="docker">Образы служб Docker скачает сам: службы Оркестратора — из реестра Primo RPA <code>nexus.primo-rpa.ru:8000</code>, PostgreSQL и RabbitMQ — с Docker Hub. Сертификат для стенда создаётся одной командой при установке. Агент и дистрибутив робота нужны, когда дойдёте до машин роботов; для запуска серверной части хватит первых двух пунктов.</p>
 <ul data-only="linux">
   <li>архивы служб для Linux — какие именно, см. <a href="know.html#services">Какие службы ставить</a>;</li>
   <li>архив веб-интерфейса UI4;</li>
@@ -51,9 +52,10 @@
   <tr><td>Архивы служб Оркестратора, агента и AgentUpdater<span data-ver="1.26.7"> (у каждого архива свой номер патча, например <code>webapi-1.26.7.25</code>)</span></td><td><code>orchestrator/linux/</code> или <code>orchestrator/windows/</code>, имена <code>primo-rpa-orchestrator-&lt;служба&gt;-&lt;версия&gt;-&lt;linux|windows&gt;.zip</code></td></tr>
   <tr data-ver="1.26.7"><td>MCP Server</td><td><code>orchestrator/windows/</code> или <code>orchestrator/linux/</code>, <code>primo-rpa-mcp-1.26.7.1</code></td></tr>
   <tr><td>Веб-интерфейс UI4</td><td><code>orchestrator/ui/primo-rpa-orchestrator-ui-&lt;версия&gt;.zip</code> — один архив для всех ОС</td></tr>
-  <tr><td>Конфиги nginx, юниты nginx, тестовый сертификат</td><td><code>orchestrator/data/NGINX/</code></td></tr>
+  <tr><td>Конфиги nginx, юниты nginx</td><td><code>orchestrator/data/NGINX/</code></td></tr>
   <tr><td>Docker: compose-файл</td><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code>; образы — из реестра <code>nexus.primo-rpa.ru:8000</code></td></tr>
-  <tr><td>Дистрибутив робота</td><td><code>robot/windows/</code> или <code>robot/linux/</code></td></tr>
+  <tr><td>Утилита шифрования паролей PasswordEncryptor</td><td><code>orchestrator/linux/</code> или <code>orchestrator/windows/</code>, <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-&lt;linux|windows&gt;.zip</code></td></tr>
+  <tr><td>Дистрибутив робота</td><td><code>robot/windows/</code> или <code>robot/linux/</code>; в Оркестратор загружается архив <code>zip</code></td></tr>
 </table></div>
 
 <h2>Что дальше</h2>

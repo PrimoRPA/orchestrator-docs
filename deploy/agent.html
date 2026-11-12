@@ -50,17 +50,34 @@ Start-Service "Primo.Orchestrator.Agent"</code></pre>
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent</code></pre>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Установите <code>expect</code> (<code>/usr/bin/expect</code>) — без него роботы не запустятся.</li>
-  <li>Распакуйте архив в <code>/opt/Primo/Agent</code>, отдайте каталог агенту, сделайте исполняемыми <code>Primo.Orchestrator.Agent</code>, <code>LTools.Orchestrator.Agent.Runner</code>, <code>launch-as-user.expect</code>.</li>
-  <li>Дайте агенту права sudo без пароля в <code>/etc/sudoers.d/</code>:
+  <li>Установите <code>expect</code> и <code>unzip</code>. На Ubuntu и Astra Linux: <code>sudo apt install expect unzip</code>. Без <code>expect</code> (<code>/usr/bin/expect</code>) роботы не запустятся.</li>
+  <li>Убедитесь, что машина подготовлена под робота: на ней стоят графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Это делают по инструкции робота. Пользователя робота включите в группу агента: <code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code>.</li>
+  <li>Создайте каталоги агента, данных агента и роботов, распакуйте архив и отдайте каталоги агенту:
+<pre><code>sudo mkdir -p /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
+sudo unzip primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip -d /opt/Primo/Agent
+sudo chown -R agent:primo-rpa /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
+sudo chmod +x /opt/Primo/Agent/Primo.Orchestrator.Agent /opt/Primo/Agent/LTools.Orchestrator.Agent.Runner /opt/Primo/Agent/launch-as-user.expect</code></pre></li>
+  <li>Дайте агенту права sudo без пароля: создайте файл <code>/etc/sudoers.d/primo-agent</code> командой <code>sudo visudo -f /etc/sudoers.d/primo-agent</code> с таким содержимым:
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
 agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
     <span class="check"><code>sudo -l -U agent</code> показывает обе команды</span></li>
   <li>Включите linger: <code>sudo loginctl enable-linger agent</code>.</li>
-  <li>В <code>appsettings.ProdLinux.json</code> агента задайте: <code>Agent:DataPath</code> (каталог данных агента), <code>DeployRobot:RobotsPath</code> (каталог роботов — значение по умолчанию <code>C:\LTools</code> для Linux не подходит), <code>AgentCommands:Session</code> (команда запуска графического сеанса). Если не задана, агент подставляет её сам по <code>/etc/os-release</code>: Astra Linux — <code>/usr/bin/fly-wm --execOnly {}</code> (на Astra 1.8 дополнительно через <code>dbus-launch</code>), РЕД ОС — <code>/usr/bin/mate-session</code>, CentOS — <code>/usr/bin/gnome-session</code>. Для Ubuntu и других дистрибутивов задайте её вручную.</li>
-  <li>Откройте порт <code>5002/tcp</code> на файерволе машины.</li>
-  <li>Установите юнит: системный <code>Primo.Orchestrator.Agent.service</code> (работает от <code>User=agent</code>) в <code>/etc/systemd/system/</code> или пользовательский <code>Primo.Orchestrator.Agent.user.service</code> в <code>~agent/.config/systemd/user/</code>; затем <code>daemon-reload</code> и <code>enable --now</code>. <span class="check">служба <code>active (running)</code>, в журнале нет предупреждений «the launch of robots is impossible»</span></li>
+  <li>Проверьте <code>/opt/Primo/Agent/appsettings.ProdLinux.json</code>:
+    <ul>
+      <li><code>Agent:DataPath</code> — каталог данных агента, в архиве задан <code>/opt/Primo/AgentData</code>;</li>
+      <li><code>DeployRobot:RobotsPath</code> — каталог роботов, в архиве задан <code>/opt/LTools</code>;</li>
+      <li><code>AgentCommands:Session</code> — полный путь к команде, которая запускает графический сеанс. В архиве записано <code>/usr/bin/mate-session</code> — это значение для РЕД ОС. Для другой ОС замените его: Astra Linux — <code>/usr/bin/fly-wm --execOnly {}</code>, CentOS — <code>/usr/bin/gnome-session</code>, Ubuntu с оболочкой Openbox — <code>/usr/bin/openbox-session</code>. Если строку удалить, для Astra Linux, РЕД ОС и CentOS агент подставит значение сам.</li>
+    </ul></li>
+  <li>Откройте порт <code>5002/tcp</code> на файерволе машины, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 5002/tcp</code>.</li>
+  <li>Установите юнит агента. Основной вариант — пользовательский юнит пользователя <code>agent</code>: файл <code>Primo.Orchestrator.Agent.user.service</code> из архива скопируйте под именем <code>Primo.Orchestrator.Agent.service</code> и запустите:
+<pre><code>sudo -u agent mkdir -p /home/agent/.config/systemd/user
+sudo -u agent cp /opt/Primo/Agent/Primo.Orchestrator.Agent.user.service /home/agent/.config/systemd/user/Primo.Orchestrator.Agent.service
+sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) systemctl --user daemon-reload
+sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
+    Другой вариант — системный юнит <code>Primo.Orchestrator.Agent.service</code> (работает от <code>User=agent</code>) в <code>/etc/systemd/system/</code>.
+    <span class="check"><code>curl -k https://localhost:5002/api/Version</code> печатает версию агента; в журнале (<code>sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) journalctl --user -u Primo.Orchestrator.Agent</code>) нет предупреждений «the launch of robots is impossible»</span></li>
 </ol>
+<p>Пока машина не зарегистрирована в Оркестраторе, агент каждые несколько секунд пишет в журнал ошибку «Не задан BaseUrl Оркестратора» — это нормально и прекращается после регистрации.</p>
 <p>При старте агент сам проверяет: доступен ли sudo, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале.</p>
 <details>
 <summary>Агент без root: от кого работает и что ему нужно</summary>

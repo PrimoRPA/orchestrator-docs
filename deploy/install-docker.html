@@ -13,7 +13,7 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Docker</span></div>
 <p class="lead">Страница проведёт от чистого Linux-сервера до страницы входа в Оркестратор. Всё ставится на один сервер одним compose-файлом: PostgreSQL, RabbitMQ, службы Оркестратора и веб-интерфейс.</p>
 <div class="meta">
-  <div><b>Перед началом</b>Linux-сервер, доступ по SSH с правами <code>sudo</code>, файлы из <a href="download.html">Дистрибутивов</a>, логин и пароль от реестра образов Primo RPA</div>
+  <div><b>Перед началом</b>Linux-сервер, доступ по SSH с правами <code>sudo</code>, доступ с сервера в интернет (без интернета — см. <a href="#offline">ниже</a>)</div>
   <div><b>Результат</b>все контейнеры в состоянии <code>healthy</code>, по адресу <code>https://&lt;адрес сервера&gt;:44392</code> открывается страница входа</div>
 </div>
 
@@ -25,6 +25,7 @@
   <tr><td>Пароли и ключи в compose-файле</td><td>можно оставить из поставки</td><td>заменить все до первого запуска — шаг 5</td></tr>
   <tr><td>Порты PostgreSQL и консоли RabbitMQ</td><td>можно оставить открытыми</td><td>закрыть — шаг 5</td></tr>
 </table></div>
+<p>Для стенда хватит сервера с 4 ядрами, 8 ГБ памяти и 40 ГБ диска: после запуска Оркестратор занимает около 2,5 ГБ памяти и 17 ГБ диска, из них 15 ГБ — образы.</p>
 <p>Стенд нельзя превратить в промышленную установку сменой паролей на ходу: лицензия привязывается к ключу из compose-файла, а пароли в базе шифруются при первом запуске. Для промышленной установки пройдите шаг 5 до запуска.</p>
 <div class="note"><p>В Docker Оркестратор работает только с PostgreSQL. Нужен MS SQL Server — выбирайте <a href="install-services.html#windows">Установку служб на Windows Server</a>.</p></div>
 
@@ -46,15 +47,19 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
   <li><b>Создайте каталог и положите в него файлы.</b>
 <pre><code>sudo mkdir -p /opt/Docker
 cd /opt/Docker</code></pre>
-    Скопируйте в каталог два файла из поставки и назовите их так:
+    Скачайте два файла из папки своей версии и сохраните под такими именами:
     <div class="tbl-wrap"><table>
       <tr><th>Файл в поставке</th><th>Имя в каталоге</th></tr>
       <tr><td><code>orchestrator/docker/docker-compose-ubuntu.yml</code></td><td><code>docker-compose.yml</code></td></tr>
       <tr><td><code>orchestrator/data/NGINX/nginx.docker.conf</code></td><td><code>nginx.conf</code></td></tr>
     </table></div>
+    Проще всего скачать их прямо на сервер. Подставьте номер версии; для LTS-версии вместо <code>raw-hosted-release</code> пишется <code>raw-hosted-lts</code>:
+<pre><code>V=&lt;версия&gt;
+sudo curl -fsSL -o docker-compose.yml https://nexus.primo-rpa.ru/repository/raw-hosted-release/$V/orchestrator/docker/docker-compose-ubuntu.yml
+sudo curl -fsSL -o nginx.conf https://nexus.primo-rpa.ru/repository/raw-hosted-release/$V/orchestrator/data/NGINX/nginx.docker.conf</code></pre>
     <span class="check">команда <code>ls /opt/Docker</code> показывает <code>docker-compose.yml</code> и <code>nginx.conf</code></span></li>
 
-  <li><b>Укажите адрес сервера.</b> Это адрес, по которому Оркестратор будут открывать пользователи и роботы: DNS-имя или IP. IP сервера показывает команда <code>hostname -I</code>.
+  <li><b>Укажите адрес сервера.</b> Это адрес, по которому Оркестратор будут открывать пользователи и роботы: DNS-имя или IP. IP сервера показывает команда <code>hostname -I</code>; если адресов несколько, берите тот, по которому сервер виден из сети пользователей.
     Откройте файл: <code>sudo nano docker-compose.yml</code>. Адрес из примера, <code>10.0.0.18</code>, стоит в двух строках — замените его в обеих:
 <pre><code>base-url: &amp;base-url https://10.0.0.18:44392
 RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
@@ -63,35 +68,38 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
 
   <li><b>Положите сертификат.</b> В каталоге должны лежать сертификат <code>cert1.crt</code> и закрытый ключ <code>cert1.rsa</code> — именно с такими именами.
     <p><b>Стенд.</b> Создайте самоподписанный сертификат, подставив адрес сервера:</p>
-<pre><code>sudo openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout cert1.rsa -out cert1.crt -subj "/CN=&lt;адрес сервера&gt;"</code></pre>
+<pre><code>sudo openssl req -x509 -newkey rsa:2048 -nodes -days 365 -keyout cert1.rsa -out cert1.crt -subj "/CN=&lt;адрес сервера&gt;" -addext "subjectAltName=DNS:&lt;имя сервера&gt;,IP:&lt;IP сервера&gt;"</code></pre>
+    <p>В <code>subjectAltName</code> оставьте то, что у вас есть: только <code>DNS:…</code>, только <code>IP:…</code> или оба. Без этого поля браузеры не принимают сертификат, даже если добавить его в доверенные.</p>
     <p><b>Промышленная установка.</b> Сертификат на имя сервера выпускает ваша служба безопасности или удостоверяющий центр. Скопируйте файлы в каталог под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля.</p>
     <p>Веб-интерфейс в контейнере работает не от root, поэтому дайте ему право читать оба файла:</p>
 <pre><code>sudo chown 101 cert1.crt cert1.rsa</code></pre>
-    <span class="check">команда <code>ls -l /opt/Docker</code> показывает четыре файла, у обоих файлов сертификата владелец <code>101</code></span></li>
+    <span class="check">команда <code>ls -ln /opt/Docker</code> показывает четыре файла, у обоих файлов сертификата в колонке владельца стоит <code>101</code></span></li>
 
   <li><b>Только для промышленной установки: замените пароли и ключи.</b> На стенде шаг пропустите.
     <p>Все пароли и ключи собраны в начале compose-файла в блоке <code>x-secrets</code>:</p>
     <ul>
       <li>Придумайте свои значения для всех строк с паролями и ключами.</li>
-      <li>У части паролей две строки: открытая и с окончанием <code>-encrypted</code>. Во вторую вписывается тот же пароль в зашифрованном виде. Зашифровать его можно утилитой PasswordEncryptor из поставки: запустите её, введите пароль, нажмите Enter и скопируйте строку, напечатанную после слов «Copy following string».</li>
+      <li>У части паролей две строки: открытая и с окончанием <code>-encrypted</code>. Во вторую вписывается тот же пароль в зашифрованном виде. Зашифровать его можно утилитой PasswordEncryptor: она лежит в папке версии рядом со службами, архив <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code> или <code>…-windows.zip</code>. Запустите её, введите пароль, нажмите Enter и скопируйте строку, напечатанную после слов «Copy following string».</li>
       <li>Пароли MCP Server (<code>mcp-orch-pass</code>, <code>mcp-api-key</code>) задаются одной строкой, без пары <code>-encrypted</code>.</li>
-      <li><code>primo-machine-key</code> — ключ, к которому привязывается лицензия. Задайте свой до запроса лицензии и сохраните в надёжном месте: без него лицензию на новом сервере не восстановить.</li>
+      <li><code>primo-machine-key</code> — ключ, к которому привязывается лицензия. Задайте свой до запроса лицензии и сохраните в надёжном месте: без него лицензию на новом сервере не восстановить. После выдачи лицензии ключ не меняйте — лицензию придётся перевыпускать.</li>
+      <li>Чтобы задать свои соль шифрования паролей и ключ подписи токенов, добавьте в <code>x-secrets</code> две строки, например <code>primo-salt: &amp;primo-salt &lt;значение&gt;</code> и <code>primo-signing-key: &amp;primo-signing-key &lt;значение&gt;</code>, а в раздел <code>environment</code> каждой службы Оркестратора — строки <code>PRIMOSALT: *primo-salt</code> и <code>PRIMOSIGNINGKEY: *primo-signing-key</code>. Пароли после этого шифруйте с той же солью: PasswordEncryptor принимает её вторым значением через пробел после пароля.</li>
       <li>Чтобы к PostgreSQL и консоли RabbitMQ нельзя было подключиться снаружи, удалите у служб <code>0postgres-db</code> и <code>0rabbitmq</code> строки <code>ports:</code> вместе со следующей за ними строкой с номером порта.</li>
     </ul>
-    <span class="check">в блоке <code>x-secrets</code> не осталось значений из поставки: команда <code>grep -c "Qwe123" docker-compose.yml</code> печатает <code>0</code></span></li>
+    <span class="check">в блоке <code>x-secrets</code> не осталось ни одного значения из поставки — сверьте с исходным файлом построчно</span></li>
 
-  <li><b>Только если роботам нужны RDP-сессии: укажите адрес RDP2.</b> Служба RDP2 в compose-файл не входит, её ставят отдельно — см. <a href="install-services.html">Установку служб</a>. В <code>nginx.conf</code> найдите блок <code>upstream rdpstream</code> и замените в нём адрес на адрес машины с RDP2, порт <code>5102</code> оставьте.
+  <li><b>Только если роботам нужны RDP-сессии: укажите адрес RDP2.</b> Служба RDP2 в compose-файл не входит, её ставят отдельно, службой, — см. <a href="install-services.html">Установку служб</a>. Обычно для неё берут отдельную машину; если серверов мало и RDP-сессий немного, можно поставить на этот же сервер. В <code>nginx.conf</code> найдите блок <code>upstream rdpstream</code> и замените в нём адрес на адрес машины с RDP2, порт <code>5102</code> оставьте.
     Если RDP2 нет или вы пока не знаете, нужна ли она, ничего не меняйте: адрес из примера запуску не мешает, его можно поправить позже.</li>
 
-  <li><b>Войдите в реестр образов и запустите.</b> Логин и пароль от реестра выдаёт Primo RPA.
-<pre><code>sudo docker login nexus.primo-rpa.ru:8000
-sudo docker compose up -d</code></pre>
-    При первом запуске Docker скачивает образы, а служба <code>web-api</code> создаёт базу данных — это занимает несколько минут. Состояние смотрите командой:
+  <li><b>Запустите.</b>
+<pre><code>sudo docker compose up -d</code></pre>
+    При первом запуске Docker скачивает образы: службы Оркестратора — из реестра Primo RPA <code>nexus.primo-rpa.ru:8000</code>, PostgreSQL и RabbitMQ — с Docker Hub. Затем служба <code>web-api</code> создаёт базу данных. Сам запуск после скачивания занимает около трёх минут. Состояние смотрите командой:
 <pre><code>sudo docker compose ps</code></pre>
     <span class="check">у всех служб в колонке STATUS стоит <code>healthy</code></span>
-    <p>Если через десять минут какая-то служба остаётся <code>unhealthy</code> или перезапускается, посмотрите её журнал: <code>sudo docker compose logs &lt;имя службы&gt;</code>. Имя службы — из колонки SERVICE.</p></li>
+    <p>Если Docker отвечает <code>not found</code> или <code>unauthorized</code> по образам Оркестратора, реестр не отдаёт образы этой версии без входа. Войдите командой <code>sudo docker login nexus.primo-rpa.ru:8000</code> с учётными данными от Primo RPA и повторите запуск; если учётных данных нет, обратитесь в поддержку Primo RPA.</p>
+    <p>Если через десять минут какая-то служба остаётся <code>unhealthy</code> или перезапускается, посмотрите её журнал: <code>sudo docker compose logs &lt;имя службы&gt;</code>. Имя службы — из колонки SERVICE. С этим журналом обращайтесь в поддержку.</p></li>
 
   <li><b>Откройте Оркестратор в браузере:</b> <code>https://&lt;адрес сервера&gt;:44392</code>. С самоподписанным сертификатом браузер предупредит о небезопасном соединении — на стенде это ожидаемо, выберите «Дополнительно» и продолжите.
+    Чтобы предупреждения не было, добавьте <code>cert1.crt</code> в доверенные корневые сертификаты на рабочих местах.
     <span class="check">открылась страница входа</span></li>
 </ol>
 
@@ -100,12 +108,11 @@ sudo docker compose up -d</code></pre>
   <summary>Как перенести образы на сервер в закрытом контуре</summary>
   <p>Образы скачивают на компьютере с интернетом и Docker, переносят файлом и загружают на сервере. Docker на сервере ставят из пакетов вашей ОС или внутреннего репозитория.</p>
   <ol class="substeps">
-    <li>На компьютере с интернетом положите <code>docker-compose.yml</code> в пустой каталог, войдите в реестр и скачайте образы:
-<pre><code>docker login nexus.primo-rpa.ru:8000
-docker compose pull
+    <li>На компьютере с интернетом положите <code>docker-compose.yml</code> в пустой каталог и скачайте образы:
+<pre><code>docker compose pull
 docker save -o images.tar $(docker compose config --images)</code></pre></li>
     <li>Перенесите <code>images.tar</code> на сервер в <code>/opt/Docker</code>.</li>
-    <li>На сервере загрузите образы и продолжайте с шага 2. Вход в реестр на шаге 7 не нужен.
+    <li>На сервере загрузите образы и продолжайте с шага 2: на шаге 7 Docker возьмёт образы с диска.
 <pre><code>sudo docker load -i /opt/Docker/images.tar</code></pre></li>
   </ol>
 </details>
@@ -129,6 +136,7 @@ docker save -o images.tar $(docker compose config --images)</code></pre></li>
   <p>Данные лежат в томах Docker и переживают пересоздание контейнеров: <code>pgdata</code> (база данных), <code>rabbitmqdata</code>, <code>webapidata</code> (загруженные дистрибутивы робота и агента), <code>nugetdata</code>. Отдельное файловое хранилище не нужно.</p>
   <p>Порядок запуска задан в файле: <code>web-api</code> ждёт PostgreSQL, RabbitMQ и <code>machine-info</code>, остальные службы ждут <code>web-api</code>.</p>
 </details>
+
 
 
 
