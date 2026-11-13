@@ -50,8 +50,14 @@ Start-Service "Primo.Orchestrator.Agent"</code></pre>
 <pre><code>sudo groupadd primo-rpa
 sudo useradd -g primo-rpa -m -s /bin/bash agent</code></pre>
     <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Установите <code>expect</code> и <code>unzip</code>. На Ubuntu и Astra Linux: <code>sudo apt install expect unzip</code>. Без <code>expect</code> (<code>/usr/bin/expect</code>) запуск роботов невозможен.</li>
-  <li>Убедитесь, что машина подготовлена для робота: установлены графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Подготовка выполняется по инструкции робота. Пользователя робота включите в группу агента: <code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code>.</li>
+  <li>Установите пакеты, которые использует агент при запуске роботов: <code>expect</code>, <code>unzip</code>, виртуальный экран <code>Xvfb</code> и утилиты <code>xauth</code>, <code>xprop</code>, <code>dbus-launch</code>. На Ubuntu:
+<pre><code>sudo apt install expect unzip xvfb xauth x11-utils dbus-x11</code></pre>
+    Без <code>expect</code> и <code>xprop</code> запуск роботов невозможен: при отсутствии <code>xprop</code> виртуальный экран считается неработающим, и запуск завершается без сообщения в интерфейсе.
+    <span class="check">команда <code>which expect Xvfb xauth xprop dbus-launch</code> выводит пять путей</span></li>
+  <li>Убедитесь, что машина подготовлена для робота: установлены графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Подготовка выполняется по инструкции робота. Пользователя робота включите в группу агента и создайте в его домашнем каталоге каталог данных приложений, если его нет:
+<pre><code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;
+sudo -u &lt;пользователь робота&gt; mkdir -p /home/&lt;пользователь робота&gt;/.local/share</code></pre>
+    Каталог <code>~/.local/share</code> создаётся при первом входе пользователя в графическую оболочку. У пользователя, созданного командой <code>useradd</code> и ни разу не входившего в систему, каталога нет, и робот завершается при старте.</li>
   <li>Создайте каталоги агента, данных агента и роботов, распакуйте архив и назначьте владельцем каталогов пользователя агента:
 <pre><code>sudo mkdir -p /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
 sudo unzip primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip -d /opt/Primo/Agent
@@ -59,8 +65,11 @@ sudo chown -R agent:primo-rpa /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
 sudo chmod +x /opt/Primo/Agent/Primo.Orchestrator.Agent /opt/Primo/Agent/LTools.Orchestrator.Agent.Runner /opt/Primo/Agent/launch-as-user.expect</code></pre></li>
   <li>Предоставьте агенту права sudo без пароля: создайте файл <code>/etc/sudoers.d/primo-agent</code> командой <code>sudo visudo -f /etc/sudoers.d/primo-agent</code> со следующим содержимым:
 <pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
+agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --unit=primo-robot-* --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
+agent ALL=(root) NOPASSWD: /usr/bin/systemctl stop primo-robot-*.service
 agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
-    <span class="check"><code>sudo -l -U agent</code> показывает обе команды</span></li>
+    Вторая и третья строки позволяют агенту запускать робота именованным юнитом и останавливать зависший запуск.
+    <span class="check"><code>sudo -l -U agent</code> показывает четыре команды</span></li>
   <li>Включите linger: <code>sudo loginctl enable-linger agent</code>.</li>
   <li>Проверьте <code>/opt/Primo/Agent/appsettings.ProdLinux.json</code>:
     <ul>
