@@ -35,7 +35,9 @@
     <span class="check">правило <code>Primo Agent (5002)</code> есть в брандмауэре</span></li>
   <li>Задайте окружение:
 <pre><code>[System.Environment]::SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "ProdWin", [System.EnvironmentVariableTarget]::Machine)</code></pre></li>
-  <li>Распакуйте архив в <code>C:\Primo\Agent</code> и при необходимости измените <code>appsettings.ProdWin.json</code>. Каталог роботов по умолчанию — <code>C:\LTools</code> (<code>DeployRobot:RobotsPath</code>).</li>
+  <li>Распакуйте архив в <code>C:\Primo\Agent</code>:
+<pre><code>Expand-Archive primo-rpa-orchestrator-agent-&lt;версия&gt;-windows.zip -DestinationPath C:\Primo\Agent</code></pre>
+    При необходимости измените <code>appsettings.ProdWin.json</code>. Каталог роботов по умолчанию — <code>C:\LTools</code> (<code>DeployRobot:RobotsPath</code>).</li>
   <li>Зарегистрируйте и запустите службу:
 <pre><code>New-Service -Name "Primo.Orchestrator.Agent" -BinaryPathName "C:\Primo\Agent\Primo.Orchestrator.Agent.exe" -DisplayName "Primo.Orchestrator.Agent" -StartupType Automatic
 Start-Service "Primo.Orchestrator.Agent"</code></pre>
@@ -116,6 +118,7 @@ sudo -u agent XDG_RUNTIME_DIR=/run/user/$(id -u agent) systemctl --user enable -
 <div class="next">
   <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
+
 
 
 
