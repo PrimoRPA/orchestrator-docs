@@ -1038,7 +1038,7 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
 </ol>
 <p>Окружение задаёт переменная <code>ASPNETCORE_ENVIRONMENT</code>: <code>ProdLinux</code> или <code>ProdWin</code>. Если она не задана, служба сразу завершается с ошибкой.</p>
 
-<div class="note"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В этом режиме миграции применяются к четырём БД, ход выводится в консоль (в конце —<code>Migrations done successfully</code> или <code>Migration error: …</code>), API не запускается. Режим подходит для проверки доступа к БД до первого запуска.</p></div>
+<div class="warn"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В сборке 1.26.7 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi.</p></div>
 
 
 <h2>Что дальше</h2>
