@@ -52,6 +52,44 @@
 </ul>
 <div class="warn"><p>Копии конфигов и переменных окружения содержат секреты. Храните их с теми же мерами защиты, что и пароли.</p></div>
 
+<h2 id="procedure">Порядок копирования и восстановления</h2>
+<p>Проверенный порядок для установки службами на Linux с PostgreSQL на том же сервере. Команды выполняются от имени пользователя с правом <code>sudo</code>; команды <code>systemctl --user</code> — под пользователем служб (<code>orch-user</code>). Для других СУБД и вариантов установки порядок тот же, отличаются команды копирования.</p>
+<h3>Создание копии</h3>
+<ol class="steps">
+  <li>Остановите службы Оркестратора, чтобы копии баз и файлов были согласованы между собой:
+<pre><code>for u in Nginx RDP2 NuGet LogEventsWebhook Licenses Queues States Notifications Analytic RobotLogs WebApi MachineInfo; do
+  systemctl --user stop Primo.Orchestrator.$u
+done</code></pre></li>
+  <li>Создайте копию каждой базы. Каталог копии должен быть доступен пользователю <code>postgres</code> на запись:
+<pre><code>for d in ltools ltoolsidentity ltoolslicense ltoolsltwrepo ltoolslogs ltoolsanalytic ltoolsnuget; do
+  sudo -u postgres pg_dump -Fc -f &lt;каталог копии&gt;/$d.dump $d
+done</code></pre></li>
+  <li>Создайте копию файлов: каталог данных, конфиги служб, юниты, конфиг и сертификат nginx:
+<pre><code>cd /
+sudo tar -czf &lt;каталог копии&gt;/files.tgz opt/Primo/Data opt/Primo/*/appsettings*.json \
+  opt/Primo/nginx/nginx.conf opt/Primo/nginx/cert1.crt opt/Primo/nginx/cert1.rsa \
+  home/orch-user/.config/systemd/user
+sudo chmod 600 &lt;каталог копии&gt;/files.tgz</code></pre></li>
+  <li>Запустите службы и перенесите копию за пределы сервера. <span class="check"><code>/health</code> служб отвечает <code>Healthy</code></span></li>
+</ol>
+<p>Состояние RabbitMQ копировать не требуется: очереди создаются службами заново при запуске. Сообщения, которые находились в очередях в момент сбоя, при этом теряются, поэтому копию создавайте при остановленных службах.</p>
+<h3>Восстановление</h3>
+<ol class="steps">
+  <li>Остановите службы, если они запущены. Убедитесь, что в RabbitMQ существует пользователь служб с правами на виртуальный хост, а в PostgreSQL — роль служб.</li>
+  <li>Создайте пустые базы с владельцем — ролью служб и восстановите в них копии:
+<pre><code>for d in ltools ltoolsidentity ltoolslicense ltoolsltwrepo ltoolslogs ltoolsanalytic ltoolsnuget; do
+  sudo -u postgres createdb -O &lt;роль служб&gt; $d
+  sudo -u postgres pg_restore -d $d &lt;каталог копии&gt;/$d.dump
+done</code></pre>
+    <span class="check"><code>pg_restore</code> завершается без сообщений об ошибках</span></li>
+  <li>Восстановите файлы. Чтобы восстановить только каталог данных, укажите его в конце команды:
+<pre><code>sudo tar -xzf &lt;каталог копии&gt;/files.tgz -C / opt/Primo/Data</code></pre>
+    <span class="check">владелец <code>/opt/Primo/Data</code> — пользователь служб</span></li>
+  <li>Запустите MachineInfo, затем WebApi и дождитесь ответа <code>Healthy</code> на <code>http://localhost:5001/health</code>. После этого запустите остальные службы.</li>
+  <li>Проверьте результат: вход в интерфейс, раздел лицензий, список роботов, запуск проекта на роботе. <span class="check">лицензии действительны, проект выполняется, история запусков сохранена</span></li>
+</ol>
+<p>При восстановлении на том же сервере лицензии остаются действительными, повторная загрузка не требуется.</p>
+
 <h2>Восстановление: на что обратить внимание</h2>
 <ul>
   <li>После восстановления конфигов служба при старте сравнит их с хэшем в БД и, если файл отличается, запишет событие 2 «Конфигурационный файл изменен» (класс «Инцидент безопасности»). Это штатное поведение.</li>
