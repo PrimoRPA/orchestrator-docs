@@ -34,7 +34,7 @@
 <section class="tab" id="linux" data-title="Linux" data-os="linux">
 <ol class="steps">
   <li>Под пользователем служб: <code>systemctl --user status Primo.Orchestrator.&lt;Имя&gt;</code>. Для варианта от root — <code>sudo systemctl status …</code>. <span class="check"><code>active (running)</code></span></li>
-  <li>Журнал службы: <code>journalctl --user -t Primo.Orchestrator.&lt;Имя&gt;</code> (от root — без <code>--user</code>); имя задано в юните (<code>SyslogIdentifier</code>).</li>
+  <li>Журнал службы: <code>journalctl --user -u Primo.Orchestrator.&lt;Имя&gt;</code> (от root — без <code>--user</code>); имя задано в юните (<code>SyslogIdentifier</code>).</li>
   <li>nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>.</li>
 </ol>
 </section>
@@ -83,7 +83,7 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
 <ol class="steps">
   <li><b>Настройки → Лицензии</b>. <span class="check">есть действующая лицензия</span></li>
   <li><b>Настройки → Система → Машины роботов</b>. <span class="check">у каждой машины заполнены <b>Доступна</b> и <b>Версия агента</b></span></li>
-  <li><b>RPA-проекты → Все RPA-проекты → Добавить RPA-проект</b>: выберите архив проекта. Через несколько секунд форма раскроется — заполните <b>Наименование</b> и нажмите <b>Сохранить</b>. <span class="check">сообщение «Проект успешно создан», проект появился в списке</span></li>
+  <li><b>RPA-проекты → Все RPA-проекты → Добавить RPA-проект</b>: выберите архив проекта. Через несколько секунд форма раскроется — заполните <b>Наименование</b> и нажмите <b>Сохранить</b>. <span class="check">сообщение «RPA-проект успешно создан», проект появился в списке</span></li>
   <li>Откройте <b>Роботы → Все роботы</b>, в строке робота нажмите кнопку запуска ▷. В форме <b>Запустить робота с проектом</b> выберите проект в поле <b>Проект</b> и нажмите <b>Готово</b>. <span class="check">сообщение о запуске робота с проектом; запуск виден в <b>RPA-проекты → Запуски</b> и в <b>Журналы → События оркестратора</b></span></li>
   <li>Дождитесь окончания: тестовый проект выполняется менее минуты. <span class="check">в <b>RPA-проекты → Запуски</b> у запуска результат «Успешно»; в списке роботов в колонке <b>Результат выполнения проекта</b> — «Готово»</span></li>
   <li>В строке запуска нажмите на имя робота: откроется список событий запуска. <span class="check">в списке есть события с источником «Робот», в том числе «Робот запущен» и «Процесс успешно завершен», и записи проекта</span></li>

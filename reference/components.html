@@ -29,7 +29,7 @@
 <tr><td>RDP2</td><td><code>LTools.Orchestrator.RDP2</code></td><td>Поддержка RDP-сессий роботов и трансляция рабочего стола в UI (через nginx: <code>/rdpstream/</code>, <code>/rdpsessions/</code>).</td><td>WebApi; машины роботов (RDP)</td></tr>
 <tr><td>NuGet2</td><td><code>BaGet/src/BaGet</code> (исполняемый файл <code>BaGet</code>)</td><td>NuGet-сервер для пакетов проектов и активностей. Доступен через nginx по пути <code>/nuget/</code>.</td><td>PostgreSQL (своя БД); файловая система или MinIO</td></tr>
 <tr><td>ArcSight</td><td><code>LTools.Orchestrator.ArcSight</code></td><td>Принимает события (<code>api/OrchEvents</code>) и пишет их в файлы в формате CEF для ArcSight.</td><td>Папка обмена с ArcSight</td></tr>
-<tr><td>UI</td><td>отдельный репозиторий UI4 (архив <code>Primo-RPA-Orchestrator-UI-*.zip</code>)</td><td>Веб-интерфейс. Раздаётся через nginx, который также проксирует API к службам.</td><td>nginx; WebApi, RobotLogs, Queues, Licenses, NuGet2, RDP2</td></tr>
+<tr><td>UI</td><td>отдельный репозиторий UI4 (архив <code>primo-rpa-orchestrator-ui-*.zip</code>)</td><td>Веб-интерфейс. Раздаётся через nginx, который также проксирует API к службам.</td><td>nginx; WebApi, RobotLogs, Queues, Licenses, NuGet2, RDP2</td></tr>
 </table></div>
 
 <h2>На машинах роботов</h2>

@@ -58,7 +58,7 @@
 <h2>Машины роботов</h2>
 <div class="tbl-wrap"><table>
 <tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
-<tr><td>Агент</td><td>5002</td><td>HTTPS (Windows, по умолчанию) / HTTP (Linux, <code>install.sh</code>)</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code>, <code>Tenants:Agent:Https</code>. <code>PrimoWorker.ps1</code> открывает 5002 в брандмауэре Windows.</td></tr>
+<tr><td>Агент</td><td>5002</td><td>HTTPS (Windows и Linux, по умолчанию)</td><td>WebApi. Порт и протокол со стороны WebApi — <code>Tenants:Agent:Port</code>, <code>Tenants:Agent:Https</code>. <code>PrimoWorker.ps1</code> открывает 5002 в брандмауэре Windows.</td></tr>
 <tr><td>RDP</td><td>3389</td><td>RDP</td><td>RDP2</td></tr>
 <tr><td>Студия</td><td>порт, который сообщила Студия, или <code>Studio:Port</code></td><td>HTTPS (<code>Studio:Https</code>)</td><td>WebApi — проверка занятости лицензий Студии. В Docker-образе WebApi задано <code>Studio__Port=8735</code>.</td></tr>
 </table></div>
