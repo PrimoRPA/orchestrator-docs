@@ -13,6 +13,11 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Параметры WebApi и агента, от которых зависят запуск робота, поддержка RDP-сессии перед стартом, освобождение и разлогинивание сессий, статус «Не доступен», блокировка робота агентом и трансляция сессии через службу RDP2.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>робот развёрнут на машине — <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>заданы параметры запуска роботов, поддержки и освобождения RDP-сессий, работает трансляция сессии</div>
+</div>
+
 <div class="note"><p>Ниже в колонке «По умолчанию» — значение из кода. В Docker-образе WebApi многие из этих параметров переопределены; где разница существенна, она указана.</p></div>
 
 <h2>Поддержка RDP-сессии перед запуском: <code>RobotStart</code></h2>
@@ -28,6 +33,9 @@
   <tr><td><code>RobotStart:AgentHttpClientTimeoutInSec</code></td><td>Таймаут части запросов WebApi к агенту, с</td><td><code>10</code></td></tr>
 </table></div>
 <div class="warn"><p><code>AttemptsKeepRDPSessionLevels</code> в коде не имеет значения по умолчанию, а код обращается к нему без проверки. Если массив не задан, запуск роботов с RDP-сессией завершится ошибкой.</p></div>
+
+<figure class="shot"><img src="../assets/img/machines.png" alt="Машины роботов" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов</b>: доступность машины и версия агента.</figcaption></figure>
+<figure class="shot"><img src="../assets/img/machine-users.png" alt="Пользователи графического сеанса" loading="lazy" width="1440" height="900"><figcaption>Пункт <b>Пользователи</b> в меню строки машины на Linux: пользователи графического сеанса и разрешение экрана.</figcaption></figure>
 
 <h2>Освобождение и разлогинивание сессий: <code>RDP</code></h2>
 <div class="tbl-wrap"><table>
@@ -111,6 +119,12 @@
   <li>Остановите агент на машине и подождите <code>Robot:RunStatusTimeout</code>. <span class="check">Роботы машины в статусе «Не доступен».</span></li>
   <li>Откройте трансляцию сессии робота. <span class="check">Изображение передаётся; если нет — проверьте <code>RdpBaseUrl</code>, <code>EnabledOrigins</code> RDP2 и проксирование <code>/rdpstream/</code> в nginx (с 1.26.9 там включена поддержка WebSocket).</span></li>
 </ol>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="project-queue.html">Очередь проектов<small>выбор робота для проекта и стратегии очереди</small></a>
+  <a href="../troubleshoot/rdp.html">Сессия робота не поднимается или не видна в консоли<small>разбор ошибок открытия и трансляции сессии</small></a>
+</div>
 
 
 </main>

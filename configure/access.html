@@ -13,6 +13,11 @@
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">На странице описаны включение способов входа (логин и пароль Оркестратора, AD по LDAP, SSO Kerberos, Keycloak), настройка тенантов и политики паролей, ограничение входа в тенант по умолчанию. Все параметры задаются в конфигурации службы WebApi.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>включены нужные способы входа, заданы тенанты и политика паролей</div>
+</div>
+
 <h2>Способы входа: <code>Auth:Type</code></h2>
 <p>Набор кнопок на экране входа UI4 задаётся одним числом — суммой флагов. Например, <code>5</code> = Оркестратор + SSO.</p>
 <div class="tbl-wrap"><table>
@@ -24,6 +29,8 @@
   <tr><td><code>16</code></td><td>Keycloak, поток с PKCE</td><td>«Keycloak (PKCE)»</td></tr>
 </table></div>
 <p>В коде значение по умолчанию — <code>0</code> (ни один флаг). В Docker-образе WebApi задано <code>Auth__Type=5</code>.</p>
+
+<figure class="shot"><img src="../assets/img/role-form.png" alt="Форма «Добавить роль»" loading="lazy" width="1440" height="900"><figcaption>Форма <b>Добавить роль</b>: тенант, группы AD и таблица прав по разделам.</figcaption></figure>
 
 <h2>Active Directory: секция <code>ActiveDirectory</code></h2>
 <p>Каждый домен — отдельный ключ в <code>ActiveDirectory:MultyForest</code>. Ключ — полное имя домена: оно же сохраняется в привязках ролей и должно совпадать со значением, которое возвращает AD при входе.</p>
@@ -148,6 +155,12 @@ WHERE "Id" IN ('a18be9c0-aa65-4af8-bd17-00bd9344e575',  -- admin
 </ol>
 
 <div class="note"><p>SSO через IIS из старого руководства не поддерживается: билет Kerberos проверяется в WebApi по keytab (файл, Vault, переменная окружения или S3).</p></div>
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="security.html">Безопасность<small>шифрование паролей в конфигах, Vault, сертификаты TLS</small></a>
+  <a href="../troubleshoot/login.html">Не получается войти через AD, SSO или Keycloak<small>разбор ошибок входа после настройки</small></a>
+</div>
+
 
 </main>
 <script src="../assets/nav.js"></script>

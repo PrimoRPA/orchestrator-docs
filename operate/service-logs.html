@@ -13,6 +13,11 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">На странице описано, где находятся технические журналы служб Оркестратора и как изменить уровень детализации. Журнал Оркестратора и журналы роботов в UI описаны отдельно — в <a href="events.html">Событиях</a> и <a href="../work/logs.html">Журналах</a>.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>пройдена <a href="../deploy/verify.html">Проверка установки</a></div>
+  <div><b>Результат</b>найден журнал нужной службы, уровень детализации изменён</div>
+</div>
+
 <h2>Как устроено</h2>
 <p>Все службы (WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, Агент) пишут журнал через Serilog. Место и уровень записи полностью задаются секцией <code>Serilog</code> конфига службы. В коде пути к файлам журналов не заданы.</p>
 <p>К каждой записи добавляется версия службы (<code>ApplicationVersion</code>); у WebApi — ещё идентификатор узла кластера.</p>
@@ -48,6 +53,12 @@ journalctl -u Primo.Orchestrator.RobotLogs -f</code></pre>
   <li><code>POST /loggers/&lt;имя&gt;/&lt;уровень&gt;</code> — изменить уровень, например <code>POST /loggers/default/Debug</code>.</li>
 </ul>
 <p>Как проверить: после <code>POST</code> ответ содержит новый уровень, в журнале службы появляются записи этого уровня.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="events.html">События и их коды<small>справочник кодов событий журнала Оркестратора</small></a>
+  <a href="../troubleshoot/index.html">Неполадки<small>выбор страницы проверок по симптому</small></a>
+</div>
 
 
 </main>

@@ -12,6 +12,10 @@
 <h1>Не получается войти через AD, SSO или Keycloak</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Способы входа включает параметр <code>Auth:Type</code>, домены и Keycloak описываются в конфигурации WebApi. Права пользователь получает только через привязку групп AD или ролей Keycloak к ролям Оркестратора.</p>
+<div class="meta">
+  <div><b>Перед началом</b>доступ к журналу WebApi — <a href="../operate/service-logs.html">Журналы служб</a></div>
+  <div><b>Результат</b>пользователи входят через AD, SSO или Keycloak и получают права своих ролей</div>
+</div>
 
 <h2>Симптомы</h2>
 <ul>
@@ -79,6 +83,12 @@
 </ol>
 <figure class="shot"><img src="../assets/img/login.png" alt="Страница входа в Оркестратор" loading="lazy" width="1440" height="900"><figcaption>Страница входа: под кнопкой <b>Войти</b> — список <b>Другие способы входа</b>.</figcaption></figure>
 <p>«Пользователь временно заблокирован.» — сработала блокировка после неудачных попыток: <code>Security:Lockout:MaxFailedAccessAttempts</code> (5), <code>DefaultLockoutTimeSpan</code> (300 с по умолчанию в коде; в Dockerfile — 1 мин).</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="access.html">Пользователь не видит папки, проекты или разделы<small>если вход выполнен, но разделы или объекты не видны</small></a>
+  <a href="../configure/access.html">Вход и доступ<small>параметры способов входа, AD и Keycloak</small></a>
+</div>
 
 
 

@@ -13,6 +13,11 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Очереди обмена данными: создание, статусы элементов, повторы и автоочистка. Очередь проектов — другая сущность, она описана в <a href="../configure/project-queue.html">Очередь проектов</a>.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>очередь обмена данными создана, повторы и автоочистка настроены</div>
+</div>
+
 <h2>Где это в меню</h2>
 <p><b>Роботы → Очереди обмена данными</b>. Права: <code>ExchangeQueues.View</code>, <code>.Create</code>, <code>.Edit</code>, <code>.Delete</code>; для работы с элементами — <code>.Enqueue</code>, <code>.Peek</code>, <code>.ReadByKey</code>, <code>.RemoveByKey</code>.</p>
 
@@ -80,6 +85,12 @@
   <tr><td><code>MinExchangeQueueValuesDeleteLimitElements</code></td><td>Минимум элементов, который можно задать в форме</td><td>100000</td></tr>
   <tr><td><code>AllowPhysicalRemoval</code></td><td>Разрешить физическое удаление</td><td><code>false</code></td></tr>
 </table></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="logs.html">Журналы<small>просмотр событий роботов и Оркестратора</small></a>
+  <a href="../operate/db-maintenance.html">Обслуживание БД<small>параметры фоновой очистки очередей обмена данными</small></a>
+</div>
 
 
 

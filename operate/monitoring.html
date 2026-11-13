@@ -13,6 +13,11 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Каждая служба Оркестратора может предоставлять метрики для Prometheus или Zabbix. На странице описано, как включить сбор, какой адрес указать в системе мониторинга и какие метрики доступны.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>пройдена <a href="../deploy/verify.html">Проверка установки</a></div>
+  <div><b>Результат</b>службы отдают метрики, Prometheus или Zabbix получает их по заданному адресу</div>
+</div>
+
 <h2>Как это устроено</h2>
 <p>Служба не отправляет метрики самостоятельно. Она открывает отдельный порт и отвечает на запросы Prometheus (HTTP, путь <code>/metrics</code>) или сервера Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
 <p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента на машинах роботов.</p>
@@ -80,6 +85,12 @@
 
 <h2>Grafana</h2>
 <p>Для показа отчётов Grafana внутри Оркестратора в конфиге WebApi есть секция <code>Grafana:ReportItems</code> — список разделов (<code>Name</code>) с отчётами (<code>Name</code>, <code>Url</code>, <code>Description</code>). В UI4 отчёты открываются в разделе «Аналитика» → «Grafana». В шаблонах nginx Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>. Примеры дашбордов и представлений для аналитической БД находятся в <code>LTools.Orchestrator.Analytic/Grafana/</code>.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="service-logs.html">Журналы служб<small>расположение технических журналов и уровень детализации</small></a>
+  <a href="../work/dashboards.html">Дашборды и аналитика<small>встроенные дашборды и ссылки на отчёты Grafana в UI4</small></a>
+</div>
 
 
 </main>

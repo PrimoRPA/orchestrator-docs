@@ -12,6 +12,10 @@
 <h1>Интерфейс не открывается или падает WebApi</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">UI4 — статические файлы, их отдаёт nginx. Все запросы к API идут на тот же адрес по пути <code>/api/</code>, nginx проксирует их в WebApi. WebApi зависит от БД и RabbitMQ. Проверяйте по цепочке: nginx → файлы UI → WebApi → БД и RabbitMQ.</p>
+<div class="meta">
+  <div><b>Перед началом</b>доступ к журналам nginx и WebApi — <a href="../operate/service-logs.html">Журналы служб</a></div>
+  <div><b>Результат</b>интерфейс открывается, WebApi отвечает на запросы</div>
+</div>
 
 <h2>Симптомы</h2>
 <ul>
@@ -84,6 +88,12 @@
 <h3>Нестандартное размещение</h3>
 <p>UI4 собран с <code>&lt;base href="/"&gt;</code> и адресом API <code>/api</code>, поэтому работает только в корне сайта, не в подкаталоге. Если UI отдаётся с другого адреса, чем WebApi, перечислите адреса UI в <code>Security:EnabledOrigins</code> (по умолчанию пусто, CORS выключен).</p>
 <p>Вторая копия WebApi на том же порту не запускается. Проверьте, что старый процесс завершён.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="login.html">Не получается войти через AD, SSO или Keycloak<small>если страница входа открывается, а вход не выполняется</small></a>
+  <a href="../deploy/verify.html">Проверка установки<small>проверка служб после восстановления работы</small></a>
+</div>
 
 
 

@@ -13,8 +13,15 @@
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Загрузка проектов, версии, активная версия и публикация из Студии.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>добавлен робот — <a href="robots.html">Роботы и машины</a></div>
+  <div><b>Результат</b>проект загружен в Оркестратор, активная версия назначена</div>
+</div>
+
 <h2>Где это в меню</h2>
 <p><b>RPA-проекты</b>: вкладки <b>Все RPA-проекты</b>, <b>Запуски</b>, <b>Очередь проектов</b>. Для всех трёх требуется право <code>RpaProjects.View</code>. Загрузка — <code>RpaProjects.Create</code>, изменение — <code>RpaProjects.Edit</code>, предрелизные версии — отдельная группа прав <code>PreReleaseVersion.*</code>.</p>
+
+<figure class="shot"><img src="../assets/img/projects.png" alt="Список RPA-проектов" loading="lazy" width="1440" height="900"><figcaption><b>RPA-проекты → Все RPA-проекты</b>: версия проекта и признак активной версии.</figcaption></figure>
 
 <h2>Загрузить проект или версию</h2>
 <ol class="steps">
@@ -50,6 +57,13 @@
 <p>В Оркестраторе ограничения размера нет. Размер ограничен в nginx: <code>client_max_body_size 700m</code> в блоке server.</p>
 
 <div class="note" data-ver="1.26.9"><p>Старая настройка <code>RpaProjectArchiveUpload:DbStore</code> с 1.26.9 не читается — используйте <code>StoreType</code>. В комментарии в коде указано «с 1.26.8.0», но в ветке 1.26.8.0 настройка ещё читается. Подробнее — <a href="../upgrade/config-changes.html">Изменения в конфигах между LTS</a>.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="jobs-triggers.html">Задания и триггеры<small>запуск проекта по расписанию и другим триггерам</small></a>
+  <a href="../configure/project-queue.html">Очередь проектов<small>выбор робота для проекта и стратегии очереди</small></a>
+</div>
+
 
 </main>
 <script src="../assets/nav.js"></script>

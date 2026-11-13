@@ -13,6 +13,11 @@
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Раздел <b>Аналитика</b> в UI4: встроенные дашборды Оркестратора и ссылки на отчёты Grafana. Метрики для Prometheus и Zabbix описаны в <a href="../operate/monitoring.html">Мониторинг и метрики</a>.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>известно назначение карточек на вкладке «Дашборды»; на вкладке «Grafana» отображаются плитки со ссылками на отчёты</div>
+</div>
+
 <h2>Аналитика → Дашборды</h2>
 <p>Набор карточек фиксирован: порядок и видимость в 1.26.9 не настраиваются. Данные возвращает метод <code>GET api/Stats</code>, для него требуется право <code>Stats.View</code> (в старых подписях — «Главная» / «Мониторинг»).</p>
 <div class="tbl-wrap"><table>
@@ -30,6 +35,8 @@
   <tr><td>Мерцающие RDP-сессии</td><td>Сессии, которые часто разрываются и переподключаются.</td></tr>
 </table></div>
 
+<figure class="shot"><img src="../assets/img/dashboards.png" alt="Дашборды" loading="lazy" width="1440" height="900"><figcaption><b>Аналитика → Дашборды</b>: сводка по роботам, выполнению, проектам и заданиям; ниже — очередь проектов.</figcaption></figure>
+
 <h2>Аналитика → Grafana</h2>
 <p>На вкладке размещены не встроенные отчёты, а плитки со ссылками на дашборды Grafana. Список плиток задаётся в конфигурации WebApi. При входе он загружается в UI4 через <code>GET api/Settings/GrafanaReportItems</code> (право <code>Settings.View</code>). Если список пуст, на странице отображается «Аналитика не настроена».</p>
 <div class="tbl-wrap"><table>
@@ -42,6 +49,12 @@
   <li>Выйдите из UI4 и войдите снова: список читается при входе и кешируется в браузере. <span class="check">В <b>Аналитика → Grafana</b> появились вкладки с плитками</span></li>
 </ol>
 <p>Данные для отчётов собирает служба Analytic (отдельная БД, подключение <code>AnalyticConnection</code>). Права службы —<code>Analytic.View</code> и <code>Analytic.AnalyticUpdate</code>.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../operate/monitoring.html">Мониторинг и метрики<small>метрики служб для Prometheus и Zabbix</small></a>
+  <a href="ui2-to-ui4.html">Где это теперь: UI2 → UI4<small>соответствие путей прежнего интерфейса и UI4</small></a>
+</div>
 
 
 

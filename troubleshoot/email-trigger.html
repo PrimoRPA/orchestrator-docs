@@ -12,6 +12,10 @@
 <h1>Не срабатывает триггер по почте</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Триггер «Запуск при получении Email» опрашивает почтовый ящик со стороны WebApi по POP3, IMAP или Exchange (EWS). Если письмо пришло, а робот не запустился, причина — в подключении к почте или в отборе писем.</p>
+<div class="meta">
+  <div><b>Перед началом</b>доступ к журналу WebApi — <a href="../operate/service-logs.html">Журналы служб</a></div>
+  <div><b>Результат</b>робот запускается при получении письма</div>
+</div>
 
 <h2>Симптомы</h2>
 <ul>
@@ -38,6 +42,7 @@
   <li>Проверьте фильтры триггера. <b>От</b> — список адресов через запятую, сравнение по вхождению строки. <b>Тема</b> — регулярное выражение или подстрока. <span class="check">Тестовое письмо подходит под оба фильтра</span></li>
   <li>Проверьте папку: берётся папка из триггера, иначе папка ящика, иначе <code>INBOX</code>.</li>
 </ol>
+<figure class="shot"><img src="../assets/img/email-form.png" alt="Форма «Добавить Email»" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Email входящей почты → Добавить Email</b>: кнопка <b>Тест</b> проверяет подключение к ящику.</figcaption></figure>
 
 <h2>Как исправить</h2>
 <h3>Много непрочитанных писем</h3>
@@ -63,6 +68,12 @@
   <tr><td><code>Triggers:Email:UseProtocolLogger</code></td><td>Записывает протокол обмена с сервером в <code>imap.log</code> или <code>pop3.log</code> — для диагностики</td><td><code>false</code></td></tr>
 </table></div>
 <div class="warn"><p>У секции <code>Triggers:Email</code> нет значений по умолчанию, если её нет в конфигурации: значения из таблицы действуют, только когда секция задана. В Dockerfile поставки она задаётся переменными <code>Triggers__Email__*</code>.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="job-not-started.html">Задание не запускается по расписанию или триггеру<small>если триггер сработал, а проект не запущен</small></a>
+  <a href="../configure/notifications.html">Почта и оповещения<small>параметры ящика входящей почты для триггеров</small></a>
+</div>
 
 
 

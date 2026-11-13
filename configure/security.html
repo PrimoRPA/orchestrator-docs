@@ -13,6 +13,11 @@
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Шифрование паролей в конфигах, хранение секретов в HashiCorp Vault, учётные записи в CyberArk и Vault, сертификаты TLS и контроль изменения конфигурационных файлов.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>пароли в конфигах зашифрованы, подключены внешние хранилища секретов, настроены TLS и контроль изменения конфигов</div>
+</div>
+
 <h2>Шифрование паролей в конфигах</h2>
 <p>Пароли и ключи в конфигах служб хранятся зашифрованными. Служба расшифровывает их при старте. Исключения: среда <code>Development</code> и режим <code>Secrets:External=1</code> (Vault) — в этих случаях значения используются без расшифровки.</p>
 <p>Что шифруется: пароли БД в строках подключения, <code>ActiveDirectory:MultyForest:*:AdminPassword</code>, <code>OpenId:KeyCloak:*:ClientSecret</code>, <code>Tenants:IncomingEmail:Password</code>, <code>RabbitMQ:Password</code> и <code>SslCertPassphrase</code>, <code>RobotDeployment:SslCertPassword</code> и <code>OrchPassword</code>, <code>CyberArk:Password</code>, <code>NuGet:ApiKey</code>, <code>FileStore:Minio:SecretKey</code>, <code>Redis:Password</code>, <code>Email:FromPassword</code> (Notifications), пароль сертификата Kestrel.</p>
@@ -31,6 +36,8 @@
   <li>Введите одной строкой пароль. Если <code>PRIMOSALT</code> на этой машине не задан, а на серверах задан, введите через пробел пароль и соль. <span class="check">Утилита выводит строку после «Copy following string:» и для проверки — расшифровку.</span></li>
   <li>Скопируйте зашифрованную строку в конфиг и перезапустите службу. <span class="check">В журнале службы нет ошибок расшифровки, подключение к БД/RabbitMQ/AD проходит.</span></li>
 </ol>
+
+<figure class="shot"><img src="../assets/img/password-policies.png" alt="Политики паролей" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Администрирование → Политики паролей</b>.</figcaption></figure>
 
 <h2>HashiCorp Vault</h2>
 <p>Vault используется в трёх ролях.</p>
@@ -110,6 +117,12 @@ WEBAPI_VAULT_PASSWORD=&lt;пароль&gt;</code></pre>
   <li>С Vault: в карточке машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётными записями из <code>credentials</code>.</span></li>
   <li>Измените любой параметр в <code>appsettings.json</code> и перезапустите службу. <span class="check">В журнале «События оркестратора» появилось событие «Конфигурационный файл изменен».</span></li>
 </ol>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="access.html">Вход и доступ<small>способы входа, тенанты и политика паролей</small></a>
+  <a href="../operate/events.html">События и их коды<small>коды событий журнала, включая изменение конфигурационного файла</small></a>
+</div>
 
 
 </main>

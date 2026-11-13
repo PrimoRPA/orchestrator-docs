@@ -13,6 +13,11 @@
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Передача событий Оркестратора во внешние системы (вебхуки через службу LogEventsWebhook), аналитическая БД и служба Analytic, выгрузки в интеграционные таблицы, доступ к REST API.</p>
 
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
+  <div><b>Результат</b>события Оркестратора передаются во внешнюю систему, аналитическая БД обновляется службой Analytic</div>
+</div>
+
 <h2>Вебхуки на события Оркестратора</h2>
 <p>Каждое событие журнала Оркестратора WebApi публикует в обменник RabbitMQ типа fanout. Служба LogEventsWebhook читает свою очередь из этого обменника и отправляет событие POST-запросом в JSON на адрес внешней системы. Внешних систем может быть несколько: на каждую — отдельный экземпляр LogEventsWebhook с отдельным именем очереди.</p>
 <h3>WebApi</h3>
@@ -84,6 +89,12 @@
   <li>Сравните несколько записей журнала «События оркестратора» с принятыми событиями. <span class="check">Совпадают по <code>Id</code> и времени.</span></li>
   <li>Через 5–10 минут после старта Analytic выполните в БД <code>ltoolsanalytic</code> запрос к <code>mv_RobotsUsage</code>. <span class="check">Данные актуальны; в журнале Analytic нет ошибок обновления представлений.</span></li>
 </ol>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../operate/events.html">События и их коды<small>коды и описания событий, передаваемых во внешние системы</small></a>
+  <a href="../reference/api.html">API<small>обращение к REST API Оркестратора</small></a>
+</div>
 
 
 </main>

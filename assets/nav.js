@@ -1,7 +1,7 @@
 // Дерево документации: меню, хлебные крошки, «назад/вперёд», оглавление раздела.
 // Страница подключает скрипт и задаёт <body data-root="../" data-page="deploy/first-run">.
 // Версия черновика и время сборки — проставляет скрипт публикации.
-const BUILD = { ver: "9.11.0", at: "13.11.2026 22:33" };
+const BUILD = { ver: "9.12.0", at: "13.11.2026 22:53" };
 
 const TREE = [
   { id: "start", title: "Начало работы", task: "понять, что это и с чего начать", items: [
@@ -356,8 +356,8 @@ const TREE = [
         };
       });
       ap.replaceWith(box);
-      // Липкая строка — только если есть что переключать
-      if (Object.keys(apply).length) document.body.classList.add("has-switches"); else box.classList.add("sw-static");
+      // Строка «Версия / Платформа» закреплена на всех страницах (ТЗ 1.10), в том числе там, где переключать нечего
+      document.body.classList.add("has-switches");
       Object.keys(apply).forEach((dim) => {
         let saved = DEF[dim];
         try { saved = localStorage.getItem("sw:" + dim) || DEF[dim]; } catch (e) {}

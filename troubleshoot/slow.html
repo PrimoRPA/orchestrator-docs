@@ -12,6 +12,10 @@
 <h1>Оркестратор и БД работают медленно</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Чаще всего причина в БД: растут журналы, нет очистки, недостаточен пул соединений. Вторая частая причина — очередь проектов и RabbitMQ под нагрузкой.</p>
+<div class="meta">
+  <div><b>Перед началом</b>включённые метрики WebApi — <a href="../operate/monitoring.html">Мониторинг и метрики</a></div>
+  <div><b>Результат</b>интерфейс и запросы к БД отвечают без задержек</div>
+</div>
 
 <h2>Симптомы</h2>
 <ul>
@@ -75,6 +79,12 @@
 <h3>Потери сообщений</h3>
 <p>Если БД журналов не успевает, RobotLogs отбрасывает записи: «Сообщение … потеряно по причине ограничения входного буфера.» Буферы: <code>InputBufferRobotLogs</code>, <code>InputBufferOrchEvents</code>, <code>InputBufferRobotStatuses</code>, <code>InputBufferAttendedRobotLogs</code> — <code>MaxQueueLength</code> (в классе 50000, в Dockerfile 200000). Увеличение буфера оправдано только вместе с ускорением БД. Очереди RabbitMQ Оркестратора объявлены с ограничением длины (например, <code>dbevents</code> — 10000) без <code>x-overflow</code>: при переполнении RabbitMQ без предупреждения удаляет самые старые сообщения.</p>
 
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../operate/db-maintenance.html">Обслуживание БД<small>секционирование и очистка таблиц журналов</small></a>
+  <a href="../configure/scaling.html">Масштабирование и отказоустойчивость<small>несколько узлов WebApi, кластер RabbitMQ, Redis</small></a>
+</div>
 
 
 
