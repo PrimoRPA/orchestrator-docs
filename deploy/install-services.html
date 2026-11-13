@@ -114,11 +114,11 @@ sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analy
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
-sudo cp &lt;каталог с файлами поставки&gt;/* /home/orch-user/dist/
+sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &lt;каталог с файлами поставки&gt;/ui/*.zip &lt;каталог с файлами поставки&gt;/data/NGINX/* /home/orch-user/dist/
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -149,7 +149,7 @@ sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
 <p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
 <pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
@@ -177,7 +177,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы (таблица ниже). Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -201,13 +201,42 @@ curl http://localhost:5001/health</code></pre>
 <pre><code>for u in RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook NuGet; do
   systemctl --user enable --now Primo.Orchestrator.$u
 done</code></pre>
-    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>.
+    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>. Проверка всех служб одной командой:
+<pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
 <p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
 
+<h4>Минимальные изменения для запуска</h4>
+<p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
+<ol class="steps">
+  <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
+<pre><code>"Host": "127.0.0.1",
+"UserName": "orch",
+"Password": "&lt;зашифрованный пароль RabbitMQ&gt;",</code></pre></li>
+  <li><b>Подключение к базам</b> — файлы WebApi (четыре строки), RobotLogs, Analytic, Licenses, NuGet2 (по одной). В каждой строке, которая начинается с <code>PORT=5432;</code>, замените имя пользователя и пароль в конце строки. Было:
+<pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
+    Стало:
+<pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
+    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+  <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
+<pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
+"RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
+"RdpBaseUrl": "https://&lt;адрес&gt;:44392/rdpstream",
+"NuGetBaseUrl": "https://&lt;адрес&gt;:44392",</code></pre></li>
+  <li><b>Адрес WebApi для служб</b> — файлы RobotLogs, Licenses, Queues, RDP2. В секции <code>Orchestrator</code> задайте <code>"BaseUrl": "http://localhost:5001"</code>. В файле LogEventsWebhook задайте <code>"LoginUrl": "http://localhost:5001/api/account"</code>.</li>
+  <li><b>Секция, которой нет в файле</b> — файлы States и Analytic. Добавьте секцию сразу после первой открывающей скобки файла; запятая после закрывающей скобки секции обязательна:
+<pre><code>{
+  "Orchestrator": {
+    "BaseUrl": "http://localhost:5001"
+  },
+  …остальное содержимое файла без изменений</code></pre></li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+</ol>
+<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+
 <h4>Что задать в конфигах</h4>
-<p>Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -243,7 +272,7 @@ cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
 unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
-    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба.
+    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба. Если у сервера нет DNS-имени, вместо <code>&lt;адрес&gt;</code> подставьте IP и оставьте в <code>subjectAltName</code> только <code>IP:&lt;IP сервера&gt;</code>.
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (находится в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -259,7 +288,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
     <span class="check">у всех <code>active running</code></span></li>
-  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. <span class="check">открывается страница входа UI4</span></li>
+  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. При самоподписанном сертификате браузер выводит предупреждение о небезопасном соединении: выберите «Дополнительно» и продолжите. <span class="check">открывается страница входа UI4</span></li>
   <li>Перезагрузите сервер. <span class="check">после перезагрузки все юниты снова <code>active</code> без входа <code>orch-user</code> в систему</span>
     <p>Если RabbitMQ установлен на этом же сервере, после перезагрузки проверьте <code>curl http://localhost:56749/health</code>. Службы Оркестратора запускаются раньше RabbitMQ; Analytic в этом случае остаётся в состоянии <code>Unhealthy</code> и повторно не подключается. Перезапустите её: <code>systemctl --user restart Primo.Orchestrator.Analytic</code>.</p></li>
 </ol>
@@ -392,11 +421,11 @@ sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analy
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
-sudo cp &lt;каталог с файлами поставки&gt;/* /home/orch-user/dist/
+sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &lt;каталог с файлами поставки&gt;/ui/*.zip &lt;каталог с файлами поставки&gt;/data/NGINX/* /home/orch-user/dist/
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -427,7 +456,7 @@ sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
 <p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
 <pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
@@ -455,7 +484,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы (таблица ниже). Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -479,13 +508,42 @@ curl http://localhost:5001/health</code></pre>
 <pre><code>for u in RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook NuGet; do
   systemctl --user enable --now Primo.Orchestrator.$u
 done</code></pre>
-    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>.
+    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>. Проверка всех служб одной командой:
+<pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
 <p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
 
+<h4>Минимальные изменения для запуска</h4>
+<p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
+<ol class="steps">
+  <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
+<pre><code>"Host": "127.0.0.1",
+"UserName": "orch",
+"Password": "&lt;зашифрованный пароль RabbitMQ&gt;",</code></pre></li>
+  <li><b>Подключение к базам</b> — файлы WebApi (четыре строки), RobotLogs, Analytic, Licenses, NuGet2 (по одной). В каждой строке, которая начинается с <code>PORT=5432;</code>, замените имя пользователя и пароль в конце строки. Было:
+<pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
+    Стало:
+<pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
+    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+  <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
+<pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
+"RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
+"RdpBaseUrl": "https://&lt;адрес&gt;:44392/rdpstream",
+"NuGetBaseUrl": "https://&lt;адрес&gt;:44392",</code></pre></li>
+  <li><b>Адрес WebApi для служб</b> — файлы RobotLogs, Licenses, Queues, RDP2. В секции <code>Orchestrator</code> задайте <code>"BaseUrl": "http://localhost:5001"</code>. В файле LogEventsWebhook задайте <code>"LoginUrl": "http://localhost:5001/api/account"</code>.</li>
+  <li><b>Секция, которой нет в файле</b> — файлы States и Analytic. Добавьте секцию сразу после первой открывающей скобки файла; запятая после закрывающей скобки секции обязательна:
+<pre><code>{
+  "Orchestrator": {
+    "BaseUrl": "http://localhost:5001"
+  },
+  …остальное содержимое файла без изменений</code></pre></li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+</ol>
+<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+
 <h4>Что задать в конфигах</h4>
-<p>Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -521,7 +579,7 @@ cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
 unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
-    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба.
+    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба. Если у сервера нет DNS-имени, вместо <code>&lt;адрес&gt;</code> подставьте IP и оставьте в <code>subjectAltName</code> только <code>IP:&lt;IP сервера&gt;</code>.
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (находится в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -538,7 +596,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
     <span class="check">у всех <code>active running</code></span></li>
-  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. <span class="check">открывается страница входа UI4</span></li>
+  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. При самоподписанном сертификате браузер выводит предупреждение о небезопасном соединении: выберите «Дополнительно» и продолжите. <span class="check">открывается страница входа UI4</span></li>
   <li>Перезагрузите сервер. <span class="check">после перезагрузки все юниты снова <code>active</code> без входа <code>orch-user</code> в систему</span>
     <p>Если RabbitMQ установлен на этом же сервере, после перезагрузки проверьте <code>curl http://localhost:56749/health</code>. Службы Оркестратора запускаются раньше RabbitMQ; Analytic в этом случае остаётся в состоянии <code>Unhealthy</code> и повторно не подключается. Перезапустите её: <code>systemctl --user restart Primo.Orchestrator.Analytic</code>.</p></li>
 </ol>
@@ -672,11 +730,11 @@ sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analy
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
-sudo cp &lt;каталог с файлами поставки&gt;/* /home/orch-user/dist/
+sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &lt;каталог с файлами поставки&gt;/ui/*.zip &lt;каталог с файлами поставки&gt;/data/NGINX/* /home/orch-user/dist/
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>).</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -706,7 +764,7 @@ sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
 <p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
   <li>Распакуйте и запустите утилиту:
 <pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
@@ -734,7 +792,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы (таблица ниже). Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -758,13 +816,42 @@ curl http://localhost:5001/health</code></pre>
 <pre><code>for u in RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook NuGet; do
   systemctl --user enable --now Primo.Orchestrator.$u
 done</code></pre>
-    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>.
+    При необходимости так же запустите <code>Primo.Orchestrator.RDP2</code> и <code>Primo.Orchestrator.ArcSight</code>. Проверка всех служб одной командой:
+<pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
 <p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
 
+<h4>Минимальные изменения для запуска</h4>
+<p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
+<ol class="steps">
+  <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
+<pre><code>"Host": "127.0.0.1",
+"UserName": "orch",
+"Password": "&lt;зашифрованный пароль RabbitMQ&gt;",</code></pre></li>
+  <li><b>Подключение к базам</b> — файлы WebApi (четыре строки), RobotLogs, Analytic, Licenses, NuGet2 (по одной). В каждой строке, которая начинается с <code>PORT=5432;</code>, замените имя пользователя и пароль в конце строки. Было:
+<pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
+    Стало:
+<pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
+    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+  <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
+<pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
+"RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
+"RdpBaseUrl": "https://&lt;адрес&gt;:44392/rdpstream",
+"NuGetBaseUrl": "https://&lt;адрес&gt;:44392",</code></pre></li>
+  <li><b>Адрес WebApi для служб</b> — файлы RobotLogs, Licenses, Queues, RDP2. В секции <code>Orchestrator</code> задайте <code>"BaseUrl": "http://localhost:5001"</code>. В файле LogEventsWebhook задайте <code>"LoginUrl": "http://localhost:5001/api/account"</code>.</li>
+  <li><b>Секция, которой нет в файле</b> — файлы States и Analytic. Добавьте секцию сразу после первой открывающей скобки файла; запятая после закрывающей скобки секции обязательна:
+<pre><code>{
+  "Orchestrator": {
+    "BaseUrl": "http://localhost:5001"
+  },
+  …остальное содержимое файла без изменений</code></pre></li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+</ol>
+<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+
 <h4>Что задать в конфигах</h4>
-<p>Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -800,7 +887,7 @@ cp nginx.linux.conf /opt/Primo/nginx/nginx.conf
 cp cert1.crt cert1.rsa /opt/Primo/nginx/
 chmod 600 /opt/Primo/nginx/cert1.rsa
 unzip -q primo-rpa-orchestrator-ui-*.zip -d /opt/Primo/nginx/www</code></pre>
-    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба.
+    Для промышленной установки команду <code>openssl</code> не выполняйте: сертификат на имя сервера выпускает удостоверяющий центр организации, его файлы копируются в <code>~/dist</code> под именами <code>cert1.crt</code> и <code>cert1.rsa</code>; ключ должен быть без пароля. В <code>subjectAltName</code> укажите имеющиеся значения: только <code>DNS:…</code>, только <code>IP:…</code> или оба. Если у сервера нет DNS-имени, вместо <code>&lt;адрес&gt;</code> подставьте IP и оставьте в <code>subjectAltName</code> только <code>IP:&lt;IP сервера&gt;</code>.
     <span class="check"><code>/opt/Primo/nginx/www/index.html</code> существует (находится в корне <code>www</code>, а не во вложенной папке)</span></li>
   <li>Установите юнит и запустите nginx:
 <pre><code>cp Primo.Orchestrator.Nginx.user.service ~/.config/systemd/user/Primo.Orchestrator.Nginx.service
@@ -816,7 +903,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
     <span class="check">у всех <code>active running</code></span></li>
-  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. <span class="check">открывается страница входа UI4</span></li>
+  <li>Откройте в браузере <code>https://&lt;адрес&gt;:44392</code>. При самоподписанном сертификате браузер выводит предупреждение о небезопасном соединении: выберите «Дополнительно» и продолжите. <span class="check">открывается страница входа UI4</span></li>
   <li>Перезагрузите сервер. <span class="check">после перезагрузки все юниты снова <code>active</code> без входа <code>orch-user</code> в систему</span>
     <p>Если RabbitMQ установлен на этом же сервере, после перезагрузки проверьте <code>curl http://localhost:56749/health</code>. Службы Оркестратора запускаются раньше RabbitMQ; Analytic в этом случае остаётся в состоянии <code>Unhealthy</code> и повторно не подключается. Перезапустите её: <code>systemctl --user restart Primo.Orchestrator.Analytic</code>.</p></li>
 </ol>
