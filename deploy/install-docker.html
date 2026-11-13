@@ -113,13 +113,15 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
 </ol>
 
 <h2 id="offline">Сервер без доступа в интернет</h2>
+<div class="note"><p>После перезагрузки сервера контейнеры запускаются автоматически. Служба <code>analytic</code> при этом может остаться в состоянии <code>unhealthy</code>; в таком случае выполните <code>sudo docker compose restart analytic</code>. При проверке состояния учитывайте, что строка <code>unhealthy</code> содержит слово <code>healthy</code>.</p></div>
 <details>
   <summary>Как перенести образы на сервер в закрытом контуре</summary>
   <p>Образы скачиваются на компьютере с доступом в интернет и установленным Docker, переносятся файлом и загружаются на сервере. Docker на сервере устанавливается из пакетов ОС или внутреннего репозитория.</p>
   <ol class="substeps">
     <li>На компьютере с доступом в интернет разместите <code>docker-compose.yml</code> в пустом каталоге и скачайте образы:
 <pre><code>docker compose pull
-docker save -o images.tar $(docker compose config --images)</code></pre></li>
+docker save -o images.tar $(docker compose config --images)</code></pre>
+    Архив образов версии 1.26.9 занимает около 2,6 ГБ; загрузка на сервере занимает несколько минут.</li>
     <li>Перенесите <code>images.tar</code> на сервер в <code>/opt/Docker</code>.</li>
     <li>На сервере загрузите образы и продолжите с шага 2: на шаге 7 Docker использует загруженные образы.
 <pre><code>sudo docker load -i /opt/Docker/images.tar</code></pre></li>
