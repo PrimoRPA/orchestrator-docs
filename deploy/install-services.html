@@ -118,7 +118,7 @@ sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &l
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -146,13 +146,15 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
-  <li>Распакуйте и запустите утилиту:
-<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
+  <li>Под пользователем служб распакуйте и запустите утилиту:
+<pre><code>sudo su - orch-user
+cd ~/dist
+unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -218,7 +220,7 @@ done</code></pre>
 <pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
     Стало:
 <pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
-    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+    В файле NuGet2 эта строка называется <code>ConnectionString</code> и находится в секции <code>Database</code>. Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
   <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
 <pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
 "RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
@@ -231,9 +233,9 @@ done</code></pre>
     "BaseUrl": "http://localhost:5001"
   },
   …остальное содержимое файла без изменений</code></pre></li>
-  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите системный диск сервера с путём, например <code>"/dev/vda"</code>. Имена дисков выводит команда <code>lsblk --nodeps -no name,serial</code>; если дисков несколько, выберите тот, который не будет заменяться.</li>
 </ol>
-<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+<p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
 <h4>Что задать в конфигах</h4>
 <p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
@@ -261,7 +263,7 @@ done</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
 <h3>5. nginx и UI4</h3>
-<p>Шаги также выполняются под <code>orch-user</code>.</p>
+<p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
 <pre><code>cd ~/dist
@@ -425,7 +427,7 @@ sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &l
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -453,13 +455,15 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
-  <li>Распакуйте и запустите утилиту:
-<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
+  <li>Под пользователем служб распакуйте и запустите утилиту:
+<pre><code>sudo su - orch-user
+cd ~/dist
+unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -525,7 +529,7 @@ done</code></pre>
 <pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
     Стало:
 <pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
-    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+    В файле NuGet2 эта строка называется <code>ConnectionString</code> и находится в секции <code>Database</code>. Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
   <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
 <pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
 "RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
@@ -538,9 +542,9 @@ done</code></pre>
     "BaseUrl": "http://localhost:5001"
   },
   …остальное содержимое файла без изменений</code></pre></li>
-  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите системный диск сервера с путём, например <code>"/dev/vda"</code>. Имена дисков выводит команда <code>lsblk --nodeps -no name,serial</code>; если дисков несколько, выберите тот, который не будет заменяться.</li>
 </ol>
-<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+<p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
 <h4>Что задать в конфигах</h4>
 <p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
@@ -568,7 +572,7 @@ done</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
 <h3>5. nginx и UI4</h3>
-<p>Шаги также выполняются под <code>orch-user</code>.</p>
+<p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
 <pre><code>cd ~/dist
@@ -734,7 +738,7 @@ sudo cp &lt;каталог с файлами поставки&gt;/linux/*.zip &l
 sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     Домашний каталог пользователя служб закрыт для других учётных записей, поэтому копирование выполняется через <code>sudo</code>. Файлы nginx — <code>nginx.linux.conf</code> и <code>Primo.Orchestrator.Nginx.user.service</code> — находятся в папке версии <code>orchestrator/data/NGINX/</code>, архив UI4 — в <code>orchestrator/ui/</code>.
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
-  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
+  <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
 <div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
@@ -761,13 +765,15 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
 
 <h3>3. Пароли для конфигов</h3>
 <p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
 <ol class="steps">
-  <li>Распакуйте и запустите утилиту:
-<pre><code>unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
+  <li>Под пользователем служб распакуйте и запустите утилиту:
+<pre><code>sudo su - orch-user
+cd ~/dist
+unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
   <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
@@ -833,7 +839,7 @@ done</code></pre>
 <pre><code>…;HOST=127.0.0.1;USER ID=postgres;SearchPath=public;PASSWORD=&lt;пример&gt;"</code></pre>
     Стало:
 <pre><code>…;HOST=127.0.0.1;USER ID=orch;SearchPath=public;PASSWORD=&lt;зашифрованный пароль БД&gt;"</code></pre>
-    Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
+    В файле NuGet2 эта строка называется <code>ConnectionString</code> и находится в секции <code>Database</code>. Строку с базой <code>ltoolssecrets</code> не изменяйте.</li>
   <li><b>Внешний адрес</b> — файл WebApi. Замените адрес из примера в четырёх параметрах:
 <pre><code>"OrchBaseUrl": "https://&lt;адрес&gt;:44392",
 "RobotLogsBaseUrl": "https://&lt;адрес&gt;:44392",
@@ -846,9 +852,9 @@ done</code></pre>
     "BaseUrl": "http://localhost:5001"
   },
   …остальное содержимое файла без изменений</code></pre></li>
-  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите диск сервера с путём, например <code>"/dev/vda"</code>. Имя диска выводит команда <code>lsblk --nodeps -no name,serial</code>.</li>
+  <li><b>Диск для лицензии</b> — файл MachineInfo. В параметре <code>"HDD"</code> укажите системный диск сервера с путём, например <code>"/dev/vda"</code>. Имена дисков выводит команда <code>lsblk --nodeps -no name,serial</code>; если дисков несколько, выберите тот, который не будет заменяться.</li>
 </ol>
-<p>Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
+<p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
 <h4>Что задать в конфигах</h4>
 <p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
@@ -876,7 +882,7 @@ done</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
 <h3>5. nginx и UI4</h3>
-<p>Шаги также выполняются под <code>orch-user</code>.</p>
+<p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
 <pre><code>cd ~/dist
