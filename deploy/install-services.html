@@ -10,7 +10,7 @@
 <body data-root="../" data-page="deploy/install-services">
 <main>
 <h1>Установка служб</h1>
-<div class="applies" data-sw="ver platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
+<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span></div>
 <p class="lead">Оркестратор устанавливается на сервер набором служб: на Linux — юнитами systemd, на Windows — службами Windows, перед ними nginx с UI4. Выберите ОС сервера: на вкладке описан весь порядок установки.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="checklist.html">Что подготовить</a></div>
@@ -305,40 +305,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическая оболочка Fly (<code>/usr/bin/fly-wm</code>). На Astra 1.8 — ещё <code>/usr/bin/dbus-launch</code>: агент вызывает его перед запуском сеанса робота.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/fly-wm /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Создайте группу и пользователя агента, добавьте в группу пользователей роботов:
-<pre><code>sudo groupadd primo-rpa
-sudo useradd -g primo-rpa -m -s /bin/bash agent
-sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
-    <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
-<pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --unit=primo-robot-* --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemctl stop primo-robot-*.service
-agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
-    <span class="check"><code>sudo -l -U agent</code> показывает четыре команды</span></li>
-  <li>Включите linger и подготовьте каталоги:
-<pre><code>sudo loginctl enable-linger agent
-sudo mkdir -p /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chown agent:primo-rpa /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
-    Агент работает с <code>UMask=0002</code>, чтобы он и роботы могли удалять файлы друг друга в каталоге проекта.</li>
-  <li>Откройте входящий <code>5002/tcp</code> — на этот порт обращается WebApi.</li>
-  <li>Под пользователем агента распакуйте архив и настройте конфиг:
-<pre><code>sudo su - agent
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
-cd /opt/Primo/Agent
-chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
-    В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). <code>AgentCommands:Session</code> на Astra допускается не задавать: если параметр пуст, агент использует<code>/usr/bin/fly-wm --execOnly {}</code> (ОС определяется по <code>NAME</code> в <code>/etc/os-release</code>).</li>
-  <li>Установите и запустите юнит (также под <code>agent</code>):
-<pre><code>mkdir -p ~/.config/systemd/user
-cp /opt/Primo/Agent/Primo.Orchestrator.Agent.user.service ~/.config/systemd/user/Primo.Orchestrator.Agent.service
-systemctl --user daemon-reload
-systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
-    <span class="check"><code>curl -k https://localhost:5002/api/Version</code> возвращает версию агента; в <code>journalctl --user -u Primo.Orchestrator.Agent</code> нет предупреждений «the launch of robots is impossible»</span></li>
-  <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
-    <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
@@ -615,41 +582,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <pre><code>sudo dnf install expect</code></pre>
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; окружение MATE (<code>/usr/bin/mate-session</code>).
     <span class="check"><code>ls /usr/bin/expect /usr/bin/mate-session /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Создайте группу и пользователя агента, добавьте в группу пользователей роботов:
-<pre><code>sudo groupadd primo-rpa
-sudo useradd -g primo-rpa -m -s /bin/bash agent
-sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
-    <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
-<pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --unit=primo-robot-* --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemctl stop primo-robot-*.service
-agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
-    <span class="check"><code>sudo -l -U agent</code> показывает четыре команды</span></li>
-  <li>Включите linger и подготовьте каталоги:
-<pre><code>sudo loginctl enable-linger agent
-sudo mkdir -p /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chown agent:primo-rpa /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
-    Агент работает с <code>UMask=0002</code>, чтобы он и роботы могли удалять файлы друг друга в каталоге проекта.</li>
-  <li>Откройте входящий <code>5002/tcp</code> — на этот порт обращается WebApi.</li>
-  <li>Под пользователем агента распакуйте архив и настройте конфиг:
-<pre><code>sudo su - agent
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
-cd /opt/Primo/Agent
-chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
-    В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). <code>AgentCommands:Session</code> на РЕД ОС допускается не задавать: если параметр пуст, агент использует<code>/usr/bin/mate-session</code> (ОС определяется по <code>NAME</code> в <code>/etc/os-release</code>, который должен начинаться с <code>RED OS</code>).
-    <p>Как агент использует команду: сеанс MATE запускается в фоне, через 5 секунд стартует робот, после него выполняется <code>AgentCommands:StopSession</code> (по умолчанию пусто).</p></li>
-  <li>Установите и запустите юнит (также под <code>agent</code>):
-<pre><code>mkdir -p ~/.config/systemd/user
-cp /opt/Primo/Agent/Primo.Orchestrator.Agent.user.service ~/.config/systemd/user/Primo.Orchestrator.Agent.service
-systemctl --user daemon-reload
-systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
-    <span class="check"><code>curl -k https://localhost:5002/api/Version</code> возвращает версию агента; в <code>journalctl --user -u Primo.Orchestrator.Agent</code> нет предупреждений «the launch of robots is impossible»</span></li>
-  <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
-    <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
@@ -926,41 +859,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическое окружение, команда запуска сеанса которого указывается в шаге 6.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Создайте группу и пользователя агента, добавьте в группу пользователей роботов:
-<pre><code>sudo groupadd primo-rpa
-sudo useradd -g primo-rpa -m -s /bin/bash agent
-sudo usermod -aG primo-rpa &lt;пользователь робота&gt;</code></pre>
-    <span data-ver="1.26.9">Другие имена — укажите в <code>Agent:UserName</code> и <code>Agent:GroupName</code>.</span>
-    <span class="check"><code>id agent</code> показывает группу <code>primo-rpa</code></span></li>
-  <li>Разрешите агенту запуск роботов и перезагрузку без пароля — файл в <code>/etc/sudoers.d/</code> (редактируйте через <code>sudo visudo -f /etc/sudoers.d/primo-agent</code>):
-<pre><code>agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemd-run -G --unit=primo-robot-* --uid=agent --gid=primo-rpa --property=EnvironmentFile=/dev/shm/agent-*-env /opt/Primo/Agent/launch-as-user.expect
-agent ALL=(root) NOPASSWD: /usr/bin/systemctl stop primo-robot-*.service
-agent ALL=(root) NOPASSWD: /usr/sbin/reboot</code></pre>
-    <span class="check"><code>sudo -l -U agent</code> показывает четыре команды</span></li>
-  <li>Включите linger и подготовьте каталоги:
-<pre><code>sudo loginctl enable-linger agent
-sudo mkdir -p /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chown agent:primo-rpa /opt/Primo/Agent &lt;каталог данных агента&gt; &lt;каталог роботов&gt;
-sudo chmod 775 &lt;каталог роботов&gt;</code></pre>
-    Агент работает с <code>UMask=0002</code>, чтобы он и роботы могли удалять файлы друг друга в каталоге проекта.</li>
-  <li>Откройте входящий <code>5002/tcp</code> — на этот порт обращается WebApi.</li>
-  <li>Под пользователем агента распакуйте архив и настройте конфиг:
-<pre><code>sudo su - agent
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-unzip -q -o primo-rpa-orchestrator-agent-*-linux.zip -d /opt/Primo/Agent
-cd /opt/Primo/Agent
-chmod +x Primo.Orchestrator.Agent LTools.Orchestrator.Agent.Runner launch-as-user.expect</code></pre>
-    В <code>appsettings.ProdLinux.json</code> задайте <code>Agent:DataPath</code> и <code>DeployRobot:RobotsPath</code> (по умолчанию <code>C:\LTools</code> — для Linux не подходит). На Ubuntu обязательно задайте <code>AgentCommands:Session</code> — полный путь к команде запуска графического сеанса (пример в коде — <code>/usr/bin/mate-session</code>). Значение по умолчанию подставляется только для Astra, РЕД ОС и CentOS (по <code>NAME</code> в <code>/etc/os-release</code>); для Ubuntu его нет, и без параметра роботы не запускаются.
-    <p>Как агент использует команду: сеанс запускается в фоне, через 5 секунд стартует робот, после него выполняется <code>AgentCommands:StopSession</code> (по умолчанию пусто). Если команда оканчивается на <code>{}</code>, вместо этого скрипт робота подставляется на место <code>{}</code>, и команда завершения не вызывается.</p></li>
-  <li>Установите и запустите юнит (также под <code>agent</code>):
-<pre><code>mkdir -p ~/.config/systemd/user
-cp /opt/Primo/Agent/Primo.Orchestrator.Agent.user.service ~/.config/systemd/user/Primo.Orchestrator.Agent.service
-systemctl --user daemon-reload
-systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
-    <span class="check"><code>curl -k https://localhost:5002/api/Version</code> возвращает версию агента; в <code>journalctl --user -u Primo.Orchestrator.Agent</code> нет предупреждений «the launch of robots is impossible»</span></li>
-  <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
-    <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>

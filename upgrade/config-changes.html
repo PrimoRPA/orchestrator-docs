@@ -30,6 +30,7 @@
   <tr><td>Notifications</td><td><code>Email:MaxRetryCount</code></td><td>по умолчанию <code>50</code>, в поставочном конфиге <code>100</code></td><td>не читается</td><td>только LTS</td></tr>
   <tr><td>Агент</td><td><code>Agent:CredentialsCheckDelayMsec</code></td><td><code>3000</code></td><td>не читается</td><td>только LTS</td></tr>
   <tr><td>RDP2</td><td><code>SuppressOutputWhenIdle</code></td><td><code>false</code></td><td>не читается</td><td>только LTS</td></tr>
+  <tr><td>nginx (установка службами на Linux)</td><td><code>nginx.linux.conf</code>: блок <code>upstream mcp</code> и <code>location /mcp</code> для MCP Server</td><td>есть в поставке 1.26.7 LTS</td><td>в поставке 1.26.9 отсутствуют</td><td>только LTS</td></tr>
 </table></div>
 <div class="warn"><p>Если параметр <code>Scheduler:TimeZoneId</code> был задан, после перехода на 1.26.9.0 расписания считаются по часовому поясу ОС. Проверьте его на сервере WebApi до обновления.</p></div>
 
@@ -64,7 +65,7 @@
   <tr><td>NuGet2</td><td><code>Storage:Type</code></td><td><code>Minio</code></td><td><code>FileSystem</code>; на Windows <code>FileSystem:Path</code> = <code>C:\OrchNuget</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>NuGet2</td><td><code>AllowPackageOverwrites</code></td><td><code>false</code></td><td><code>true</code></td><td>1.26.7 LTS</td></tr>
   <tr><td>Агент (Windows)</td><td><code>Kestrel:EndPoints:ExternalHttps:Certificate:Path</code></td><td><code>C:\Primo\Agent\cert1.pfx</code></td><td><code>cert1.pfx</code> (относительный путь)</td><td>1.26.7 LTS</td></tr>
-  <tr><td>Licenses, NuGet2</td><td><code>DbConnection:Items:Licenses:CommandTimeOut</code> (Windows); <code>Database:DbConnection:CommandTimeOut</code></td><td><code>20</code></td><td><code>120</code></td><td>1.26.9</td></tr>
+  <tr><td>WebApi, RobotLogs, Analytic, Licenses, NuGet2 и строки подключения к БД секретов у остальных служб</td><td>Таймаут команд БД в поставочных конфигах: <code>CommandTimeOut</code> в <code>DbConnection:Items:*</code>, <code>COMMANDTIMEOUT</code> в строках подключения</td><td><code>20</code></td><td><code>120</code></td><td>1.26.9</td></tr>
 </table></div>
 
 <h2>Новые параметры</h2>
