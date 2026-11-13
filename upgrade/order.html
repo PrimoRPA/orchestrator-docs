@@ -80,8 +80,9 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   systemctl --user stop Primo.Orchestrator.$s
 done</code></pre>
     <span class="check"><code>systemctl --user list-units 'Primo.Orchestrator.*'</code> — нет <code>active</code></span></li>
+  <li>Скопируйте архивы новой версии в отдельный каталог, например <code>~/dist-new</code>. В каталоге с архивами прежней версии шаблон имени из команд ниже совпадёт с двумя файлами.</li>
   <li>Сохраните старые каталоги и распакуйте новые:
-<pre><code>cd ~/dist
+<pre><code>cd ~/dist-new
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook; do
   mv /opt/Primo/$s /opt/Primo/$s-old
   unzip -q primo-rpa-orchestrator-"${s,,}"-*-linux.zip -d /opt/Primo/$s
@@ -91,7 +92,7 @@ mv /opt/Primo/NuGet2 /opt/Primo/NuGet2-old
 unzip -q primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     <span class="check">в каждом каталоге есть <code>Version.txt</code> с новой версией</span></li>
-  <li>Перенесите свои значения из <code>/opt/Primo/&lt;Служба&gt;-old/appsettings.ProdLinux.json</code> в новые файлы. <span class="check">новые конфиги содержат перенесённые значения</span></li>
+  <li>Перенесите свои значения из <code>/opt/Primo/&lt;Служба&gt;-old/appsettings.ProdLinux.json</code> в новые файлы. Проверьте также секции, которых нет в поставочном файле и которые добавлялись при установке: <code>Orchestrator</code> в файлах States и Analytic, <code>CustomerBinding</code> в файле MachineInfo. <span class="check">новые конфиги содержат перенесённые значения</span></li>
   <li>Сравните установленные юниты с новыми (<code>diff ~/.config/systemd/user/Primo.Orchestrator.WebApi.service /opt/Primo/WebApi/Primo.Orchestrator.WebApi.user.service</code>). Если юнит изменился, скопируйте новый, верните в него свои строки <code>Environment=</code> (например, <code>PRIMOSALT</code>) и выполните <code>systemctl --user daemon-reload</code>. <span class="check">в юнитах сохранены добавленные переменные</span></li>
   <li>Запустите MachineInfo и WebApi:
 <pre><code>systemctl --user start Primo.Orchestrator.MachineInfo
@@ -100,6 +101,8 @@ curl http://localhost:5001/health</code></pre>
     <span class="check">ответ <code>Healthy</code>; <code>journalctl --user -u Primo.Orchestrator.WebApi</code> без ошибок миграций</span></li>
   <li>Запустите остальные службы и nginx; при обновлении UI4 замените содержимое <code>/opt/Primo/nginx/www</code> файлами нового дистрибутива UI (<code>index.html</code> в корне). <span class="check">UI4 открывается</span></li>
 </ol>
+
+<div class="note"><p>Проверено при обновлении с 1.26.7 на 1.26.9: юниты служб в этих версиях не различаются, WebApi применяет миграции и отвечает <code>Healthy</code> менее чем через минуту после запуска, лицензии остаются действительными. RDP2 обновляется так же, как остальные службы.</p></div>
 
 <h3>Альтернатива: службы от root</h3>
 <p>Те же шаги, но через <code>sudo</code>: <code>sudo systemctl stop|start Primo.Orchestrator.&lt;Служба&gt;</code>, юниты без <code>.user</code> находятся в <code>/etc/systemd/system/</code>, журнал — <code>journalctl -u Primo.Orchestrator.&lt;Служба&gt;</code>. Переход на схему без root — <a href="from-root.html">Переход с root на работу без root</a>.</p>
@@ -113,20 +116,23 @@ curl http://localhost:5001/health</code></pre>
   <li>Используйте новый <code>docker-compose.yml</code> из поставки и перенесите в него свои значения: блоки <code>x-globals</code>, <code>x-secrets</code>, <code>primo-machine-key</code>. Ключ <code>primo-machine-key</code> должен остаться прежним, иначе лицензии станут невалидными. <span class="check">у всех служб Оркестратора в теге новая версия, ключ совпадает со старым</span></li>
   <li>Скачайте образы: <code>docker compose pull</code> (в закрытом контуре — загрузите их из архива). <span class="check"><code>docker images</code> показывает новые теги</span></li>
   <li>Пересоздайте контейнеры: <code>docker compose up -d</code>. <span class="check"><code>docker compose ps</code> — все службы <code>healthy</code></span></li>
-  <li>Удалите старые образы: <code>docker image prune</code>. <span class="check">место на диске освободилось</span></li>
+  <li>Удалите старые образы: <code>docker image prune -a</code>. Команда удаляет все образы, которые не используются контейнерами. <span class="check">место на диске освободилось</span></li>
 </ol>
 <div class="warn"><p>Переход с compose 1.25.7: в нём был MinIO, и WebApi с NuGet2 хранили файлы там (<code>FileStore__Type=1</code>, <code>Storage__Type=Minio</code>). С 1.26.7 MinIO в compose нет, файлы хранятся в томах <code>webapidata</code> и <code>nugetdata</code>. Дистрибутивы агента и робота и NuGet-пакеты из MinIO автоматически не переносятся. Либо оставьте MinIO и задайте старые значения явно, либо загрузите файлы заново. Не удаляйте том <code>miniodata</code> до проверки.</p></div>
+<div class="note"><p>Проверено при обновлении с 1.26.7 на 1.26.9: состав служб, томов и параметров в начале compose-файла в этих версиях совпадает; обновление вместе со скачиванием образов занимает около двух минут; лицензии, роботы, проекты и история запусков сохраняются. В compose-файле 1.26.9 образы PostgreSQL и RabbitMQ берутся из реестра Primo RPA, а не с Docker Hub; версия PostgreSQL прежняя, данные в томе остаются.</p></div>
 <div class="warn"><p>RDP2 в Docker-поставку не входит. Обновите его отдельно по шагам для Windows или Linux.</p></div>
 </div>
 
 <h2>Агенты из UI4</h2>
 <p>Требуется право «Обновление агента» (<code>AgentDistrs.AgentUpdate</code>). Загружаемый дистрибутив должен быть не ниже 1.24.8.0, платформа — совпадать с машиной.</p>
 <ol class="steps">
-  <li>Настройки → Система → Дистрибутивы агента → «Добавить дистрибутив Агента». Загрузите zip агента нужной ОС. <span class="check">дистрибутив в списке, «Наличие в хранилище» подтверждено</span></li>
+  <li>Настройки → Система → Дистрибутивы агента → «Добавить дистрибутив Агента». Выберите zip агента нужной ОС и нажмите <b>Сохранить</b>. Сообщение «Server error» при сохранении означает, что на сервере нет каталога для дистрибутивов агента — см. раздел 1 <a href="../deploy/install-services.html">Установки служб</a>. <span class="check">дистрибутив в списке, «Наличие в хранилище» подтверждено</span></li>
   <li>Настройки → Система → Машины роботов. Отметьте машины и нажмите «Обновить выбранные». <span class="check">открылась панель «Обновление агента на машинах роботов»</span></li>
   <li>Для каждой машины выберите дистрибутив или включите «Последняя версия». Нажмите «Обновить». <span class="check">в колонке «Последнее обновление» — «Обновление запущено» с датой</span></li>
   <li>Отслеживайте этапы: «Скачивание AgentUpdater», «Скачивание дистрибутива агента», «Остановка сервиса агента», «Обновление сервиса агента», «Запуск сервиса агента». В журнал событий пишутся записи <code>AgentUpdate OK - …</code>. <span class="check">«Версия агента» — новая</span></li>
 </ol>
+<figure class="shot"><img src="../assets/img/agent-update.png" alt="Панель «Обновление агента на машинах роботов»" loading="lazy" width="1440" height="900"><figcaption>Панель <b>Обновление агента на машинах роботов</b>: для каждой машины выбирается дистрибутив либо включается <b>Последняя версия</b>.</figcaption></figure>
+<div class="note"><p>Обновление агента на Linux занимает менее минуты. Сервер и агент соседних версий совместимы в обе стороны: сервер 1.26.9 работает с агентом 1.26.7, сервер 1.26.7 — с агентом 1.26.9. Робот 1.26.7 запускает проекты под сервером и агентом 1.26.9.</p></div>
 <p>На машине выполняется следующее: AgentUpdater останавливает службу агента (Windows — <code>Primo.Orchestrator.Agent</code>, Linux — <code>systemctl --user stop Primo.Orchestrator.Agent</code>), копирует каталог агента без <code>Logs</code> в <code>&lt;Agent:DataPath&gt;/AgentRecovery</code>, распаковывает новый дистрибутив и запускает службу. При ошибке файлы восстанавливаются из копии.</p>
 <p>Из старого конфига агента переносятся только эти ключи:</p>
 <div class="tbl-wrap"><table>
@@ -147,14 +153,27 @@ curl http://localhost:5001/health</code></pre>
 <h2>Роботы</h2>
 <ol class="steps">
   <li>Настройки → Система → Дистрибутивы робота → «Добавить дистрибутив Робота»; загрузите архивы из поставки. <span class="check">дистрибутивы в списке</span></li>
-  <li>Отметьте нужный дистрибутив «Сделать основным». <span class="check">в колонке «Основной» — новый дистрибутив</span></li>
+  <li>В меню <b>⋮</b> в строке нужного дистрибутива выберите <b>Назначить по умолчанию</b>. <span class="check">в колонке <b>По умолчанию</b> у нового дистрибутива — «Да»</span></li>
   <li>Роботы → Все роботы → «Переразвернуть роботов». <span class="check">статус развёртывания — успешно</span></li>
 </ol>
+<figure class="shot"><img src="../assets/img/robotdistr-menu.png" alt="Меню строки дистрибутива робота" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Дистрибутивы робота</b>: меню строки с пунктом <b>Назначить по умолчанию</b>.</figcaption></figure>
+
+<h2 id="rollback">Откат обновления</h2>
+<p>Миграции новой версии изменяют базы данных, поэтому при откате базы восстанавливаются из копии, созданной перед обновлением. Порядок для установки службами на Linux:</p>
+<ol class="steps">
+  <li>Остановите службы.</li>
+  <li>Верните каталоги прежней версии: переименуйте <code>/opt/Primo/&lt;Служба&gt;</code> новой версии и верните на место <code>/opt/Primo/&lt;Служба&gt;-old</code>. Так же верните прежнее содержимое <code>/opt/Primo/nginx/www</code>, если обновлялся интерфейс.</li>
+  <li>Восстановите базы из копии — см. <a href="../operate/backup.html#procedure">Порядок копирования и восстановления</a>. Перед созданием пустых баз удалите базы новой версии командой <code>dropdb</code>.</li>
+  <li>Запустите MachineInfo, затем WebApi, затем остальные службы. <span class="check"><code>/health</code> служб отвечает <code>Healthy</code>, в файле <code>Version.txt</code> каталога службы — прежняя версия</span></li>
+</ol>
+<p>Агент, обновлённый до новой версии, после отката сервера продолжает работать, возвращать его к прежней версии не требуется.</p>
+
 <h2>Что дальше</h2>
 <div class="next">
   <a href="../deploy/verify.html">Проверка установки<small>убедиться, что всё работает после обновления</small></a>
   <a href="from-root.html">Переход с root на работу без root<small>если службы на Linux всё ещё работают от root</small></a>
 </div>
+
 
 
 

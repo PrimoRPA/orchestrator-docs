@@ -110,7 +110,7 @@ sudo loginctl enable-linger orch-user</code></pre>
   <li>Создайте каталоги и назначьте их владельцем пользователя служб:
 <pre><code>sudo mkdir -p /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}
 sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}</code></pre>
-    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
+    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Подкаталог для дистрибутивов агента WebApi сам не создаёт: под пользователем служб выполните <code>mkdir -p /opt/Primo/Data/AgentDistrs</code>, иначе загрузка дистрибутива агента в интерфейсе завершится сообщением «Server error». Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
@@ -340,6 +340,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
+<figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
 
 <details>
@@ -419,7 +420,7 @@ sudo loginctl enable-linger orch-user</code></pre>
   <li>Создайте каталоги и назначьте их владельцем пользователя служб:
 <pre><code>sudo mkdir -p /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}
 sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}</code></pre>
-    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
+    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Подкаталог для дистрибутивов агента WebApi сам не создаёт: под пользователем служб выполните <code>mkdir -p /opt/Primo/Data/AgentDistrs</code>, иначе загрузка дистрибутива агента в интерфейсе завершится сообщением «Server error». Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
@@ -650,6 +651,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
+<figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
 
 <details>
@@ -730,7 +732,7 @@ sudo loginctl enable-linger orch-user</code></pre>
   <li>Создайте каталоги и назначьте их владельцем пользователя служб:
 <pre><code>sudo mkdir -p /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}
 sudo chown -R orch-user:orch-user /opt/Primo/{MachineInfo,WebApi,RobotLogs,Analytic,Notifications,States,Queues,Licenses,LogEventsWebhook,NuGet2,RDP2,ArcSight,nginx,Data}</code></pre>
-    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
+    В каталоге <code>/opt/Primo/Data</code> службы хранят загруженные дистрибутивы, архивы проектов и пакеты. Подкаталог для дистрибутивов агента WebApi сам не создаёт: под пользователем служб выполните <code>mkdir -p /opt/Primo/Data/AgentDistrs</code>, иначе загрузка дистрибутива агента в интерфейсе завершится сообщением «Server error». Владелец меняется только у перечисленных каталогов: если на этом же сервере установлен агент, каталоги <code>/opt/Primo/Agent</code> и <code>/opt/Primo/AgentData</code> должны остаться за пользователем агента.
     <span class="check"><code>ls -l /opt/Primo</code> — владелец перечисленных каталогов <code>orch-user</code></span></li>
   <li>Скопируйте архивы и файлы nginx в каталог пользователя служб, например в <code>/home/orch-user/dist</code>:
 <pre><code>sudo mkdir -p /home/orch-user/dist
@@ -960,6 +962,7 @@ systemctl --user enable --now Primo.Orchestrator.Agent</code></pre>
   <li>Зарегистрируйте машину: в UI4 <b>Настройки → Система → Машины роботов</b>, <b>Добавить машину</b>, заполните <b>Наименование</b> и <b>IP/DNS</b>, включите <b>Linux</b> (после сохранения не меняется) и сохраните.
     <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
+<figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
 <p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
 
 <details>
@@ -1038,7 +1041,7 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
 </ol>
 <p>Окружение задаёт переменная <code>ASPNETCORE_ENVIRONMENT</code>: <code>ProdLinux</code> или <code>ProdWin</code>. Если она не задана, служба сразу завершается с ошибкой.</p>
 
-<div class="warn"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В сборке 1.26.7 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi.</p></div>
+<div class="warn"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В сборках 1.26.7 и 1.26.9 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi.</p></div>
 
 
 <h2>Что дальше</h2>

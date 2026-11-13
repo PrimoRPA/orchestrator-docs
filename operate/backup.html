@@ -90,6 +90,36 @@ done</code></pre>
 </ol>
 <p>При восстановлении на том же сервере лицензии остаются действительными, повторная загрузка не требуется.</p>
 
+<h3 id="docker">Установка в Docker</h3>
+<p>Проверенный порядок для установки одним compose-файлом. Команды выполняются от имени <code>root</code> в каталоге с compose-файлом. Копируются дамп всех баз, тома с файлами (<code>webapidata</code>, <code>nugetdata</code>) и файлы каталога установки. Том RabbitMQ копировать не требуется.</p>
+<ol class="steps">
+  <li>Остановите службы Оркестратора, кроме PostgreSQL, и создайте дамп баз:
+<pre><code>cd /opt/Docker
+docker compose stop $(docker compose config --services | grep -v '^0postgres-db$')
+docker compose exec -T 0postgres-db pg_dumpall -U postgres | gzip > &lt;каталог копии&gt;/all.sql.gz</code></pre></li>
+  <li>Остановите PostgreSQL и создайте копию томов и файлов установки. Имена томов выводит <code>docker volume ls</code>:
+<pre><code>docker compose stop
+for v in orch-docker_webapidata orch-docker_nugetdata; do
+  tar -czf &lt;каталог копии&gt;/$v.tgz -C /var/lib/docker/volumes/$v/_data .
+done
+cp docker-compose.yml nginx.conf cert1.crt cert1.rsa &lt;каталог копии&gt;/</code></pre></li>
+  <li>Запустите службы: <code>docker compose start</code>. <span class="check"><code>docker compose ps</code> — все службы <code>healthy</code></span></li>
+</ol>
+<p>Восстановление на сервере с установленным Docker:</p>
+<ol class="steps">
+  <li>Верните в каталог установки <code>docker-compose.yml</code>, <code>nginx.conf</code> и файлы сертификата из копии. Создайте контейнеры и тома без запуска и распакуйте в тома файлы:
+<pre><code>cd /opt/Docker
+docker compose up --no-start
+for v in orch-docker_webapidata orch-docker_nugetdata; do
+  tar -xzf &lt;каталог копии&gt;/$v.tgz -C /var/lib/docker/volumes/$v/_data
+done</code></pre></li>
+  <li>Запустите только PostgreSQL, дождитесь состояния <code>healthy</code> и восстановите базы. Сообщение о том, что роль <code>postgres</code> уже существует, ошибкой не является:
+<pre><code>docker compose up -d 0postgres-db
+gunzip -c &lt;каталог копии&gt;/all.sql.gz | docker compose exec -T 0postgres-db psql -U postgres -q -d postgres</code></pre></li>
+  <li>Запустите остальные службы: <code>docker compose up -d</code>. <span class="check">все службы <code>healthy</code>; лицензии действительны, проект на роботе выполняется</span></li>
+</ol>
+<p>Ключ <code>primo-machine-key</code> в compose-файле должен остаться прежним: к нему привязаны лицензии.</p>
+
 <h2>Восстановление: на что обратить внимание</h2>
 <ul>
   <li>После восстановления конфигов служба при старте сравнит их с хэшем в БД и, если файл отличается, запишет событие 2 «Конфигурационный файл изменен» (класс «Инцидент безопасности»). Это штатное поведение.</li>

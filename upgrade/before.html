@@ -74,7 +74,7 @@
   <li>Сделайте дампы всех БД из таблицы. <span class="check">для каждой БД есть свежий дамп и он открывается</span></li>
   <li>Скопируйте конфиги, юниты, compose, каталоги хранилищ и тома. Запишите <code>PRIMOSALT</code>, <code>PRIMOSIGNINGKEY</code>, <code>primo-machine-key</code> в надёжное место. <span class="check">копии находятся вне сервера Оркестратора</span></li>
 </ol>
-<div class="warn"><p>В WebApi предусмотрен режим, в котором выполняется только миграция БД: <code>Primo.Orchestrator.WebApi --migration</code>. В сборке 1.26.7 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi. Планируйте обновление исходя из этого.</p></div>
+<div class="warn"><p>В WebApi предусмотрен режим, в котором выполняется только миграция БД: <code>Primo.Orchestrator.WebApi --migration</code>. В сборках 1.26.7 и 1.26.9 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi. Планируйте обновление исходя из этого.</p></div>
 <div class="note"><p>Для PostgreSQL миграции допускается выполнять от отдельной учётной записи: <code>MigrationUserName</code> / <code>MigrationPassword</code> в <code>DbConnection:Items:*</code>.</p></div>
 
 <h2>3. Совместимость</h2>
