@@ -15,7 +15,7 @@
 
 <div class="meta">
   <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
-  <div><b>Результат</b>пароли в конфигах зашифрованы, подключены внешние хранилища секретов, настроены TLS и контроль изменения конфигов</div>
+  <div><b>Результат</b>пароли и ключи в конфигах служб зашифрованы</div>
 </div>
 
 <h2>Шифрование паролей в конфигах</h2>
@@ -54,7 +54,7 @@
 <p>Ключи внутри секрета повторяют имена параметров конфига: <code>RabbitMQ:Password</code>, <code>CyberArk:Password</code>, <code>FileStore:Minio:SecretKey</code> и т. п. Для WebApi учётные записи AD находятся в подпутях <code>ad/&lt;домен&gt;</code> (ключи <code>AdAdminUserName</code>, <code>AdAdminPassword</code>), почта тенантов — в <code>tenant/&lt;Id тенанта&gt;</code> (<code>TenantIncomingEmailUserName</code>, <code>TenantIncomingEmailLogin</code>, <code>TenantIncomingEmailPassword</code>).</p>
 
 <h3>2. Учётные записи ресурсов и RDP-пользователей</h3>
-<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётную запись в Vault. В UI4 в карточке машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». Учётные записи RDP в Vault появились в 1.26.8.</p>
+<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётную запись в Vault. В UI4 в форме RDP-пользователя машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». Учётные записи RDP в Vault появились в 1.26.8.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётными записями для ресурсов</td><td><code>asset</code></td></tr>
@@ -114,7 +114,7 @@ WEBAPI_VAULT_PASSWORD=&lt;пароль&gt;</code></pre>
 <h2>Как проверить</h2>
 <ol class="steps">
   <li>После смены паролей перезапустите службу. <span class="check">Служба стартует, <code>/health</code> отвечает <code>200</code>.</span></li>
-  <li>С Vault: в карточке машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётными записями из <code>credentials</code>.</span></li>
+  <li>С Vault: в форме RDP-пользователя машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётными записями из <code>credentials</code>.</span></li>
   <li>Измените любой параметр в <code>appsettings.json</code> и перезапустите службу. <span class="check">В журнале «События оркестратора» появилось событие «Конфигурационный файл изменен».</span></li>
 </ol>
 
