@@ -49,7 +49,7 @@
   <tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
   <tr><td><code>Integration:Unloading</code>, <code>Observability:Unloading</code></td><td>Выгрузки в интеграционные таблицы (<code>Enabled</code>, <code>Items</code> с <code>CronString</code>, <code>ObjectFlow</code>, <code>LeaveIterations</code>)</td><td>выключены</td></tr>
 </table></div>
-<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>DpaEvents</code>, <code>RobotsUsage</code>, <code>WorkersUsage</code> — без префикса <code>mv_</code>. В коде распознаются только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>
+<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>RobotsUsage</code>, <code>WorkersUsage</code> и другими — без префикса <code>mv_</code>. В коде распознаются только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>
 
 <h2>Выгрузки WebApi в интеграционные таблицы</h2>
 <p>WebApi по расписанию копирует справочники в таблицы <code>IntegrationExchange*</code> БД <code>ltools</code>, откуда их забирает внешняя система.</p>
@@ -79,8 +79,7 @@
 <p>В WebApi: <code>"Integration": { "EventWebhook": { "Enabled": true } }</code>. В Analytic:</p>
 <pre><code>"Schedules": { "RefreshMaterializedViews": {
   "mv_WorkersUsage": { "CronString": "0 0/5 * * * ?" },
-  "mv_RobotsUsage":  { "CronString": "0 0/5 * * * ?" },
-  "mv_DpaEvents":    { "CronString": "0 0/5 * * * ?" }
+  "mv_RobotsUsage":  { "CronString": "0 0/5 * * * ?" }
 } }</code></pre>
 
 <h2>Как проверить</h2>

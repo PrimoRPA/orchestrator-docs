@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/storage">
+<main>
+<h1>Файлы дистрибутивов, проектов и пакетов: хранилище и публикация</h1>
+<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Дистрибутив робота отображается как отсутствующий в хранилище, хотя файл на месте; растёт каталог временных файлов WebApi; NuGet-пакет не публикуется из Оркестратора. Где WebApi хранит файлы и какими параметрами это задаётся, описано в <a href="../configure/storage.html">Хранилища</a>; здесь — причины неполадок и способы исправления.</p>
+<div class="meta">
+  <div><b>Перед началом</b>доступ к журналу WebApi и к серверу или контейнеру WebApi — <a href="../operate/service-logs.html">Журналы служб</a></div>
+  <div><b>Результат</b>файлы доступны всем узлам WebApi, пакеты публикуются в NuGet-сервер</div>
+</div>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>После загрузки дистрибутива робота в колонке <b>Наличие в хранилище</b> через несколько секунд отображается «Нет», хотя файл дистрибутива есть в папке и доступен для чтения. Рядом может отображаться отметка «Долгое время от некоторых нод нет подтверждения».</li>
+  <li>На сервере или в контейнере WebApi растёт каталог временных файлов (в Docker-образах — <code>/tmp</code>).</li>
+  <li>Пакет не публикуется в NuGet-сервер из Оркестратора, хотя напрямую в NuGet-сервер загружается. В журнале WebApi повторяется «Ошибка обработки задания Publish для пакета … NuGet-сервера: …».</li>
+</ul>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li><b>Несколько экземпляров WebApi работают с одной БД, а папки дистрибутивов у них разные.</b> Каждый экземпляр проверяет файл в своей папке.</li>
+  <li><b>WebApi сохраняет файлы на локальный диск и не удаляет их.</b> Это загруженные NuGet-пакеты и, при устаревшем способе хранения, архивы проектов.</li>
+  <li><b>WebApi не получает ответ от NuGet-сервера.</b> Истекает таймаут запроса или соединение сбрасывается при установке TLS.</li>
+</ul>
+
+<h2>Что проверить</h2>
+<ol class="steps">
+  <li>Определите, сколько экземпляров WebApi подключено к БД: события «Добавился узел» (90500) и «Потерян узел» (90501), список процессов и подов. <span class="check">Известны все работающие узлы WebApi</span></li>
+  <li>Найдите в событиях Оркестратора «Рассинхронизация дистрибутива робота на узлах» (1204) и событие 1205 («мерцание» подтверждения). <span class="check">Известно, есть ли рассогласование между узлами</span></li>
+  <li>На каждом узле без S3 проверьте файл <code>&lt;RobotDistrUpload:TargetFilePath&gt;/&lt;PrefixFolder&gt;&lt;Id&gt;/LTools.Robot.x64.zip</code> (или <code>.x86.zip</code>) и его размер. <span class="check">Файл есть на всех узлах, размер совпадает с размером загруженного дистрибутива</span></li>
+  <li>Проверьте размер каталогов <code>NuGet:UploadPackagePath</code> и <code>RpaProjectArchiveUpload:TargetFilePath</code> (в Docker-образах <code>/tmp/OrchNuGet</code> и <code>/tmp/RpaProjects</code>) и значение <code>RpaProjectArchiveUpload:StoreType</code>. <span class="check">Известно, какой каталог растёт</span></li>
+  <li>В <b>Настройки → NuGet → Задачи</b> посмотрите задачи публикации с ошибкой, в журнале WebApi — текст ошибки после «NuGet-сервера:». <span class="check">Известен текст ошибки публикации</span></li>
+</ol>
+
+<h2>Как исправить</h2>
+
+<h3>«Наличие в хранилище» = «Нет» при нескольких экземплярах WebApi</h3>
+<p>Каждый узел WebApi раз в 3 секунды проверяет у себя каждый дистрибутив робота и записывает в БД своё подтверждение. Без S3 узел проверяет файл в папке <code>RobotDistrUpload:TargetFilePath</code>, с S3 — объект в бакете; подтверждение положительное, только если размер файла совпадает с загруженным. В колонке отображается «Да», только если все работающие узлы подтвердили наличие. Если узел не подтверждает дольше <code>InstanceInfo:NodesDesynchronizationTimeout</code> секунд (по умолчанию 60), записывается событие 1204. Остановленный узел исключается из проверки.</p>
+<p>Дистрибутив сохраняется только на том узле, через который его загрузили. Если к той же БД подключён второй экземпляр WebApi со своей папкой, он файла не находит. Выберите один из вариантов:</p>
+<ol class="steps">
+  <li>Если второй экземпляр запущен ошибочно, остановите его. <span class="check">Через несколько секунд в колонке «Да»</span></li>
+  <li>Если узлов должно быть несколько, подключите S3 (<code>FileStore:Type=1</code>) — см. <a href="../configure/storage.html">Хранилища</a> — либо скопируйте подпапку дистрибутива <code>&lt;PrefixFolder&gt;&lt;Id&gt;</code> в папку дистрибутивов каждого узла. <span class="check">Нет события 1204, в колонке «Да»</span></li>
+</ol>
+<p>У каждого узла должен быть свой <code>InstanceInfo:Id</code> — см. <a href="../configure/scaling.html">Масштабирование и отказоустойчивость</a>. Дистрибутивы агента проверяются так же.</p>
+
+<h3>Растёт каталог временных файлов WebApi</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Каталог (в Docker-образах)</th><th>Что в нём</th><th>Что делать</th></tr>
+  <tr><td><code>NuGet:UploadPackagePath</code> (<code>/tmp/OrchNuGet</code>)</td><td>NuGet-пакеты, загруженные через <b>Опубликовать NuGet-пакет</b>. После публикации файл не удаляется</td><td>Удаляйте файлы пакетов, у которых нет незавершённых задач в <b>Задачи по NuGet-пакетам</b></td></tr>
+  <tr><td><code>RpaProjectArchiveUpload:TargetFilePath</code> (<code>/tmp/RpaProjects</code>)</td><td>Архивы RPA-проектов, только при <code>RpaProjectArchiveUpload:StoreType=0</code> (устаревший способ). Это основное хранилище архивов, а не временные файлы</td><td>Не удаляйте файлы: без них версии проектов не скачиваются. Переведите хранение в БД или S3 (<code>StoreType</code> = 1 или 2) и разместите папку на постоянном томе</td></tr>
+</table></div>
+<p>Встроенной очистки этих каталогов в WebApi нет. В Kubernetes содержимое <code>/tmp</code> пода, не вынесенное на том, удаляется при пересоздании пода.</p>
+<div class="warn"><p>При <code>StoreType=0</code> в Docker и Kubernetes каталог архивов должен быть на постоянном томе. Иначе при пересоздании контейнера архивы проектов теряются.</p></div>
+
+<h3>Пакет не публикуется в NuGet-сервер</h3>
+<p>Публикация выполняется в фоне. Пакет сохраняется в <code>NuGet:UploadPackagePath</code>, в БД создаётся задача публикации. Раз в <code>NuGet:TaskPeriod</code> секунд (по умолчанию 2) WebApi берёт задачу и отправляет пакет запросом <code>PUT {NuGetBaseUrl}/{PathBase}/api/v2/package</code>. Задача с ошибкой повторяется через <code>NuGet:RepeatErrorDelay</code> минут (по умолчанию 2) без ограничения числа попыток, поэтому ошибки в журнале и в UI4 повторяются, пока задача не будет удалена или выполнена.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр секции <code>NuGet</code></th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>NuGetBaseUrl</code></td><td>Адрес NuGet-сервера</td><td>—</td></tr>
+  <tr><td><code>PathBase</code></td><td>Путь, который добавляется к адресу. Пусто — не добавляется</td><td><code>nuget</code></td></tr>
+  <tr><td><code>ApiKey</code></td><td>Ключ NuGet-сервера, зашифрован</td><td>—</td></tr>
+  <tr><td><code>UploadPackagePath</code></td><td>Папка для пакетов перед публикацией</td><td>— (в Docker <code>/tmp/OrchNuGet</code>)</td></tr>
+  <tr><td><code>TaskPeriod</code></td><td>Период опроса задач, с</td><td><code>2</code></td></tr>
+  <tr><td><code>RepeatErrorDelay</code></td><td>Задержка повтора задачи с ошибкой, мин</td><td><code>2</code></td></tr>
+  <tr><td><code>Timeout</code></td><td>Таймаут запроса к NuGet-серверу, с</td><td><code>10</code></td></tr>
+</table></div>
+<p><b>Таймаут.</b> Ошибка «The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.» означает, что NuGet-сервер не ответил за <code>NuGet:Timeout</code> секунд. Увеличьте таймаут и перезапустите WebApi:</p>
+<pre><code>"NuGet": {
+  "Timeout": 60
+}</code></pre>
+<p><b>Ошибка TLS.</b> Ошибка «The SSL connection could not be established, see inner exception.» с внутренней «Connection reset by peer» означает, что соединение разорвано при установке TLS. Проверка сертификата NuGet-сервера в WebApi отключена: клиент принимает любой сертификат, поэтому само по себе недоверенное издательство сертификата к этой ошибке не приводит. Проверьте:</p>
+<ol class="steps">
+  <li>Адрес, который собирается из <code>NuGetBaseUrl</code> и <code>PathBase</code>: протокол, порт и путь должны соответствовать NuGet-серверу.</li>
+  <li>Доступность адреса с сервера или из контейнера WebApi, например запросом <code>curl -v &lt;NuGetBaseUrl&gt;/&lt;PathBase&gt;/v3/index.json</code>. <span class="check">Запрос из контейнера WebApi проходит без разрыва соединения</span></li>
+</ol>
+<p><b>Прекратить повторы.</b> Удалите задачу с ошибкой в <b>Настройки → NuGet → Задачи</b> (кнопка удаления в строке). Пакет можно опубликовать напрямую в NuGet-сервер.</p>
+<div class="note"><p>Задачу публикации может взять любой узел WebApi, а файл пакета сохраняется на том узле, через который его загрузили. При нескольких узлах <code>NuGet:UploadPackagePath</code> должен указывать на общую для узлов папку.</p></div>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="../configure/storage.html">Хранилища<small>папки, S3 и способы хранения архивов проектов</small></a>
+  <a href="../configure/scaling.html">Масштабирование и отказоустойчивость<small>номера узлов WebApi и работа нескольких экземпляров</small></a>
+</div>
+
+
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="troubleshoot/rabbitmq">
+<main>
+<h1>Ошибки RabbitMQ: нет обменника или очереди</h1>
+<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Службы Оркестратора обмениваются сообщениями через RabbitMQ. Обменники и очереди создаёт не администратор, а сами службы при запуске. Если нужная служба не запускалась на этом сервере RabbitMQ или RabbitMQ потерял свои данные, публикация завершается ошибкой, и проекты не запускаются, а события и письма теряются.</p>
+<div class="meta">
+  <div><b>Перед началом</b>доступ к журналам служб — <a href="../operate/service-logs.html">Журналы служб</a></div>
+  <div><b>Результат</b>все обменники и очереди на месте, в журналах нет ошибок RabbitMQ</div>
+</div>
+
+<h2>Симптомы</h2>
+<ul>
+  <li>Не запускается ни один проект, не разворачивается робот. Агент пишет «Оркестратор вернул ошибку: StatusCode=InternalServerError».</li>
+  <li>В журнале WebApi предупреждение «Error publishing event [OrchEvent] to EventHub.» с одним из исключений:
+    <ul>
+      <li><code>NOT_FOUND - no exchange 'events' in vhost '/'</code> (код 404);</li>
+      <li><code>AlreadyClosedException: Already closed</code> с текстом <code>Feature `transient_nonexcl_queues` is deprecated</code> (код 541).</li>
+    </ul>
+  </li>
+  <li>В журнале службы при запуске: «Ошибка при подключении к RabbitMQ».</li>
+  <li>В консоли RabbitMQ нет очереди <code>projects_&lt;тенант&gt;</code>, хотя одноимённый обменник есть.</li>
+  <li>Docker: после <code>docker compose down</code> и <code>up</code> в консоли RabbitMQ нет ни обменников, ни очередей Оркестратора.</li>
+</ul>
+
+<h2>Кто создаёт обменники и очереди</h2>
+<p>Каждая служба при запуске объявляет свои обменники и очереди. Объявление повторяется при каждом старте; существующие объекты с теми же параметрами не изменяются. Если служба не запускалась, её объектов нет, а остальные службы получают ошибку при публикации.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Обменник (тип) → очередь</th><th>Объявляет</th><th>Читает</th></tr>
+  <tr><td><code>events</code> (fanout) → <code>events</code></td><td>States</td><td>States. В обменник публикует WebApi — все события Оркестратора</td></tr>
+  <tr><td><code>projects_&lt;тенант&gt;</code> (direct), <code>projectspriority_&lt;тенант&gt;</code> (fanout), <code>deferred1_…</code>, <code>deferred2_…</code>, <code>deferred3_…</code> (fanout) — одноимённые очереди</td><td>WebApi, отдельный комплект на каждый тенант; у базового тенанта суффикс пустой: <code>projects_</code></td><td>WebApi (очередь проектов)</td></tr>
+  <tr><td><code>dbevents</code> (fanout) → <code>dbevents</code>, <code>dbevents2</code></td><td>WebApi</td><td><code>dbevents</code> — RobotLogs, <code>dbevents2</code> — Analytic</td></tr>
+  <tr><td><code>emailevents</code> (fanout) → <code>emailevents</code></td><td>WebApi</td><td>Notifications</td></tr>
+  <tr><td><code>emaildefferedgeneral</code>, <code>emaildefferedafterfail</code> (fanout), <code>emailqueue</code> (direct)</td><td>Notifications</td><td>Notifications</td></tr>
+  <tr><td><code>notificationemailevents</code> (direct)</td><td>WebApi и Notifications</td><td>WebApi (экран «Уведомления»)</td></tr>
+  <tr><td>Очереди <code>AgentUnavailabilityEvents</code>, <code>RpaProjectQueueRiseEvents</code>, <code>RpaProjectCompletedEvents</code>, <code>RobotStartErrorEvents</code>, <code>UserExpiredEvents</code>, <code>LicenseIsExpiringEvents</code>, <code>AllEventsResolveEvents</code>, <code>OrchEventsResolveEvents</code></td><td>States и Notifications</td><td>Notifications</td></tr>
+  <tr><td><code>wsevents&lt;N&gt;</code>, <code>keepaliverobots&lt;N&gt;</code>, <code>assetcacheinvalidationevents&lt;N&gt;</code></td><td>WebApi, отдельная очередь на каждый экземпляр (N — номер экземпляра)</td><td>WebApi</td></tr>
+</table></div>
+<p>Все объекты, кроме последней строки, создаются долговечными (durable) с ограничением длины очереди <code>x-max-length</code>: 10000 у очередей проектов, <code>dbevents</code>, <code>dbevents2</code>, <code>emailevents</code>, <code>notificationemailevents</code> и очередей писем; 5000 у <code>events</code> и очередей уведомлений. Очередь <code>projectspriority_…</code> дополнительно создаётся с приоритетами (<code>x-max-priority</code> = 3) и временем жизни сообщений; очереди <code>projectspriority_…</code> и <code>deferred…</code> по истечении времени передают сообщения в обменник <code>projects_&lt;тенант&gt;</code>. Очереди последней строки — временные (не durable, удаляются автоматически, не эксклюзивные). Имена задаются в секции <code>RabbitMQ</code> каждой службы; в таблице — значения по умолчанию.</p>
+
+<h2>Вероятные причины</h2>
+<ul>
+  <li><b>Служба, которая объявляет объект, не запускалась</b> после очистки или пересоздания RabbitMQ. Обменник <code>events</code> создаёт только States: если States выключена или ещё не стартовала, WebApi получает «no exchange 'events'» при публикации любого события, например после неудачного входа пользователя.</li>
+  <li><b>Службы подключены к разным серверам RabbitMQ или разным виртуальным хостам.</b> Адрес задают <code>RabbitMQ:Host</code> (или список <code>RabbitMQ:Hosts</code>; при заполненных обоих используется <code>Host</code>) и <code>RabbitMQ:Port</code>, виртуальный хост — <code>RabbitMQ:VirtualHost</code> (если не задан, используется виртуальный хост по умолчанию <code>/</code>).</li>
+  <li><b>Ошибка при объявлении</b> в момент запуска службы: служба пишет «Ошибка при подключении к RabbitMQ» и не создаёт оставшиеся объекты.</li>
+  <li><b>Установлен RabbitMQ 4.x.</b> WebApi создаёт временные неэксклюзивные очереди (последняя строка таблицы). В RabbitMQ 4.x такие очереди по умолчанию запрещены, сервер закрывает канал с кодом 541.</li>
+  <li data-only="docker"><b>Docker: RabbitMQ стартовал с пустой базой</b> после пересоздания контейнера (см. ниже).</li>
+</ul>
+
+<h2>Что проверить</h2>
+<ol class="steps">
+  <li>Найдите в журнале WebApi на время ошибки строки «Error publishing event» и прочитайте текст исключения: <code>no exchange</code>, <code>transient_nonexcl_queues</code> или ошибку соединения. <span class="check">Известно, какого объекта не хватает или почему закрыт канал</span></li>
+  <li>Проверьте, запущены ли States, Notifications и WebApi. Найдите в начале журнала каждой службы «Ошибка при подключении к RabbitMQ». <span class="check">Все три службы работают, ошибки при запуске нет</span></li>
+  <li>Откройте консоль управления RabbitMQ (порт <code>15672</code>), вкладки <b>Exchanges</b> и <b>Queues</b>. Сверьте объекты с таблицей выше и виртуальный хост (столбец <b>Virtual host</b>) с <code>RabbitMQ:VirtualHost</code> служб. <span class="check">Обменник <code>events</code> и очереди <code>projects_…</code> есть в том виртуальном хосте, к которому подключены службы</span></li>
+  <li>Сравните <code>RabbitMQ:Host</code> и <code>RabbitMQ:Port</code> в конфигурации всех служб. С сервера WebApi проверьте доступность именно этого адреса и порта (по умолчанию <code>5672</code>), а не адреса, по которому открывалась консоль. <span class="check">Все службы указывают на один и тот же RabbitMQ</span></li>
+  <li>Проверьте версию RabbitMQ: <code>rabbitmqctl version</code> или правый верхний угол консоли управления. <span class="check">Версия 3.x</span></li>
+</ol>
+
+<h2>Как исправить</h2>
+<h3>Нет обменника <code>events</code></h3>
+<p>Обменник создаёт служба States при запуске. После появления обменника WebApi требуется перезапустить: канал публикации, закрытый сервером из-за ошибки 404, автоматически не восстанавливается.</p>
+<ol class="steps">
+  <li>Остановите службы Оркестратора.</li>
+  <li>Запустите States и дождитесь в журнале строки «Запуск сервиса чтения событий оркестратора.» без ошибки RabbitMQ после неё. <span class="check">В консоли RabbitMQ есть обменник <code>events</code> типа <code>fanout</code> и очередь <code>events</code></span></li>
+  <li>Запустите WebApi, затем Notifications и остальные службы. <span class="check">В журнале WebApi нет «no exchange 'events'»</span></li>
+</ol>
+<p>Если служба States не используется, обменник можно создать вручную в консоли RabbitMQ: <b>Exchanges → Add a new exchange</b>, имя <code>events</code>, тип <code>fanout</code>, <b>Durability</b> — Durable, <b>Auto delete</b> — No. Параметры должны совпадать с теми, что объявляет States: при расхождении States не запустится с этим RabbitMQ. События в такой обменник без очереди не сохраняются.</p>
+<p data-only="docker">В Docker WebApi запускается раньше States (остальные службы ждут готовности <code>web-api</code>). Если обменника не было, после запуска всех контейнеров выполните <code>docker compose restart web-api</code>.</p>
+
+<h3>Нет очереди <code>projects_&lt;тенант&gt;</code></h3>
+<p>Очереди и обменники проектов создаёт WebApi при запуске, сначала очередь, затем обменник, для каждого тенанта. Если обменник есть, а очереди нет, очередь удалена после запуска WebApi или при её объявлении произошла ошибка.</p>
+<ol class="steps">
+  <li>Найдите в журнале WebApi после строки «Создание обменников и очередей в RabbitMQ для обработки очереди ожидания проектов.» ошибку «Ошибка при подключении к RabbitMQ» и текст исключения.</li>
+  <li>Убедитесь, что RabbitMQ доступен, и перезапустите WebApi. <span class="check">Очередь <code>projects_&lt;тенант&gt;</code> появилась в консоли RabbitMQ, проекты из очереди уходят роботам</span></li>
+</ol>
+<p>Допускается создать недостающую очередь вручную, но с теми же аргументами, что объявляет WebApi (<code>x-max-length</code> = 10000, durable), и привязать к обменнику <code>projects_&lt;тенант&gt;</code> с ключом маршрутизации, равным имени очереди. Перезапуск WebApi надёжнее.</p>
+
+<h3>Установлен RabbitMQ 4.x</h3>
+<p>В поставочных docker-compose используется образ <code>rabbitmq:3-management</code>, то есть ветка 3.x. С RabbitMQ 4.x WebApi не может создать временные очереди. Установите RabbitMQ ветки 3.x (3.13). Если в репозитории дистрибутива есть только 4.x (например, Ubuntu 24.04), установите пакет 3.x отдельно, из deb-пакета нужной версии. <span class="check">В журнале WebApi нет <code>transient_nonexcl_queues</code>, роботы разворачиваются</span></p>
+
+<div data-only="docker">
+<h3>Docker: пустая база RabbitMQ после пересоздания контейнера</h3>
+<p>У службы <code>0rabbitmq</code> в поставочном docker-compose не задан параметр <code>hostname</code>. Данные хранятся в томе <code>rabbitmqdata</code> (<code>/var/lib/rabbitmq</code>), но RabbitMQ размещает базу в каталоге с именем узла <code>rabbit@&lt;имя хоста&gt;</code>. При пересоздании контейнера Docker назначает новое случайное имя хоста, RabbitMQ запускает новый узел с пустой базой: без обменников, очередей и сообщений. Старые каталоги остаются в томе.</p>
+<ol class="steps">
+  <li>Проверьте каталоги узлов в томе: <code>docker compose exec 0rabbitmq ls -l /var/lib/rabbitmq/mnesia</code>. <span class="check">Несколько каталогов <code>rabbit@…</code> — база создавалась заново при пересоздании контейнера</span></li>
+  <li>Задайте службе <code>0rabbitmq</code> постоянное имя хоста:
+<pre><code>    0rabbitmq:
+        image: rabbitmq:3-management
+        hostname: rabbitmq
+        ...</code></pre></li>
+  <li>Выполните <code>docker compose up -d</code>. При первом запуске с новым именем хоста база снова создаётся пустой: дождитесь запуска всех служб и выполните <code>docker compose restart web-api</code>. <span class="check">После повторного <code>docker compose down</code> и <code>up</code> обменники и очереди сохраняются</span></li>
+</ol>
+</div>
+
+<h2>Очередь заполнена, сообщения никто не читает</h2>
+<p>Очередь <code>dbevents2</code> предназначена для подсистемы аналитики (служба Analytic). WebApi создаёт её всегда и копирует в неё все события Оркестратора. Если Analytic не развёрнута, у очереди нет потребителей, и она заполняется до предела <code>x-max-length</code> = 10000; более старые сообщения вытесняются. Это штатное поведение, на работу Оркестратора оно не влияет. Если Analytic развёрнута, а очередь не уменьшается — проверьте журнал Analytic.</p>
+<p>То же относится к другим очередям без потребителя: в столбце <b>Consumers</b> консоли RabbitMQ видно, читает ли очередь какая-либо служба.</p>
+
+<h2>Похожее сообщение, не связанное с RabbitMQ: MQTT</h2>
+<p>В журнале WebApi при запусках роботов возможны ошибки «Failed publishing to {topic}: {message}» с исключением <code>MQTTnet.Exceptions.MqttClientNotConnectedException</code>. MQTT используется только для взаимодействия со службой RDP2 и настраивается секцией <code>Mqtt</code> (<code>Url</code>, <code>Username</code>, <code>Password</code>). Если секция не заполнена, сообщение не влияет на работу, но пишется с уровнем Error. Чтобы скрыть его, задайте для источника уровень выше Error:</p>
+<pre><code>"Serilog": {
+  "MinimumLevel": {
+    "Override": {
+      "LTools.Orchestrator.Mqtt.Client.MqttBusClient": "Fatal"
+    }
+  }
+}</code></pre>
+<p>В Docker — переменная <code>Serilog__MinimumLevel__Override__LTools.Orchestrator.Mqtt.Client.MqttBusClient=Fatal</code> у службы <code>web-api</code>. При использовании RDP2 фильтр не задавайте: он скроет и реальные ошибки связи с брокером MQTT.</p>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="project-queue.html">Проект висит в очереди и не уходит на робота<small>если очереди на месте, а проект не передаётся роботу</small></a>
+  <a href="../reference/components.html">Компоненты и службы<small>какие службы используют RabbitMQ</small></a>
+</div>
+
+
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

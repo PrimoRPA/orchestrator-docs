@@ -84,7 +84,7 @@
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Где</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>RDP:RdpBaseUrl</code></td><td>WebApi</td><td>Внешний адрес (точка nginx) единственной службы RDP2. Для случая без <code>AddressFilter</code></td><td>—</td></tr>
-  <tr><td><code>RDP:RdpBaseUrls</code></td><td>WebApi</td><td>Словарь «внутренний IP сервера RDP2 → внешний адрес» для нескольких служб RDP2 с <code>AddressFilter</code></td><td>—</td></tr>
+  <tr><td><code>RDP:RdpBaseUrls</code></td><td>WebApi</td><td>Словарь «адрес машины робота (поле <b>IP/DNS</b>) → внешний адрес RDP2, которая обслуживает эту машину» для нескольких служб RDP2 с <code>AddressFilter</code></td><td>—</td></tr>
   <tr><td><code>Orchestrator:BaseUrl</code></td><td>RDP2</td><td>Адрес WebApi</td><td>—</td></tr>
   <tr><td><code>AddressFilter</code></td><td>RDP2</td><td>Какие машины обслуживает этот экземпляр. Наборы машин у экземпляров не должны пересекаться</td><td>пусто — все</td></tr>
   <tr><td><code>Host</code></td><td>RDP2</td><td>Внутренний IP сервера RDP2. Не задан — определяется WebApi по запросу, что не всегда даёт верный результат</td><td>пусто</td></tr>
