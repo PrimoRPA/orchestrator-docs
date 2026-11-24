@@ -318,7 +318,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt install expect unzip xvfb xauth x11-utils dbus-x11</code></pre>
-    Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
+    Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя машины должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическая оболочка Fly (<code>/usr/bin/fly-wm</code>). На Astra 1.8 — ещё <code>/usr/bin/dbus-launch</code>: агент вызывает его перед запуском сеанса робота.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/fly-wm /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
   <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и не зависят от ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
@@ -900,7 +900,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt install expect unzip xvfb xauth x11-utils dbus-x11</code></pre>
-    Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
+    Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя машины должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическое окружение; команда запуска его сеанса задаётся в параметре <code>AgentCommands:Session</code> конфига агента.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
   <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и не зависят от ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>

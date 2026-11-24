@@ -35,7 +35,7 @@
 <h2>На машинах роботов</h2>
 <div class="tbl-wrap"><table>
 <tr><th>Компонент</th><th>Проект</th><th>Назначение</th><th>Зависит от</th></tr>
-<tr><td>Агент</td><td><code>LTools.Orchestrator.Agent</code></td><td>Развёртывание и запуск роботов, RDP-пользователи, триггеры по папке, сбор производительности, скриншоты, обновление.</td><td>WebApi; RobotLogs</td></tr>
+<tr><td>Агент</td><td><code>LTools.Orchestrator.Agent</code></td><td>Развёртывание и запуск роботов, пользователи машины, триггеры по папке, сбор производительности, скриншоты, обновление.</td><td>WebApi; RobotLogs</td></tr>
 <tr><td>Agent.Runner</td><td><code>LTools.Orchestrator.Agent.Runner</code></td><td>Только Linux: вспомогательный процесс агента для запуска робота в графическом сеансе. Входит в архив агента для Linux.</td><td>Агент</td></tr>
 <tr><td>AgentUpdater</td><td><code>LTools.Orchestrator.AgentUpdater</code></td><td>Обновление агента. Архивы <code>AgentUpdater.zip</code> и <code>AgentUpdater-linux.zip</code> включаются в архивы WebApi.</td><td>Агент</td></tr>
 </table></div>
@@ -114,7 +114,7 @@ UI ◄── /events (WS:Path) ── WebApi: живые обновления в
   <li>Запуск инициирован вручную или заданием. Проект помещается в очередь проектов (RabbitMQ, при строгом порядке — таблица БД). <span class="check">Проект виден в разделе <b>Очередь проектов</b>.</span></li>
   <li>Для свободного робота WebApi вызывает у агента <code>api/Robots/Start</code> (или <code>StartWithTracking</code>). <span class="check">В карточке робота появляются этапы запуска.</span></li>
   <li>Агент проходит этапы и сообщает о каждом: остановка старого процесса робота, скачивание и сохранение архива проекта, генерация скрипта запуска, создание задачи запуска. <span class="check">Этапы запуска отмечены успешными.</span></li>
-  <li><b>Windows:</b> агент записывает <code>run.bat</code> и создаёт задачу Планировщика заданий под учётной записью робота. <b>Linux:</b> агент записывает <code>start-0-runner.sh</code> → <code>start-1-session.sh</code> (запускает графическую сессию) → <code>start-2-robot.sh</code>. Если в <code>~/.config/robot</code> есть исполняемые <code>pre-session.sh</code>, <code>post-session.sh</code>, <code>pre-robot.sh</code>, <code>post-robot.sh</code>, они выполняются до и после соответствующего шага. <span class="check">На машине робота запущен процесс <code>Primo.Robot</code>.</span></li>
+  <li><b>Windows:</b> агент записывает <code>run.bat</code> и создаёт задачу Планировщика заданий от имени пользователя машины. <b>Linux:</b> агент записывает <code>start-0-runner.sh</code> → <code>start-1-session.sh</code> (запускает графическую сессию) → <code>start-2-robot.sh</code>. Если в <code>~/.config/robot</code> есть исполняемые <code>pre-session.sh</code>, <code>post-session.sh</code>, <code>pre-robot.sh</code>, <code>post-robot.sh</code>, они выполняются до и после соответствующего шага. <span class="check">На машине робота запущен процесс <code>Primo.Robot</code>.</span></li>
   <li>Робот получает свободную лицензию, переходит в состояние «Выполняет проект», отправляет журналы в RobotLogs, работает с ресурсами и очередями через WebApi. <span class="check">Состояние робота — «Выполняет проект».</span></li>
 </ol>
 <p>Развёртывание также выполняется через агента (<code>api/Robots/Deploy</code>): агент скачивает дистрибутив робота, распаковывает его, на Windows изменяет <code>Primo.Robot.exe.config</code> (порт и сертификат) и резервирует URL робота.</p>

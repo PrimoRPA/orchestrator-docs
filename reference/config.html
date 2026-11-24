@@ -413,14 +413,14 @@
 <tr><td><code>RDP:SessionsReleaseThreadSleep</code></td><td>число</td><td>Время засыпания потока отключения RDP-сессий (мс).</td><td><code>1000</code></td></tr>
 <tr><td><code>RDP:SessionsReleaseDelay</code></td><td>число</td><td>Задержка освобождения сессии, мс: сессия может сразу понадобиться другому роботу, и её не придётся создавать заново. Только при <code>ExclusiveSessionsRelease</code> = <code>false</code>.</td><td><code>0</code></td></tr>
 <tr><td><code>RDP:ExclusiveSessionsRelease</code></td><td>bool</td><td>Если флаг установлен, робот при освобождении сессии не учитывает отсутствие релиза сессии у других роботов. Должно использоваться, когда только один робот закрывает сессию, чтобы не нарушать работу остальных роботов в этой сессии.</td><td><code>false</code></td></tr>
-<tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>bool</td><td>Завершать сеансы отключённых RDP-пользователей.</td><td><code>true</code> <br><small>при запуске службы читается как <code>false</code></small></td></tr>
-<tr><td><code>RDP:LogOffDisconnectedRDPUsersThreadSleep</code></td><td>число</td><td>Время засыпания потока завершения сеансов отключенных RDP-пользователей (мс).</td><td><code>1000</code></td></tr>
+<tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>bool</td><td>Завершать сеансы отключённых пользователей машины.</td><td><code>true</code> <br><small>при запуске службы читается как <code>false</code></small></td></tr>
+<tr><td><code>RDP:LogOffDisconnectedRDPUsersThreadSleep</code></td><td>число</td><td>Время засыпания потока завершения сеансов отключенных пользователей машины (мс).</td><td><code>1000</code></td></tr>
 <tr><td><code>RDP:LostConnectTimeout</code></td><td>число</td><td>Время (с) с последней даты обновления состояния, после которого соединение считается потерянным.</td><td><code>5</code></td></tr>
-<tr><td><code>RDP:LogOffDisconnectedRDPUsersAsync</code></td><td>bool</td><td>Асинхронное завершение сеансов RDP-пользователей Используется при LogOffDisconnectedRDPUsersServiceType.Legacy.</td><td><code>false</code></td></tr>
+<tr><td><code>RDP:LogOffDisconnectedRDPUsersAsync</code></td><td>bool</td><td>Асинхронное завершение сеансов пользователей машины Используется при LogOffDisconnectedRDPUsersServiceType.Legacy.</td><td><code>false</code></td></tr>
 <tr><td><code>RDP:MaxAttemptStartLogOff</code></td><td>число</td><td>Максимальное количество попыток отправки команды завершения сеанса в Агент.</td><td><code>10</code></td></tr>
 <tr><td><code>RDP:MaxAttemptLogOff</code></td><td>число</td><td>Максимальное количество попыток завершения сеанса. На основе ответа от Агента.</td><td><code>10</code></td></tr>
 <tr><td><code>RDP:RDPSessionsReleaseService</code></td><td>перечисление</td><td>Тип алгоритма освобождения сессий. Значения: <code>Legacy</code>, <code>Opt2</code>.</td><td><code>Legacy</code></td></tr>
-<tr><td><code>RDP:LogOffDisconnectedRDPUsersService</code></td><td>перечисление</td><td>Тип алгоритма завершения сеансов RDP-пользователей. Значения: <code>Legacy</code>, <code>Opt2</code>.</td><td><code>Opt2</code> <br><small>при запуске службы читается как <code>Legacy</code></small></td></tr>
+<tr><td><code>RDP:LogOffDisconnectedRDPUsersService</code></td><td>перечисление</td><td>Тип алгоритма завершения сеансов пользователей машины. Значения: <code>Legacy</code>, <code>Opt2</code>.</td><td><code>Opt2</code> <br><small>при запуске службы читается как <code>Legacy</code></small></td></tr>
 <tr><td><code>RDP:ClearIntervalInMinutes</code></td><td>число</td><td>Интервал очистки, мин.</td><td><code>1440</code></td></tr>
 <tr><td><code>RDP:RdpBaseUrl</code></td><td>строка</td><td>URL (конечная точка nginx) одной службы RDP2 - для случая, когда не задан AddressFilter в конфиге службы RDP2.</td><td><code>—</code></td></tr>
 <tr><td><code>RDP:RdpBaseUrls</code></td><td>словарь</td><td>Сопоставление URL (конечной точки nginx) служб RDP2 - для случая, когда задан AddressFilter в конфигах служб RDP2. Ключом является адрес машины робота (значение поля IP/DNS машины), значением - внешний URL той службы RDP2, в AddressFilter которой указана эта машина; nginx проксирует его во внутренний адрес RDP2.</td><td><code>—</code></td></tr>
@@ -764,7 +764,7 @@
 <tr><td><code>IsMultiMaster</code></td><td>bool</td><td>Режим нескольких ведущих узлов PostgreSQL (влияет на регистрацию контекста основной БД).</td><td><code>false</code></td></tr>
 <tr><td><code>UseHttpLogging</code></td><td>bool</td><td>Журналировать HTTP-запросы (ASP.NET Core HTTP logging).</td><td><code>false</code></td></tr>
 <tr><td><code>Robot:RequestTimeoutSec</code></td><td>число</td><td>Таймаут HTTP-запросов к роботу, с.</td><td><code>—</code></td></tr>
-<tr><td><code>RDP:RdpUserPasswordMaxLength</code></td><td>число</td><td>Максимальная длина пароля RDP-пользователя агента.</td><td><code>128</code></td></tr>
+<tr><td><code>RDP:RdpUserPasswordMaxLength</code></td><td>число</td><td>Максимальная длина пароля пользователя машины.</td><td><code>128</code></td></tr>
 <tr><td><code>Worker:AdminPasswordMaxLength</code></td><td>число</td><td>Максимальная длина пароля администратора машины.</td><td><code>128</code></td></tr>
 </table></div>
 <p>Общие секции этой службы (описаны в разделе <a href="#common">«Общие параметры»</a>): <code>PostgresWithSslOptions</code>, <code>Secrets</code>, <code>DbConnection</code>, <code>Monitoring</code>.</p>
@@ -805,7 +805,7 @@
 <h3 id="agent-agent">Agent</h3>
 <div class="tbl-wrap"><table>
 <tr><th>Параметр</th><th>Тип</th><th>Назначение</th><th>По умолчанию</th></tr>
-<tr data-ver="1.26.7"><td><code>Agent:CredentialsCheckDelayMsec</code></td><td>число</td><td>Пауза, мс, между первой неуспешной и второй попыткой проверить логин и пароль учётной записи Linux-робота.</td><td><code>3000</code></td></tr>
+<tr data-ver="1.26.7"><td><code>Agent:CredentialsCheckDelayMsec</code></td><td>число</td><td>Пауза, мс, между первой неуспешной и второй попыткой проверить логин и пароль пользователя машины на Linux.</td><td><code>3000</code></td></tr>
 <tr><td><code>Agent:DataPath</code></td><td>строка</td><td>Полный путь к папке с данными агента.</td><td><code>—</code></td></tr>
 <tr><td><code>Agent:ProjectZipEncoding</code></td><td>строка</td><td>Кодировка для распаковки архива проекта перед запуском робота.</td><td><code>—</code></td></tr>
 <tr><td><code>Agent:DistribDir</code></td><td>строка</td><td>Относительный путь к папке с дистрибутивами агента.</td><td><code>AgentDistrib</code></td></tr>
@@ -927,8 +927,8 @@
 <tr><td><code>Host</code></td><td>строка</td><td>Имя/адрес этого экземпляра RDP2.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>RdpClientConnectionUpdateInterval</code></td><td>число</td><td>Период цикла обновления RDP-сессий, мс. Допустимо 1000–60000, иначе приводится к границе.</td><td><code>0 → 1000</code></td></tr>
 <tr><td><code>MaxSessionsLimit</code></td><td>число</td><td>Сколько сессий подключать за один цикл. Допустимо 1–10, иначе приводится к границе.</td><td><code>0 → 1</code></td></tr>
-<tr><td><code>UsersListInclude</code></td><td>строка</td><td>Через запятую: учётные записи роботов, которые брать в работу (только они).</td><td><code>&quot;&quot;</code></td></tr>
-<tr><td><code>UsersListExclude</code></td><td>строка</td><td>Через запятую: учётные записи роботов, которые не брать в работу.</td><td><code>&quot;&quot;</code></td></tr>
+<tr><td><code>UsersListInclude</code></td><td>строка</td><td>Через запятую: пользователи машины, которых брать в работу (только они).</td><td><code>&quot;&quot;</code></td></tr>
+<tr><td><code>UsersListExclude</code></td><td>строка</td><td>Через запятую: пользователи машины, которых не брать в работу.</td><td><code>&quot;&quot;</code></td></tr>
 <tr><td><code>OnlyEvenOddUsersIds</code></td><td>число</td><td>0 — только чётные идентификаторы, 1 — только нечётные; другое значение отключает фильтр.</td><td><code>null</code></td></tr>
 <tr><td><code>EnabledOrigins</code></td><td>массив строк</td><td>Разрешённые источники CORS.</td><td><code>—</code></td></tr>
 <tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>число</td><td>Время жизни сессии при обращении к WebApi, мин.</td><td><code>—</code></td></tr>

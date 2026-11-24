@@ -26,7 +26,7 @@
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>RobotStart:AttemptsKeepRDPSessionLevels[]</code></td><td>Массив уровней. В каждом: <code>AttempCount</code> — попыток на уровне, <code>AttempExpirationInSeconds</code> — пауза между попытками, с. Задержка следующего уровня должна быть больше предыдущей</td><td>массив не задан; у элемента <code>3</code> и <code>5</code>. В Docker-образе три уровня: 3×3 с, 3×5 с, 3×10 с</td></tr>
-  <tr><td><code>RobotStart:WaitUserProfileLoaded</code></td><td>Ждать загрузки профиля RDP-пользователя</td><td><code>false</code></td></tr>
+  <tr><td><code>RobotStart:WaitUserProfileLoaded</code></td><td>Ждать загрузки профиля пользователя машины</td><td><code>false</code></td></tr>
   <tr><td><code>RobotStart:ReEnqueueNoRdpOrProfile</code></td><td>Если сессия не открыта или профиль не загрузился — вернуть запуск в очередь проектов</td><td><code>false</code></td></tr>
   <tr><td><code>RobotStart:IntervalForReleaseInSeconds</code></td><td>Если робот не ответил за это время, считается, что он не запустился, и лицензия освобождается</td><td><code>300</code> (в Docker <code>120</code>)</td></tr>
   <tr><td><code>RobotStart:DisableReleaseRdpSessionTimeOut</code></td><td>Не отключать RDP-сессию при освобождении лицензии по таймауту</td><td><code>false</code></td></tr>
@@ -36,7 +36,7 @@
 <div class="warn"><p>У <code>RobotStart:AttemptsKeepRDPSessionLevels</code> нет значения по умолчанию. Если массив не задан, запуск роботов с RDP-сессией завершается ошибкой.</p></div>
 
 <figure class="shot"><img src="../assets/img/machines.png" alt="Машины роботов" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов</b>: доступность машины и версия агента.</figcaption></figure>
-<figure class="shot"><img src="../assets/img/machine-users.png" alt="Пользователи графического сеанса" loading="lazy" width="1440" height="900"><figcaption>Пункт <b>Пользователи</b> в меню строки машины на Linux: пользователи графического сеанса и разрешение экрана.</figcaption></figure>
+<figure class="shot"><img src="../assets/img/machine-users.png" alt="Пользователи графического сеанса" loading="lazy" width="1440" height="900"><figcaption>Пункт <b>Пользователи</b> в меню строки машины на Linux: пользователи машины (в интерфейсе — <b>Пользователи графического сеанса</b>) и разрешение экрана.</figcaption></figure>
 
 <h2>Освобождение и разлогинивание сессий: <code>RDP</code></h2>
 <div class="tbl-wrap"><table>
@@ -44,7 +44,7 @@
   <tr><td><code>RDP:SessionsReleaseDelay</code></td><td>Задержка отключения сессии, мс: сессия может сразу понадобиться другому роботу. Только при <code>ExclusiveSessionsRelease=false</code></td><td><code>0</code> (в Docker <code>5000</code>)</td></tr>
   <tr><td><code>RDP:ExclusiveSessionsRelease</code></td><td>Робот отключает сессию, не дожидаясь других роботов в ней</td><td><code>false</code></td></tr>
   <tr><td><code>RDP:SessionsReleaseThreadSleep</code></td><td>Период потока отключения сессий, мс</td><td><code>1000</code></td></tr>
-  <tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>Разлогинивать отключённых RDP-пользователей</td><td>разлогинивание включается, только если в конфигурации явно задано <code>true</code> (в Docker <code>True</code>)</td></tr>
+  <tr><td><code>RDP:EnabledLogOffDisconnectedRDPUsers</code></td><td>Разлогинивать отключённых пользователей машины</td><td>разлогинивание включается, только если в конфигурации явно задано <code>true</code> (в Docker <code>True</code>)</td></tr>
   <tr><td><code>RDP:LogOffDisconnectedRDPUsersService</code></td><td>Алгоритм разлогинивания: <code>0</code> — прежний, <code>1</code> — новый</td><td>без ключа в конфигурации — <code>0</code> (в Docker <code>0</code>)</td></tr>
   <tr><td><code>RDP:LogOffDisconnectedRDPUsersAsync</code></td><td>Асинхронное разлогинивание (для алгоритма <code>0</code>)</td><td><code>false</code></td></tr>
   <tr><td><code>RDP:LogOffDisconnectedRDPUsersThreadSleep</code></td><td>Период потока разлогинивания, мс</td><td><code>1000</code></td></tr>
@@ -67,7 +67,7 @@
   <tr><td><code>Robot:VersionForAgentCollectRobotStatus</code></td><td>Версия робота, с которой статусы собирает агент</td><td><code>1.1.30.2</code></td></tr>
   <tr><td><code>Robot:CollectRobotStatusService</code></td><td>Алгоритм сбора статусов роботов: <code>0</code> — прежний, <code>1</code> — новый</td><td><code>0</code> (в Docker <code>1</code>)</td></tr>
 </table></div>
-<p>На стороне агента файлы блокировки находятся в папке <code>&lt;Agent:DataPath&gt;/&lt;Robot:LocksDir&gt;</code> (по умолчанию подпапка <code>RobotLocks</code>). Агент создаёт её и очищает при старте. RDP-пользователям роботов требуются полные права на эту папку.</p>
+<p>На стороне агента файлы блокировки находятся в папке <code>&lt;Agent:DataPath&gt;/&lt;Robot:LocksDir&gt;</code> (по умолчанию подпапка <code>RobotLocks</code>). Агент создаёт её и очищает при старте. Пользователям машины требуются полные права на эту папку.</p>
 
 <h2>Агент: что ещё влияет на запуск</h2>
 <p>Параметры задаются на машине робота в файле конфигурации агента: <code>/opt/Primo/Agent/appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> в каталоге агента (Windows). После изменения перезапустите агент. Установка агента — на странице <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>

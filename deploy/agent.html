@@ -44,7 +44,7 @@
 Start-Service "Primo.Orchestrator.Agent"</code></pre>
     <span class="check"><code>Get-Service Primo.Orchestrator.Agent</code> — <code>Running</code>; <code>https://localhost:5002/api/Version</code> возвращает версию агента</span></li>
 </ol>
-<p>Роботов агент запускает заданиями Планировщика заданий Windows от имени пользователя робота.</p>
+<p>Роботов агент запускает заданиями Планировщика заданий Windows от имени пользователя машины (рабочей станции).</p>
 </section>
 <section class="tab" id="linux" data-title="Linux" data-os="linux">
 <p>Требуется: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты). Команды выполняются на машине робота под учётной записью с правами <code>sudo</code>.</p>
@@ -58,11 +58,11 @@ sudo useradd -g primo-rpa -m -s /bin/bash agent</code></pre>
     Для Astra Linux и РЕД ОС пакеты и графическая оболочка указаны в разделе 7 вкладки ОС на странице <a href="install-services.html">Установка служб</a>.
     Без <code>expect</code> и <code>xprop</code> запуск роботов невозможен: при отсутствии <code>xprop</code> виртуальный экран считается неработающим, и запуск завершается без сообщения в интерфейсе.
     <span class="check">команда <code>which expect Xvfb xauth xprop dbus-launch</code> выводит пять путей</span></li>
-  <li>Убедитесь, что машина подготовлена для робота: установлены графическая оболочка и <code>Xvfb</code>, создан пользователь ОС для робота. Подготовка выполняется по инструкции робота. Пользователя робота включите в группу агента и создайте в его домашнем каталоге каталог данных приложений, если его нет:
-<pre><code>sudo usermod -aG primo-rpa &lt;пользователь робота&gt;
-sudo -u &lt;пользователь робота&gt; mkdir -p /home/&lt;пользователь робота&gt;/.local/share</code></pre>
+  <li>Убедитесь, что машина подготовлена для робота: установлены графическая оболочка и <code>Xvfb</code>, создан пользователь машины — учётная запись ОС, под которой работает робот. Подготовка выполняется по инструкции робота. Пользователя машины включите в группу агента и создайте в его домашнем каталоге каталог данных приложений, если его нет:
+<pre><code>sudo usermod -aG primo-rpa &lt;пользователь машины&gt;
+sudo -u &lt;пользователь машины&gt; mkdir -p /home/&lt;пользователь машины&gt;/.local/share</code></pre>
     Каталог <code>~/.local/share</code> создаётся при первом входе пользователя в графическую оболочку. У пользователя, созданного командой <code>useradd</code> и ни разу не входившего в систему, каталога нет, и робот завершается при старте.
-    <span class="check"><code>id &lt;пользователь робота&gt;</code> показывает группу <code>primo-rpa</code>; <code>sudo ls -d /home/&lt;пользователь робота&gt;/.local/share</code> выводит путь каталога</span></li>
+    <span class="check"><code>id &lt;пользователь машины&gt;</code> показывает группу <code>primo-rpa</code>; <code>sudo ls -d /home/&lt;пользователь машины&gt;/.local/share</code> выводит путь каталога</span></li>
   <li>Создайте каталоги агента, данных агента и роботов, распакуйте архив и назначьте владельцем каталогов пользователя агента:
 <pre><code>sudo mkdir -p /opt/Primo/Agent /opt/Primo/AgentData /opt/LTools
 sudo unzip primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip -d /opt/Primo/Agent
