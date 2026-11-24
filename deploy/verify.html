@@ -27,21 +27,21 @@
 <div class="tabs" data-key="server-os">
 <section class="tab" id="docker" data-title="Docker" data-os="">
 <ol class="steps">
-  <li>Выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose автоматически опрашивает <code>/health</code> каждые 30 секунд</span></li>
-  <li>Если сервис <code>unhealthy</code> — <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
+  <li>На сервере Оркестратора в каталоге с compose-файлом (в инструкции по установке — <code>/opt/Docker</code>) выполните <code>docker compose ps</code>. <span class="check">у всех сервисов статус <code>healthy</code>; compose автоматически опрашивает <code>/health</code> каждые 30 секунд</span></li>
+  <li>Если сервис <code>unhealthy</code>, откройте его журнал: <code>docker compose logs &lt;сервис&gt;</code>. Службы пишут журнал в консоль в формате JSON.</li>
 </ol>
 </section>
 <section class="tab" id="linux" data-title="Linux" data-os="linux">
 <ol class="steps">
-  <li>Под пользователем служб: <code>systemctl --user status Primo.Orchestrator.&lt;Имя&gt;</code>. Для варианта от root — <code>sudo systemctl status …</code>. <span class="check"><code>active (running)</code></span></li>
-  <li>Журнал службы: <code>journalctl --user -u Primo.Orchestrator.&lt;Имя&gt;</code> (от root — без <code>--user</code>); имя задано в юните (<code>SyslogIdentifier</code>).</li>
-  <li>nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>.</li>
+  <li>На сервере Оркестратора под пользователем служб выполните для каждой службы <code>systemctl --user status Primo.Orchestrator.&lt;Имя&gt;</code>. Если службы установлены от root — <code>sudo systemctl status Primo.Orchestrator.&lt;Имя&gt;</code>. <span class="check"><code>active (running)</code></span></li>
+  <li>Если служба не запущена, откройте её журнал: <code>journalctl --user -u Primo.Orchestrator.&lt;Имя&gt;</code> (для служб от root — <code>sudo journalctl -u Primo.Orchestrator.&lt;Имя&gt;</code>).</li>
+  <li>Проверьте журнал ошибок nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code>. <span class="check">после последнего запуска nginx новых ошибок нет</span></li>
 </ol>
 </section>
 <section class="tab" id="windows" data-title="Windows Server" data-os="windows">
 <ol class="steps">
-  <li><code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
-  <li>Если служба не стартует — запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы и проверьте ошибку в консоли.</li>
+  <li>На сервере Оркестратора в PowerShell выполните <code>Get-Service Primo.Orchestrator.*</code>. <span class="check">все службы <code>Running</code></span></li>
+  <li>Если служба не запускается, запустите её <code>.exe</code> с аргументом <code>--console</code> из каталога службы: ошибка выводится в консоль.</li>
 </ol>
 </section>
 </div>
@@ -68,12 +68,12 @@
 </details>
 <p data-only="docker">В Docker порты служб наружу не открыты: службы каждые 30 секунд опрашивает compose, и состояние <code>healthy</code> из этапа 1 — результат этой проверки. С сервера проверьте только вход через nginx:</p>
 <pre data-only="docker"><code>curl -k -f https://localhost:44392/api/Version   # печатает номер версии</code></pre>
-<p data-only="linux windows">На сервере (порты — со страницы <a href="../deploy/network.html">Порты и сетевой трафик</a>):</p>
+<p data-only="linux windows">Выполните на сервере Оркестратора (порты остальных служб — на странице <a href="network.html#reference">Порты и сетевой трафик</a>):</p>
 <pre data-only="linux windows"><code>curl -f http://localhost:5001/health        # WebApi
 curl -f http://localhost:5051/health        # MachineInfo
 curl -f http://localhost:56748/health       # RobotLogs
 curl -k -f https://localhost:44392/api/Version   # WebApi через nginx, без авторизации</code></pre>
-<p>С сервера WebApi — до агента:</p>
+<p>С сервера Оркестратора проверьте доступность агента на каждой машине роботов:</p>
 <pre><code>curl -k https://&lt;IP машины робота&gt;:5002/api/Worker   # 200 и версия агента
 curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pre>
 
@@ -94,7 +94,6 @@ curl -k https://&lt;IP машины робота&gt;:5002/api/Version</code></pr
 <p>Проверка завершена: Оркестратор, агент и робот работают совместно.</p>
 
 <h2>Возможные проблемы</h2>
-<p>Наиболее частые причины обращений в поддержку на этапе проверки:</p>
 <div class="pitfalls">
   <div><b>Служба не стартует или отвечает Unhealthy</b><p>Начните с журнала службы (этап 1). Наиболее частые причины: нет доступа к БД или RabbitMQ либо не задано окружение <code>ASPNETCORE_ENVIRONMENT</code>. → <a href="../troubleshoot/ui-not-opening.html">Интерфейс не открывается или падает WebApi</a></p></div>
   <div><b>Запуск завис на 50 % или 75 %</b><p>Робот не получил сессию или не стартовал на машине. → <a href="../troubleshoot/robot-not-starting.html">Робот не запускается: запуск завис на 50 % или 75 %</a></p></div>

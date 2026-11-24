@@ -18,11 +18,12 @@
   <div><b>Результат</b>службы отдают метрики, Prometheus или Zabbix получает их по заданному адресу</div>
 </div>
 
-<h2>Как это устроено</h2>
+<h2>Как устроен сбор метрик</h2>
 <p>Служба не отправляет метрики самостоятельно. Она открывает отдельный порт и отвечает на запросы Prometheus (HTTP, путь <code>/metrics</code>) или сервера Zabbix (пассивная проверка по протоколу агента Zabbix). Провайдер выбирается в секции <code>Monitoring</code> конфига каждой службы. По умолчанию провайдер не задан — мониторинг выключен, в журнал службы пишется предупреждение <code>Monitoring service is disabled</code>.</p>
 <p>Секция <code>Monitoring</code> есть у служб: WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, а также у Агента на машинах роботов.</p>
 
 <h2>Параметры</h2>
+<p>Секция <code>Monitoring</code> задаётся в конфиге той службы, метрики которой собираются: <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows). В поставочных конфигах Linux секции нет — добавьте её. Параметры читаются при запуске: после изменения перезапустите службу.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>Monitoring:Provider</code></td><td><code>Prometheus</code>, <code>Zabbix</code> или пустая строка (выключено). Другое значение — ошибка в журнале службы, мониторинг выключен.</td><td><code>""</code></td></tr>
@@ -33,7 +34,7 @@
   <tr><td><code>Monitoring:IdleDurationMillis</code></td><td>Только WebApi: как часто (мс) пересчитывать метрики <code>primo_orch_*</code>, которые считаются запросами к БД. Между пересчётами отдаются прежние значения. Минимальное значение — 1000.</td><td><code>2000</code></td></tr>
 </table></div>
 
-<p>Пример фрагмента <code>appsettings.json</code> любой службы:</p>
+<p>Пример секции для конфига любой службы:</p>
 <pre><code>"Monitoring": {
   "Provider": "Prometheus",
   "Port": 10052,
@@ -42,29 +43,37 @@
   "NpgsqlMonitoringEnabled": true,
   "IdleDurationMillis": 10000
 }</code></pre>
-<p>В Docker-образах из <code>k8s/*.Dockerfile</code> мониторинг уже включён переменными окружения: <code>Monitoring__Provider=Prometheus</code>, <code>Monitoring__Port=10052</code>, порт 10052 объявлен в <code>EXPOSE</code>.</p>
-<div class="warn"><p>Если несколько служб установлены на одном сервере, задайте каждой отдельный <code>Monitoring:Port</code> — по умолчанию у всех 10052, и вторая служба не сможет открыть порт.</p></div>
+<p>В Docker-образах поставки мониторинг уже включён переменными окружения: <code>Monitoring__Provider=Prometheus</code>, <code>Monitoring__Port=10052</code>, метрики .NET и Kestrel включены, <code>Monitoring__IdleDurationMillis=10000</code>. Порт 10052 объявлен в образе, но в поставочном compose-файле наружу не опубликован: Prometheus должен работать в той же сети Docker либо порт нужно опубликовать в compose-файле.</p>
+<div class="note"><p>Если несколько служб установлены на одном сервере, задайте каждой отдельный <code>Monitoring:Port</code> — по умолчанию у всех 10052, и вторая служба не сможет открыть порт.</p></div>
 
 <h2>Подключение Prometheus</h2>
 <ol class="steps">
-  <li>Включите <code>Provider: "Prometheus"</code> и перезапустите службу. <span class="check">в журнале службы нет сообщения <code>Monitoring service is disabled</code></span></li>
-  <li>Откройте в браузере <code>http://&lt;хост службы&gt;:&lt;Monitoring:Port&gt;/metrics</code>. <span class="check">видны строки <code># HELP</code> и <code>primo_…</code></span></li>
-  <li>Добавьте задание в <code>scrape_configs</code> Prometheus — по одному <code>job_name</code> на службу.</li>
+  <li>В конфиге службы задайте <code>Monitoring:Provider</code> = <code>Prometheus</code> и свободный <code>Monitoring:Port</code>, затем перезапустите службу. <span class="check">в журнале службы нет сообщения <code>Monitoring service is disabled</code></span></li>
+  <li>На сервере службы запросите метрики: <code>curl http://localhost:&lt;Monitoring:Port&gt;/metrics</code>. <span class="check">в ответе есть строки <code># HELP</code> и <code>primo_…</code></span></li>
+  <li>На сервере Prometheus добавьте в <code>scrape_configs</code> файла <code>prometheus.yml</code> задание — по одному <code>job_name</code> на службу — и перезагрузите конфигурацию Prometheus. <span class="check">на странице целей Prometheus (Status → Targets) задание в состоянии <code>UP</code></span></li>
 </ol>
-<p>Пример конфига Prometheus находится в поставке исходников: <code>prometheus/prometheus.yml</code>. Он рассчитан на локальный стенд (порты 9900–9960 на <code>host.docker.internal</code>) — в рабочей установке укажите фактические хосты и порты.</p>
+<p>Пример заданий для WebApi и RobotLogs; хосты и порты замените фактическими:</p>
+<pre><code>scrape_configs:
+  - job_name: "webapi"
+    static_configs:
+      - targets: ["&lt;хост WebApi&gt;:10052"]
+  - job_name: "robotlogs"
+    static_configs:
+      - targets: ["&lt;хост RobotLogs&gt;:10053"]</code></pre>
+<p>Путь <code>/metrics</code> и протокол HTTP — значения Prometheus по умолчанию, задавать их в задании не требуется.</p>
 
 <h2>Подключение Zabbix</h2>
 <p>При <code>Provider: "Zabbix"</code> служба работает как пассивный агент Zabbix на порту <code>Monitoring:Port</code>. На сервере Zabbix создайте узел с интерфейсом агента на этот адрес и порт.</p>
 <ul>
   <li>Ключ элемента данных — имя метрики, например <code>primo_rl_queue_length</code>.</li>
-  <li>Для метрики с меткой значение метки пишется в квадратных скобках: <code>db_client_connections_usage[ltoolslogs]</code>. Метка без скобок — значение без метки.</li>
+  <li>Для метрики с меткой значение метки пишется в квадратных скобках: <code>db_client_connections_usage[ltoolslogs]</code>. Ключ без скобок возвращает значение метрики без метки.</li>
   <li>Ключ <code>agent.ping</code> всегда возвращает <code>1</code> — подходит для проверки доступности.</li>
   <li>Неизвестный ключ возвращает <code>ZBX_NOTSUPPORTED</code>.</li>
 </ul>
 <div class="warn"><p>Значение метки в ключе Zabbix должно состоять из латинских букв, цифр и <code>_</code> и не начинаться с цифры. Метрики WebApi размечены именем тенанта (<code>TenantName</code>): для тенанта с кириллицей, пробелом или дефисом в имени ключ не пройдёт проверку, Zabbix получит <code>ZBX_NOTSUPPORTED</code>.</p></div>
 
 <h2>Метрики служб</h2>
-<p>У каждой метрики в коде есть описание на русском (строка <code># HELP</code>). Ниже — сводка; полный текст виден в ответе <code>/metrics</code>.</p>
+<p>У каждой метрики есть описание на русском — строка <code># HELP</code> в ответе <code>/metrics</code>. Ниже — сводка по службам.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Префикс</th><th>Что показывает</th></tr>
   <tr><td>WebApi</td><td><code>primo_orch_</code></td><td>Срез по тенантам (метка <code>TenantName</code>, у тенанта по умолчанию метки нет): роботы (всего, развёрнутые, выполняющие), машины, проекты и версии, ассеты, шаблоны, задания по статусам, лицензии Студии и робота (всего и занятые по редакциям Enterprise/Standard/Desktop, для оркестраторных и аттендед-роботов). Счётчик <code>primo_orch_failed_uploads</code> — неудачные выгрузки в аналитику (метка <code>TableName</code>).</td></tr>
@@ -84,7 +93,8 @@
 <div class="note"><p>Метрики <code>primo_orch_*</code> считаются запросами к БД при каждом обращении Prometheus или Zabbix, но не чаще, чем раз в <code>IdleDurationMillis</code>. При частом опросе увеличьте этот параметр.</p></div>
 
 <h2>Grafana</h2>
-<p>Для показа отчётов Grafana внутри Оркестратора в конфиге WebApi есть секция <code>Grafana:ReportItems</code> — список разделов (<code>Name</code>) с отчётами (<code>Name</code>, <code>Url</code>, <code>Description</code>). В UI4 отчёты открываются в разделе «Аналитика» → «Grafana». В шаблонах nginx Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>. Примеры дашбордов и представлений для аналитической БД находятся в <code>LTools.Orchestrator.Analytic/Grafana/</code>.</p>
+<p>Отчёты Grafana открываются в UI4 на странице <b>Аналитика → Grafana</b>. Список отчётов задаётся в конфиге WebApi, в секции <code>Grafana:ReportItems</code>: разделы (<code>Name</code>) и отчёты в них (<code>Name</code>, <code>Url</code>, <code>Description</code>).</p>
+<p>В шаблонах nginx из поставки Grafana проксируется по пути <code>/grafana/</code> на <code>127.0.0.1:3000</code>.</p>
 
 <h2>Что дальше</h2>
 <div class="next">

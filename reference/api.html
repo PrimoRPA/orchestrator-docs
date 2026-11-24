@@ -15,7 +15,7 @@
 <div class="note"><p>API Оркестратора не публичный. Swagger есть в каждой установке, но обязательств по обратной совместимости API нет: методы и их параметры могут меняться от версии к версии. Подробное описание API выдаётся по запросу.</p></div>
 
 <h2>Swagger</h2>
-<p>Swagger включён во всех службах, кроме NuGet2, независимо от окружения: в <code>Startup.cs</code> каждой службы <code>AddSwagger</code> вызывается без условий, отдельного параметра для отключения нет. Пути одинаковые:</p>
+<p>Swagger включён во всех службах, кроме NuGet2, в любом окружении; параметра для его отключения нет. Пути одинаковые:</p>
 <div class="tbl-wrap"><table>
 <tr><th>Что</th><th>Путь</th></tr>
 <tr><td>Интерфейс Swagger UI</td><td><code>/api/doc</code></td></tr>
@@ -44,7 +44,7 @@
 <p>Разрешённые способы входа задаёт <code>Auth:Type</code>. Доступ к методам проверяется по разрешениям ролей пользователя. Для веб-сокета (SignalR, путь <code>WS:Path</code>, по умолчанию <code>/events</code>) токен можно передать в строке запроса <code>access_token</code>.</p>
 
 <h2>Группы методов WebApi</h2>
-<p>Все контроллеры WebApi доступны по пути <code>/api/&lt;Контроллер&gt;</code>. Отметка «без входа» — в контроллере есть методы, доступные без токена.</p>
+<p>Все контроллеры WebApi доступны по пути <code>/api/&lt;Контроллер&gt;</code>. Отметка «без входа» означает, что в контроллере есть методы, доступные без токена.</p>
 <div class="tbl-wrap"><table>
 <tr><th>Контроллер</th><th>Назначение</th></tr>
 <tr><td><code>Account</code></td><td>Вход и выход, список тенантов и способов входа (без входа).</td></tr>
@@ -56,14 +56,14 @@
 <tr><td><code>Workers</code>, <code>WorkerIpAddresses</code></td><td>Машины роботов и их IP-адреса.</td></tr>
 <tr><td><code>RdpSessions</code></td><td>RDP-сессии машин (используется RDP2).</td></tr>
 <tr><td><code>AgentCallback</code></td><td>Приём вызовов агента.</td></tr>
-<tr><td><code>AgentDistrs</code>, <code>RobotDistrs</code>, <code>DeployTemplates</code></td><td>Дистрибутивы агента и робота, шаблоны развёртывания.</td></tr>
+<tr><td><code>AgentDistrs</code>, <code>RobotDistrs</code>, <code>DeployTemplates</code></td><td>Дистрибутивы агента и робота, шаблоны развертывания.</td></tr>
 <tr><td><code>RpaProjects</code>, <code>RpaProjectVariables</code></td><td>RPA-проекты и их переменные.</td></tr>
 <tr><td><code>RpaProjectQueue</code></td><td>Очередь ожидания проектов.</td></tr>
 <tr><td><code>RpaProjectLaunches</code>, <code>Launches</code></td><td>Запуски проектов, мониторинг запусков.</td></tr>
 <tr><td><code>Assignments</code>, <code>Schedules</code>, <code>Triggers</code>, <code>ProductionCalendars</code>, <code>ProductionCalendars2</code></td><td>Задания, расписания, триггеры, производственные календари (одиночные и множественные).</td></tr>
 <tr><td><code>IncomingEmails</code></td><td>Почтовые ящики для триггеров по почте.</td></tr>
 <tr><td><code>ExchangeQueues</code></td><td>Очереди обмена данными между роботами.</td></tr>
-<tr><td><code>Assets</code></td><td>Ассеты (ресурсы).</td></tr>
+<tr><td><code>Assets</code></td><td>Ресурсы (ассеты).</td></tr>
 <tr><td><code>Folders</code>, <code>Folders2</code></td><td>Личные и общие папки.</td></tr>
 <tr><td><code>RobotLogs</code>, <code>Logs</code>, <code>OrchEvents</code>, <code>SystemEventTypes</code></td><td>Журналы роботов (чтение), запись журнала, события Оркестратора и типы системных событий.</td></tr>
 <tr><td><code>Subscriptions</code>, <code>NotificationEmailQueue</code>, <code>Email</code></td><td>Подписки на уведомления, очередь писем, отправка писем.</td></tr>

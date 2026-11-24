@@ -11,21 +11,24 @@
 <main>
 <h1>Почта и оповещения</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Рассылка писем Оркестратора: формирование оповещений (служба States), отправка (служба Notifications, SMTP), пороги оповещений и ящик для почтовых триггеров.</p>
+<p class="lead">На странице описаны подключение Оркестратора к SMTP-серверу (служба Notifications), пороги оповещений (служба States) и почтовый ящик для триггеров по входящей почте (WebApi).</p>
 
 <div class="meta">
   <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
   <div><b>Результат</b>оповещения Оркестратора отправляются по почте</div>
 </div>
 
-<h2>Как устроено</h2>
-<p>Служба States отслеживает события и состояния — недоступность агента, рост очереди проектов, истечение лицензии и пароля — и по подпискам пользователей передаёт письма через RabbitMQ службе Notifications. Notifications отправляет их через SMTP-сервер. Подписки настраиваются в UI4: <b>Настройки → Администрирование → Подписки</b>; системные события там называются «Агент не доступен», «Очередь ожидания проектов растет», «Срок действия лицензии истекает». Очередь писем видна в <b>Настройки → Администрирование → Уведомления</b>.</p>
+<div class="note"><p>Параметры задаются в конфигурации той службы, которая названа в заголовке раздела: файл <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows) в каталоге службы. В Docker — переменные окружения сервисов <code>notifications</code>, <code>states</code> и <code>web-api</code> в <code>docker-compose.yml</code>; уровни имени разделяются двойным подчёркиванием: <code>Email__FromSmtp</code>, <code>SLA__AgentUnavailability__FirstSec</code>. После изменения перезапустите службу; в Docker выполните <code>sudo docker compose up -d</code>. Порядок чтения источников — на странице <a href="../reference/config.html#sources">Параметры конфигурации</a>.</p></div>
+
+<h2>Как формируются и отправляются письма</h2>
+<p>Служба States отслеживает события и состояния — недоступность агента, рост очереди проектов, истечение лицензии и пароля — и по подпискам пользователей передаёт письма через RabbitMQ службе Notifications. Notifications отправляет их через SMTP-сервер.</p>
+<p>Подписки настраиваются в UI4: <b>Настройки → Администрирование → Подписки</b>. Системные события в форме подписки называются «Агент не доступен», «Очередь ожидания проектов растет», «Срок действия лицензии истекает». Очередь писем отображается на вкладке <b>Настройки → Администрирование → Уведомления</b>.</p>
 
 <figure class="shot"><img src="../assets/img/subscription-form.png" alt="Форма «Добавить подписку»" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Администрирование → Подписки → Добавить подписку</b>: адрес, системные и оркестраторные события, фильтр по сущностям.</figcaption></figure>
 
 <h2>SMTP: секция <code>Email</code> службы Notifications</h2>
 <div class="tbl-wrap"><table>
-  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><th>Параметр (внутри <code>Email</code>)</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>FromSmtp</code>, <code>FromSmtpPort</code></td><td>SMTP-сервер и порт</td><td>— / <code>0</code></td></tr>
   <tr><td><code>FromEmail</code>, <code>FromName</code></td><td>Адрес и имя отправителя</td><td>—</td></tr>
   <tr><td><code>FromUserName</code>, <code>FromPassword</code></td><td>Учётная запись SMTP. Пароль зашифрован (см. <a href="security.html">Безопасность</a>)</td><td>—</td></tr>
@@ -36,8 +39,14 @@
   <tr><td><code>ClientTimeOut</code></td><td>Таймаут SMTP-клиента, мс</td><td><code>120000</code></td></tr>
   <tr><td><code>UseProtocolLogger</code></td><td>Писать протокол обмена в файл <code>smtp.log</code> в папке службы — для отладки</td><td><code>false</code></td></tr>
 </table></div>
-<p>Задержки повторной отправки (секция <code>RabbitMQ</code> службы Notifications): <code>EmailDefferedGeneralMilliseconds</code> — общая задержка писем, <code>500</code> мс; <code>EmailDefferedAfterFailMilliseconds</code> — задержка после неудачной попытки, <code>1000</code> мс; <code>EmailQueueMaxLength</code> — длина очереди писем, <code>10000</code>.</p>
-<p>В WebApi есть только один параметр почты: <code>Email:MaxAttachmentsLengthInMB</code> — предельный размер вложений в письмах, которые отправляются через Оркестратор, по умолчанию <code>10</code>.</p>
+<p>Очередь писем и задержки отправки — секция <code>RabbitMQ</code> службы Notifications:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><td><code>RabbitMQ:EmailDefferedGeneralMilliseconds</code></td><td>Общая задержка писем, мс</td><td><code>500</code></td></tr>
+  <tr><td><code>RabbitMQ:EmailDefferedAfterFailMilliseconds</code></td><td>Задержка после неудачной попытки отправки, мс</td><td><code>1000</code></td></tr>
+  <tr><td><code>RabbitMQ:EmailQueueMaxLength</code></td><td>Длина очереди писем</td><td><code>10000</code></td></tr>
+</table></div>
+<p>В конфигурации WebApi к исходящей почте относится один параметр: <code>Email:MaxAttachmentsLengthInMB</code> — предельный размер вложений в письмах, которые отправляются через Оркестратор, МБ; по умолчанию <code>10</code>.</p>
 
 <h2>Пороги оповещений: служба States</h2>
 <div class="tbl-wrap"><table>
@@ -52,51 +61,65 @@
   <tr><td><code>SLA:RpaProjectQueueRise:CriticalQueueLength</code></td><td>Критическая длина очереди проектов</td><td>не задан (в Docker <code>4</code>)</td></tr>
   <tr><td><code>SLA:RpaProjectQueueRise:RepeatedlySec</code></td><td>Повтор оповещения о росте очереди, с</td><td>не задан (в Docker <code>300</code>)</td></tr>
 </table></div>
-<div class="warn"><p>У порогов <code>SLA</code> в коде нет значений по умолчанию. Если секции нет и <code>SLAFromDb=false</code>, задайте её явно.</p></div>
+<div class="note"><p>У порогов <code>SLA</code> нет значений по умолчанию. Если <code>SLAFromDb=false</code>, задайте секцию <code>SLA</code> явно.</p></div>
 
-<h2>Входящая почта для триггеров</h2>
-<p>Ящик для заданий с триггером «Запуск при получении Email» задаётся в WebApi: базовый — <code>Tenants:IncomingEmail</code>, для тенанта — <code>Tenants:Items[].IncomingEmail</code>. Дополнительные ящики добавляются в UI4: <b>Настройки → Система → Email входящей почты</b>.</p>
+<h2>Входящая почта для триггеров: WebApi</h2>
+<p>Ящик для заданий с триггером «Запуск при получении Email» задаётся в конфигурации WebApi: базовый — секция <code>Tenants:IncomingEmail</code>, для тенанта — <code>Tenants:Items[].IncomingEmail</code> с теми же полями. Дополнительные ящики добавляются в UI4: <b>Настройки → Система → Email входящей почты</b>.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
-  <tr><td><code>IncomingEmail:UserName</code>, <code>Login</code>, <code>Password</code></td><td>Ящик; <code>Login</code>, если задан, используется вместо <code>UserName</code>. Пароль зашифрован</td><td>—</td></tr>
-  <tr><td><code>IncomingEmail:Imap</code>, <code>ImapPort</code>, <code>ImapFolder</code></td><td>IMAP-сервер, порт, папка</td><td>—</td></tr>
-  <tr><td><code>IncomingEmail:Pop3</code>, <code>Pop3Port</code></td><td>POP3-сервер и порт (вместо IMAP)</td><td>—</td></tr>
-  <tr><td><code>IncomingEmail:UseSsl</code> / <code>RequireAuthenticate</code></td><td>SSL/TLS / аутентификация</td><td><code>true</code> / <code>true</code></td></tr>
-  <tr><td><code>IncomingEmail:UseStandartNotSSLPort</code></td><td>Сервер на стандартном порту без SSL (IMAP 143, POP3 110); <code>UseSsl</code> игнорируется</td><td><code>false</code></td></tr>
-  <tr><td><code>IncomingEmail:RemoveReceived</code></td><td>Удалять обработанные письма</td><td><code>false</code></td></tr>
+  <tr><td><code>Tenants:IncomingEmail:UserName</code>, <code>Login</code>, <code>Password</code></td><td>Ящик; <code>Login</code>, если задан, используется вместо <code>UserName</code>. Пароль зашифрован</td><td>—</td></tr>
+  <tr><td><code>Tenants:IncomingEmail:Imap</code>, <code>ImapPort</code>, <code>ImapFolder</code></td><td>IMAP-сервер, порт, папка</td><td>—</td></tr>
+  <tr><td><code>Tenants:IncomingEmail:Pop3</code>, <code>Pop3Port</code></td><td>POP3-сервер и порт (вместо IMAP)</td><td>—</td></tr>
+  <tr><td><code>Tenants:IncomingEmail:UseSsl</code> / <code>RequireAuthenticate</code></td><td>SSL/TLS / аутентификация</td><td><code>true</code> / <code>true</code></td></tr>
+  <tr><td><code>Tenants:IncomingEmail:UseStandartNotSSLPort</code></td><td>Сервер на стандартном порту без SSL (IMAP 143, POP3 110); <code>UseSsl</code> игнорируется</td><td><code>false</code></td></tr>
+  <tr><td><code>Tenants:IncomingEmail:RemoveReceived</code></td><td>Удалять обработанные письма</td><td><code>false</code></td></tr>
   <tr><td><code>Triggers:Email:IntevalInSeconds</code></td><td>Период опроса ящика, с</td><td><code>20</code></td></tr>
   <tr><td><code>Triggers:Email:WindowSize</code></td><td>Писем за один опрос</td><td><code>5</code></td></tr>
   <tr><td><code>Triggers:Email:MaxFolderUnseenMessagesCount</code></td><td>Если непрочитанных больше — обработка триггера прерывается с ошибкой</td><td><code>100</code></td></tr>
   <tr><td><code>Triggers:Email:SecureSocketOption</code></td><td>Режим TLS (значения как у SMTP выше)</td><td><code>1</code> (Auto)</td></tr>
-  <tr><td><code>Triggers:Email:UseProtocolLogger</code></td><td>Писать протокол IMAP в <code>imap.log</code> в папке Оркестратора</td><td><code>false</code></td></tr>
+  <tr><td><code>Triggers:Email:UseProtocolLogger</code></td><td>Писать протокол IMAP в файл <code>imap.log</code> в папке службы WebApi — для отладки</td><td><code>false</code></td></tr>
   <tr><td><code>Triggers:Email:RemoveAuthenticationMechanisms</code>, <code>RemoveGSSAPI</code>, <code>RemoveNTLM</code>, <code>UseManagedNtlm</code></td><td>Управление механизмами аутентификации IMAP (если сервер предлагает неработающие)</td><td>пусто / <code>false</code></td></tr>
 </table></div>
 
-<h2>Пример (Notifications)</h2>
-<pre><code>"Email": {
-  "FromSmtp": "smtp.example.local",
-  "FromSmtpPort": 587,
-  "SecureSocketOption": 3,
-  "RequireAuthenticate": true,
-  "FromUserName": "orch-notify@example.local",
-  "FromPassword": "&lt;зашифрованный пароль&gt;",
-  "FromEmail": "orch-notify@example.local",
-  "FromName": "Primo RPA",
-  "MaxLetSim": 20
+<h2>Пример</h2>
+<p>Фрагменты файлов конфигурации; секции добавляются к имеющимся в файле. Notifications:</p>
+<pre><code>{
+  "Email": {
+    "FromSmtp": "smtp.example.local",
+    "FromSmtpPort": 587,
+    "SecureSocketOption": 3,
+    "RequireAuthenticate": true,
+    "FromUserName": "orch-notify@example.local",
+    "FromPassword": "&lt;зашифрованный пароль&gt;",
+    "FromEmail": "orch-notify@example.local",
+    "FromName": "Primo RPA",
+    "MaxLetSim": 20
+  }
 }</code></pre>
 <p>States:</p>
-<pre><code>"UserExpired": { "StartBefore": 4320, "NotificationInterval": 1440 },
-"LicenseExpired": { "DaysStartBefore": 15, "NotificationInterval": 24 },
-"SLAFromDb": false,
-"SLA": {
-  "AgentUnavailability": { "FirstSec": 60, "RepeatedlySec": 600 },
-  "RpaProjectQueueRise": { "CriticalQueueLength": 50, "RepeatedlySec": 600 }
+<pre><code>{
+  "UserExpired": { "StartBefore": 4320, "NotificationInterval": 1440 },
+  "LicenseExpired": { "DaysStartBefore": 15, "NotificationInterval": 24 },
+  "SLAFromDb": false,
+  "SLA": {
+    "AgentUnavailability": { "FirstSec": 60, "RepeatedlySec": 600 },
+    "RpaProjectQueueRise": { "CriticalQueueLength": 50, "RepeatedlySec": 600 }
+  }
 }</code></pre>
+<p>В Docker те же параметры — переменные окружения сервисов:</p>
+<pre><code># notifications
+Email__FromSmtp: smtp.example.local
+Email__FromSmtpPort: 587
+Email__SecureSocketOption: 3
+# states
+UserExpired__StartBefore: 4320
+SLA__AgentUnavailability__FirstSec: 60</code></pre>
 
 <h2>Как проверить</h2>
 <ol class="steps">
-  <li>Создайте подписку на системное событие «Агент не доступен» со своим адресом и остановите агент на тестовой машине. <span class="check">Через <code>SLA:AgentUnavailability:FirstSec</code> приходит письмо.</span></li>
-  <li>Если письма нет — откройте «Уведомления». <span class="check">Письмо в очереди есть → проблема в SMTP: включите <code>UseProtocolLogger</code> и проверьте <code>smtp.log</code>. Письма нет → проверьте подписку и службу States.</span></li>
+  <li>Создайте подписку на системное событие «Агент не доступен»: <b>Настройки → Администрирование → Подписки → Добавить подписку</b>, укажите адрес, на который должно прийти проверочное письмо. <span class="check">Подписка появилась в списке.</span></li>
+  <li>Остановите агент на тестовой машине. <span class="check">Через <code>SLA:AgentUnavailability:FirstSec</code> секунд на указанный адрес приходит письмо.</span></li>
+  <li>Если письма нет, откройте <b>Настройки → Администрирование → Уведомления</b>. <span class="check">Письмо в очереди есть — причина в подключении к SMTP: включите <code>Email:UseProtocolLogger</code> в конфигурации Notifications и проверьте <code>smtp.log</code>. Письма нет — проверьте подписку и службу States.</span></li>
 </ol>
 
 <h2>Что дальше</h2>

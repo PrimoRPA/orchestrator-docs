@@ -21,7 +21,7 @@
 <h2>Базы данных</h2>
 <p>Каждая БД задаётся элементом секции <code>DbConnection:Items</code> конфига службы. Имена БД ниже — из Docker-образов поставки; в конкретной установке они могут отличаться, проверьте <code>DbConnection:Items:&lt;имя&gt;:DbName</code>.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Элемент <code>DbConnection:Items</code></th><th>БД (как в образах)</th><th>Что внутри</th><th>Чья</th></tr>
+  <tr><th>Элемент <code>DbConnection:Items</code></th><th>БД (как в образах)</th><th>Что внутри</th><th>Какие службы используют</th></tr>
   <tr><td><code>Default</code></td><td><code>ltools</code></td><td>Оперативные данные: машины, роботы, проекты и архивы проектов (при хранении в БД), задания, очереди обмена данными и их архив, тенанты, настройки, хэши конфигов.</td><td>WebApi и другие службы; служба Licenses обращается к ней же через элемент <code>Licenses</code></td></tr>
   <tr><td><code>Identity</code></td><td><code>ltoolsidentity</code></td><td>Пользователи, роли, права, привязка ролей к группам AD.</td><td>WebApi</td></tr>
   <tr><td><code>License</code></td><td><code>ltoolslicense</code></td><td>Установленные лицензии.</td><td>WebApi</td></tr>
@@ -31,6 +31,7 @@
   <tr><td>—</td><td>отдельная, задаётся <code>Secrets:ConnectionString</code></td><td>Хранилище секретов, если <code>Secrets:External</code> = БД.</td><td>все службы</td></tr>
   <tr><td><code>Database:DbConnection</code> (служба NuGet)</td><td><code>ltoolsnuget</code></td><td>Метаданные NuGet-пакетов.</td><td>NuGet</td></tr>
 </table></div>
+<p>Секция <code>DbConnection:Items</code> действует для PostgreSQL. Для MS SQL базы задаются строками подключения в секции <code>ConnectionStrings</code> — их имена приведены на странице <a href="../upgrade/before.html">Перед обновлением</a>.</p>
 <p><code>ltools</code>, <code>ltoolsidentity</code> и <code>ltoolslicense</code> связаны между собой (идентификаторы тенантов, пользователей, лицензий), поэтому создавайте их копии в одном окне и восстанавливайте вместе.</p>
 
 <h2>Файлы и объектное хранилище</h2>
@@ -42,15 +43,15 @@
   <tr data-ver="1.26.7"><td>Архивы RPA-проектов</td><td><code>RpaProjectArchiveUpload:DbStore</code> (WebApi)</td><td>По умолчанию <code>true</code> — в БД <code>ltools</code>; <code>false</code> — в папке <code>TargetFilePath</code>.</td></tr>
   <tr data-ver="1.26.9"><td>Архивы RPA-проектов</td><td><code>RpaProjectArchiveUpload:StoreType</code> (WebApi)</td><td>По умолчанию <code>1</code> (<code>LocalDb</code>) — в БД <code>ltools</code>; <code>2</code> — в S3; <code>0</code> (файловая система, папка <code>TargetFilePath</code>) устарел.</td></tr>
   <tr><td>Скриншоты роботов</td><td><code>ScreenFileUpload:ScreenFilePath</code>, <code>ScreenFileUpload:StoreType</code> (RobotLogs)</td><td>Файловая система (по умолчанию) или S3.</td></tr>
-  <tr><td>NuGet-пакеты</td><td>секция <code>Storage</code> службы NuGet</td><td>В Docker-образе — бакет <code>nuget</code> в S3.</td></tr>
+  <tr><td>NuGet-пакеты</td><td><code>Storage:Type</code>, <code>FileSystem:Path</code> (NuGet)</td><td>В поставке — файловая система (<code>Storage:Type</code> = <code>FileSystem</code>), каталог из <code>FileSystem:Path</code>; в Docker — том <code>nugetdata</code>.</td></tr>
   <tr><td>Бакеты S3 Оркестратора</td><td><code>FileStore:MainBucketName</code></td><td>Если пусто — для дистрибутивов и архивов проектов создаются отдельные бакеты.</td></tr>
   <tr><td>Keytab-файлы Kerberos</td><td><code>ActiveDirectory:MultyForest:&lt;домен&gt;:KerberosKeytabPath</code></td><td>Либо в Vault/переменной окружения (<code>KerberosKeytabVault</code>), либо в S3 (<span data-ver="1.26.9"><code>FileStore:S3KerberosKeytabs</code></span><span data-ver="1.26.7"><code>FileStore:MinioKerberosKeytabs</code></span>).</td></tr>
 </table></div>
 
 <h2>Конфиги, сертификаты, секреты</h2>
 <ul>
-  <li>Конфиги каждой службы: <code>appsettings.json</code> и <code>appsettings.&lt;окружение&gt;.json</code>. Окружение задаёт <code>ASPNETCORE_ENVIRONMENT</code>: в unit-файлах Linux и образах — <code>ProdLinux</code>, на Windows — <code>ProdWin</code>. На Linux службы находятся в <code>/opt/Primo/&lt;Служба&gt;</code>.</li>
-  <li>Unit-файлы systemd <code>Primo.Orchestrator.*.service</code> (Linux) или параметры служб Windows.</li>
+  <li>Конфиги каждой службы: <code>appsettings.json</code> и <code>appsettings.&lt;окружение&gt;.json</code>. Окружение задаёт <code>ASPNETCORE_ENVIRONMENT</code>: в юнитах Linux и образах — <code>ProdLinux</code>, на Windows — <code>ProdWin</code>. На Linux службы находятся в <code>/opt/Primo/&lt;Служба&gt;</code>.</li>
+  <li>Юниты systemd <code>Primo.Orchestrator.*.service</code> (Linux) или параметры служб Windows.</li>
   <li>Конфиг nginx и сертификат с ключом, на которые он ссылается (<code>ssl_certificate</code>, <code>ssl_certificate_key</code>).</li>
   <li>Переменные окружения <code>PRIMOSALT</code> (соль шифрования паролей в конфигах) и <code>PRIMOSIGNINGKEY</code> (ключ подписи токенов). Без той же соли зашифрованные пароли в конфигах не расшифруются.</li>
   <li>Если секреты во внешнем хранилище (<code>Secrets:External</code>) — резервная копия Vault или БД секретов.</li>
@@ -128,7 +129,7 @@ gunzip -c &lt;каталог копии&gt;/all.sql.gz | docker compose exec -T 
 <h2>Восстановление: на что обратить внимание</h2>
 <ul>
   <li>После восстановления конфигов служба при старте сравнит их с хэшем в БД и, если файл отличается, запишет событие 2 «Конфигурационный файл изменен» (класс «Инцидент безопасности»). Это штатное поведение.</li>
-  <li>Лицензии привязываются к серверу через службу MachineInfo (<code>License:MachineInfoUrl</code>, <code>License:MachineInfoUrls</code>). При восстановлении на другом оборудовании лицензии могут стать недействительными.</li>
+  <li>Лицензии привязываются к серверу через службу MachineInfo (<code>License:MachineInfoUrl</code>, <code>License:MachineInfoUrls</code>). При восстановлении на другом оборудовании лицензии могут стать недействительными — см. <a href="../upgrade/migrate.html">Перенос на другой сервер или СУБД</a>.</li>
 </ul>
 
 <h2>Что дальше</h2>

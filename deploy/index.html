@@ -10,7 +10,7 @@
 <body data-root="../" data-page="deploy/">
 <main>
 <h1>Развертывание</h1>
-<div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
+<div class="applies" data-sw="platform">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
 <p class="lead">Установка Оркестратора с нуля — от планирования до тестового проекта, выполненного на роботе. Пройдите шаги по порядку.</p>
 <ol class="route">
   <li><span class="stage-t">Планирование установки</span>
@@ -26,30 +26,28 @@
   </li>
   <li><a href="install.html">Установка</a>
     <ol class="substeps">
-      <li><a href="install.html">Серверная часть</a> <span>— Docker или службы</span></li>
+      <li data-only="docker"><a href="install-docker.html">Установка в Docker</a> <span>— серверная часть: все компоненты в одном compose-файле</span></li>
+      <li data-only="linux"><a href="install-services.html#astra">Установка служб</a> <span>— серверная часть: Astra Linux, РЕД ОС или Ubuntu</span></li>
+      <li data-only="windows"><a href="install-services.html#windows">Установка служб</a> <span>— серверная часть: Windows Server</span></li>
       <li><a href="agent.html">Машины роботов и агент</a> <span>— агент на каждую машину робота</span></li>
     </ol>
   </li>
   <li><a href="first-run.html">Первый запуск</a>
-    <ol class="substeps">
-      <li><a href="first-run.html">Первый запуск</a> <span>— вход, лицензия, дистрибутив робота, первый робот</span></li>
-    </ol>
+    <p>Вход, лицензия, дистрибутив робота, первый робот.</p>
   </li>
   <li><a href="verify.html">Проверка установки</a>
-    <ol class="substeps">
-      <li><a href="verify.html">Проверка установки</a> <span>— службы отвечают, тестовый проект выполнился</span></li>
-    </ol>
+    <p>Службы отвечают, тестовый проект выполнен на роботе.</p>
   </li>
 </ol>
 <h2>Частые задачи</h2>
 <ul>
-  <li><a href="../start/">С чего начать — Путеводитель</a></li>
+  <li><a href="../start/index.html">С чего начать — Путеводитель</a></li>
   <li><a href="install-services.html#astra">Установить Оркестратор на Astra Linux</a></li>
   <li><a href="install-docker.html#mode">Быстро развернуть стенд в Docker</a></li>
   <li><a href="agent.html">Подключить ещё одну машину робота</a></li>
   <li><a href="network.html">Передать сетевым администраторам список портов</a></li>
 </ul>
-<p class="auto-note">Список подобран вручную. В идеале он собирается автоматически — по популярности страниц и числу обращений в поддержку.</p>
+<p class="auto-note">Список подобран вручную. Целевой вариант — автоматическая сборка по популярности страниц и числу обращений в поддержку.</p>
 </main>
 <script src="../assets/nav.js"></script>
 </body>

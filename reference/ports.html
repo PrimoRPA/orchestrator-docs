@@ -11,7 +11,7 @@
 <main>
 <h1>Порты</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Порты служб Оркестратора и внешних компонентов: кто слушает, по какому протоколу и кто подключается. Значения взяты из конфигов nginx, Dockerfile, шаблона docker-compose и кода.</p>
+<p class="lead">Порты служб Оркестратора и внешних компонентов: кто слушает, по какому протоколу и кто подключается.</p>
 
 <p>Порт службы задаётся адресом точки Kestrel: <code>Kestrel:EndPoints:InternalHttp:Url</code> (HTTP) или <code>Kestrel:EndPoints:ExternalHttps:Url</code> (HTTPS). Номера ниже — те, на которые настроены поставляемые nginx-конфиги и Docker-образы для Ubuntu. При изменении порта службы измените и <code>upstream</code> в nginx.</p>
 
@@ -30,7 +30,7 @@
 <tr><td><code>/api/robotlicenseresponses</code>, <code>/licenses/</code></td><td>Licenses</td></tr>
 <tr><td><code>/nuget/</code></td><td>NuGet2</td></tr>
 <tr><td><code>/rdpstream/</code>, <code>/rdpsessions/</code></td><td>RDP2 (HTTPS)</td></tr>
-<tr><td><code>/mcp</code></td><td>MCP-сервер</td></tr>
+<tr><td><code>/mcp</code></td><td>MCP Server</td></tr>
 <tr><td><code>/grafana/</code></td><td>Grafana (нет в <code>nginx.docker.conf</code>)</td></tr>
 <tr><td><code>/apiendpoint</code></td><td>закрыт, возвращает 404</td></tr>
 </table></div>
@@ -38,7 +38,7 @@
 <h2>Службы Оркестратора</h2>
 <div class="tbl-wrap"><table>
 <tr><th>Служба</th><th>Порт</th><th>Протокол</th><th>Кто подключается</th></tr>
-<tr><td>WebApi</td><td>5001</td><td>HTTP</td><td>nginx; RobotLogs, States, Analytic, Licenses, Queues, RDP2, MCP (<code>Orchestrator:BaseUrl</code>); LogEventsWebhook в поставляемом compose</td></tr>
+<tr><td>WebApi</td><td>5001</td><td>HTTP</td><td>nginx; RobotLogs, States, Analytic, Licenses, Queues, RDP2, MCP Server (<code>Orchestrator:BaseUrl</code>); LogEventsWebhook в поставляемом compose</td></tr>
 <tr><td>RobotLogs</td><td>56748</td><td>HTTP</td><td>nginx; WebApi (<code>RobotLogs:BaseUrl</code>)</td></tr>
 <tr><td>Queues</td><td>5088</td><td>HTTP</td><td>nginx</td></tr>
 <tr><td>Licenses</td><td>5089</td><td>HTTP</td><td>nginx</td></tr>
@@ -49,7 +49,7 @@
 <tr><td>States</td><td>56750</td><td>HTTP</td><td>— (health-check)</td></tr>
 <tr><td>Notifications</td><td>56751</td><td>HTTP</td><td>— (health-check)</td></tr>
 <tr><td>LogEventsWebhook</td><td>56770</td><td>HTTP</td><td>— (health-check)</td></tr>
-<tr><td>MCP-сервер</td><td>5080</td><td>HTTP</td><td>nginx</td></tr>
+<tr><td>MCP Server</td><td>5080</td><td>HTTP</td><td>nginx</td></tr>
 <tr><td>Метрики любой службы</td><td>10052</td><td>HTTP</td><td>Prometheus или Zabbix, если задан <code>Monitoring:Provider</code> (порт — <code>Monitoring:Port</code>)</td></tr>
 </table></div>
 <p>Порты 5001, 56748, 5088, 5089, 8081, 5102, 5080 и 3000 (Grafana) взяты из <code>upstream</code> nginx-конфигов; 5051, 56749, 56750, 56751, 56770 — из Docker-образов для Ubuntu. У каждой службы есть проверки <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code>.</p>

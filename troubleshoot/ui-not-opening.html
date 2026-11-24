@@ -11,36 +11,38 @@
 <main>
 <h1>Интерфейс не открывается или падает WebApi</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">UI4 — статические файлы, их отдаёт nginx. Все запросы к API идут на тот же адрес по пути <code>/api/</code>, nginx проксирует их в WebApi. WebApi зависит от БД и RabbitMQ. Проверяйте по цепочке: nginx → файлы UI → WebApi → БД и RabbitMQ.</p>
+<p class="lead">Если UI4 не открывается, отвечает ошибкой или служба WebApi не стартует, проверяйте по цепочке: nginx → файлы UI → WebApi → БД и RabbitMQ. UI4 — статические файлы, которые отдаёт nginx; запросы к API идут на тот же адрес по пути <code>/api/</code>, и nginx проксирует их в WebApi.</p>
 <div class="meta">
   <div><b>Перед началом</b>доступ к журналу WebApi — <a href="../operate/service-logs.html">Журналы служб</a></div>
   <div><b>Результат</b>интерфейс открывается, WebApi отвечает на запросы</div>
 </div>
 
 <h2>Симптомы</h2>
-<ul>
-  <li>Браузер не может подключиться или сообщает об ошибке сертификата.</li>
-  <li>Пустая страница или 404.</li>
-  <li>Страница входа открылась, но после действия — «Истек таймаут запроса. Попробуйте повторить запрос!» или «Proxy configuration error».</li>
-  <li>Сразу после входа происходит возврат на страницу входа.</li>
-  <li>Служба WebApi не стартует после установки, обновления или перезагрузки сервера, либо периодически аварийно завершается.</li>
-  <li>После обновления или отката версии WebApi завершается при старте с ошибкой миграции БД.</li>
-  <li>В журнале WebApi постоянно повторяются записи об MQTT или о заголовке <code>X-Real-IP</code>.</li>
-</ul>
+<div class="tbl-wrap"><table>
+  <tr><th>Что видно</th><th>Где решение</th></tr>
+  <tr><td>Браузер не может подключиться или сообщает об ошибке сертификата</td><td>Строки «nginx слушает порт» и «Сертификат» в <a href="#checks">таблице проверок</a>, затем <a href="#nginx">nginx и файлы UI</a></td></tr>
+  <tr><td>Пустая страница или 404</td><td>Строка «Файлы UI» в <a href="#checks">таблице проверок</a>; UI размещён не в корне сайта — <a href="#placement">Нестандартное размещение</a></td></tr>
+  <tr><td>Страница входа открылась, но после действия — «Истек таймаут запроса. Попробуйте повторить запрос!», «Proxy configuration error» или «Server error - check the terminal for more info!»</td><td><a href="#ui-errors">Ошибки в UI4 и что они означают</a></td></tr>
+  <tr><td>Сразу после входа происходит возврат на страницу входа</td><td><a href="#ui-errors">Ошибки в UI4 и что они означают</a></td></tr>
+  <tr><td>Служба WebApi не стартует после установки, обновления или перезагрузки сервера либо периодически аварийно завершается</td><td><a href="#webapi-start">WebApi не стартует или падает</a></td></tr>
+  <tr><td>После обновления или отката версии WebApi завершается при старте с ошибкой миграции БД</td><td><a href="#db-start">Ошибки БД при старте WebApi</a>, <a href="#rollback-db">Откат версии</a></td></tr>
+  <tr><td>В журнале WebApi постоянно повторяются записи об MQTT или о заголовке <code>X-Real-IP</code></td><td><a href="#log-noise">Записи журнала, которые не означают сбой</a></td></tr>
+</table></div>
 
 <h2>Вероятные причины</h2>
 <ul>
-  <li>nginx не запущен, указан неверный порт или сертификат.</li>
-  <li>WebApi не запущен: не задано окружение, нет доступа к БД или RabbitMQ при старте.</li>
-  <li>После перезагрузки сервера службы стартуют раньше БД или RabbitMQ.</li>
-  <li>Неверный <code>location /api/</code> в nginx.</li>
-  <li>Linux: конфигурацию <code>nginx.linux.conf</code> запускает стандартная служба <code>nginx</code>, а не пользовательская служба <code>Primo.Orchestrator.Nginx</code>.</li>
-  <li>WebApi не может создать БД или применить миграции: нет права на создание БД, между WebApi и PostgreSQL работает пулер соединений, в PostgreSQL задано <code>standard_conforming_strings = off</code>, версия откачена без восстановления БД.</li>
-  <li>Исчерпан лимит подключений PostgreSQL (<code>max_connections</code>) или не разрешается имя сервера БД.</li>
+  <li>nginx не запущен, указан неверный порт или сертификат — <a href="#nginx">nginx и файлы UI</a>.</li>
+  <li>WebApi не запущен: не задано окружение, нет доступа к БД или RabbitMQ при старте — <a href="#webapi-start">WebApi не стартует или падает</a>.</li>
+  <li>После перезагрузки сервера службы стартуют раньше БД или RabbitMQ — <a href="#webapi-start">WebApi не стартует или падает</a>.</li>
+  <li>Неверный <code>location /api/</code> в nginx — <a href="#ui-errors">Ошибки в UI4</a>.</li>
+  <li>Linux: конфигурацию <code>nginx.linux.conf</code> запускает стандартная служба <code>nginx</code>, а не пользовательская служба <code>Primo.Orchestrator.Nginx</code> — <a href="#nginx">nginx и файлы UI</a>, шаг 2.</li>
+  <li>WebApi не может создать БД или применить миграции: нет права на создание БД, между WebApi и PostgreSQL работает пулер соединений, в PostgreSQL задано <code>standard_conforming_strings = off</code>, версия откачена без восстановления БД — <a href="#db-start">Ошибки БД при старте WebApi</a>.</li>
+  <li>Исчерпан лимит подключений PostgreSQL (<code>max_connections</code>) — <a href="#db-connections">Лимит подключений</a>; не разрешается имя сервера БД — <a href="#webapi-start">WebApi не стартует или падает</a>.</li>
   <li>Ошибки RabbitMQ при объявлении обменников и очередей на старте — см. <a href="rabbitmq.html">RabbitMQ</a>.</li>
 </ul>
 
-<h2>Что проверить</h2>
+<h2 id="checks">Что проверить</h2>
+<p>Проверки идут по цепочке от браузера к БД; первая невыполненная строка указывает на звено со сбоем.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Что проверить</th><th>Где</th><th>Должно быть</th></tr>
   <tr><td>nginx слушает порт</td><td><code>nginx.conf</code>: <code>listen 44392 ssl</code></td><td>Порт открыт на сервере и в сетевом экране</td></tr>
@@ -56,7 +58,7 @@
 <div class="note"><p><code>/health</code> всегда отвечает <code>Healthy</code> и не проверяет БД. Если он отвечает, а UI4 не работает, проверьте журнал WebApi.</p></div>
 
 <h2>Как исправить</h2>
-<h3>Linux</h3>
+<h3 id="nginx">nginx и файлы UI: Linux</h3>
 <ol class="steps">
   <li>nginx Оркестратора работает как пользовательская служба <code>Primo.Orchestrator.Nginx</code>. Системный nginx должен быть выключен, для пользователя включён linger. Проверьте: <code>systemctl --user status Primo.Orchestrator.Nginx</code>. <span class="check">active (running)</span></li>
   <li>Если конфигурацию из поставки запускает стандартная служба <code>nginx</code>, служба завершается с ошибкой о pid-файле, хотя проверка конфигурации проходит. Отключите стандартную службу и запустите пользовательскую — <a href="../deploy/install-services.html">Установка служб</a>:
@@ -67,12 +69,12 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
   <li>Закрытый ключ сертификата должен быть доступен только владельцу: <code>chmod 600 /opt/Primo/nginx/cert1.rsa</code>.</li>
   <li>WebApi: служба <code>Primo.Orchestrator.WebApi</code>, каталог <code>/opt/Primo/WebApi</code>.</li>
 </ol>
-<h3>Windows</h3>
+<h3>nginx и файлы UI: Windows</h3>
 <p>Вариант с nginx — те же действия, что выше, конфигурация <code>nginx.win.conf</code>.</p>
-<h3>Docker</h3>
+<h3>nginx и файлы UI: Docker</h3>
 <p>Контейнер UI собирает конфигурацию nginx из шаблона через переменные <code>NGINX_LISTEN_PORT</code>, <code>NGINX_APP_SERVER_HOSTNAME</code>, <code>NGINX_APP_SERVER_PORT</code> и другие. TLS внутри контейнера нет. nginx отвечает на <code>/health</code> самостоятельно, поэтому работающий контейнер UI не означает, что WebApi доступен.</p>
 
-<h3>WebApi не стартует или падает</h3>
+<h3 id="webapi-start">WebApi не стартует или падает</h3>
 <p>Найдите в журнале WebApi последние записи перед остановкой.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Сообщение</th><th>Что делать</th></tr>
@@ -123,14 +125,14 @@ sudo -u postgres psql -d ltoolsnuget -c "CREATE EXTENSION IF NOT EXISTS citext;"
   <li>Уменьшите <code>MaxPoolSize</code> до значения, рассчитанного под нагрузку, остановите лишние экземпляры Оркестратора на этом сервере БД или увеличьте <code>max_connections</code> в PostgreSQL. Перезапустите службы. <span class="check">Ошибки 53300 в журнале WebApi больше не появляются</span></li>
 </ol>
 
-<h3>Записи журнала, которые не означают сбой</h3>
+<h3 id="log-noise">Записи журнала, которые не означают сбой</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Запись в журнале WebApi</th><th>Что означает</th></tr>
   <tr><td>«Failed connecting to MQTT: Value cannot be null. (Parameter 'uriString')», «Failed publishing to RdpSession: …»</td><td>Не задан адрес MQTT (<code>Mqtt:Url</code>). WebApi пытается отправить уведомление службе RDP2 при запуске робота с поддержкой RDP-сессии. Остановку WebApi эти ошибки не вызывают. Если служба RDP2 не используется, записи на работу не влияют</td></tr>
   <tr><td>«Не удалось извлечь заголовок [X-Real-IP] из запроса. Используем для определения IP-адреса клиента метод GetCurrentUserIP()=[…]» на каждый запрос <code>KeepAliveStudio</code></td><td>Известное ограничение: для запроса <code>KeepAliveStudio</code> предупреждение записывается всегда, даже если nginx передаёт заголовок. На работу лицензий Студии не влияет. Если предупреждение появляется и для <code>TakeAvailableStudioLicense</code> или <code>ReleaseStudioLicense</code>, проверьте, что в <code>location /api/</code> конфигурации nginx передаётся <code>proxy_set_header X-Real-IP $remote_addr</code></td></tr>
 </table></div>
 
-<h3>Ошибки в UI4 и что они означают</h3>
+<h3 id="ui-errors">Ошибки в UI4 и что они означают</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Что видно</th><th>Причина</th></tr>
   <tr><td>«Истек таймаут запроса. Попробуйте повторить запрос!»</td><td>Сеть или 502 от nginx: WebApi не запущен или не слушает 5001.</td></tr>
@@ -140,7 +142,7 @@ sudo -u postgres psql -d ltoolsnuget -c "CREATE EXTENSION IF NOT EXISTS citext;"
   <tr><td>«Permission error»</td><td>403: у роли нет нужного права.</td></tr>
 </table></div>
 
-<h3>Нестандартное размещение</h3>
+<h3 id="placement">Нестандартное размещение</h3>
 <p>UI4 собран с <code>&lt;base href="/"&gt;</code> и адресом API <code>/api</code>, поэтому работает только в корне сайта, не в подкаталоге. Если UI отдаётся с другого адреса, чем WebApi, перечислите адреса UI в <code>Security:EnabledOrigins</code> (по умолчанию пусто, CORS выключен).</p>
 <p>Вторая копия WebApi на том же порту не запускается. Проверьте, что старый процесс завершён.</p>
 

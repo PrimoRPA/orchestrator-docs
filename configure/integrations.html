@@ -11,23 +11,26 @@
 <main>
 <h1>Интеграции</h1>
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Передача событий Оркестратора во внешние системы (вебхуки через службу LogEventsWebhook), аналитическая БД и служба Analytic, выгрузки в интеграционные таблицы, доступ к REST API.</p>
+<p class="lead">На странице описаны передача событий Оркестратора во внешние системы (вебхуки через службу LogEventsWebhook), настройка аналитической БД и службы Analytic, выгрузки в интеграционные таблицы и вход внешней системы в REST API.</p>
 
 <div class="meta">
   <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
   <div><b>Результат</b>настроен обмен данными Оркестратора с внешними системами</div>
 </div>
 
+<div class="note"><p>Параметры задаются в конфигурации той службы, которая названа в заголовке подраздела: файл <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows) в каталоге службы. В Docker — переменные окружения сервисов <code>web-api</code>, <code>log-events-webhook</code> и <code>analytic</code> в <code>docker-compose.yml</code>; уровни имени разделяются двойным подчёркиванием: <code>Integration__EventWebhook__Enabled</code>, <code>HttpEndPoint__Url</code>. После изменения перезапустите службу; в Docker выполните <code>sudo docker compose up -d</code>. Порядок чтения источников — на странице <a href="../reference/config.html#sources">Параметры конфигурации</a>.</p></div>
+
 <h2>Вебхуки на события Оркестратора</h2>
-<p>Каждое событие журнала Оркестратора WebApi публикует в обменник RabbitMQ типа fanout. Служба LogEventsWebhook читает свою очередь из этого обменника и отправляет событие POST-запросом в JSON на адрес внешней системы. Внешних систем может быть несколько: на каждую — отдельный экземпляр LogEventsWebhook с отдельным именем очереди.</p>
-<h3>WebApi</h3>
+<p>WebApi публикует каждое событие журнала Оркестратора в обменник RabbitMQ типа fanout. Служба LogEventsWebhook читает свою очередь из этого обменника и отправляет событие POST-запросом в JSON на адрес внешней системы.</p>
+<p>Внешних систем может быть несколько: на каждую — отдельный экземпляр LogEventsWebhook с отдельным именем очереди.</p>
+<h3>Параметры WebApi</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>Integration:EventWebhook:Enabled</code></td><td>Публиковать события для вебхуков</td><td>не задан (в Docker <code>False</code>)</td></tr>
   <tr><td><code>RabbitMQ:EventWebhookExchangeName</code></td><td>Обменник (fanout)</td><td><code>eventswebhook</code></td></tr>
 </table></div>
-<div class="warn"><p>Задайте <code>Integration:EventWebhook:Enabled</code> явно (<code>true</code> или <code>false</code>). Код обращается к подсекции <code>EventWebhook</code> без проверки на отсутствие.</p></div>
-<h3>LogEventsWebhook</h3>
+<div class="warn"><p>Задайте <code>Integration:EventWebhook:Enabled</code> явно (<code>true</code> или <code>false</code>). Если подсекции <code>EventWebhook</code> в конфигурации WebApi нет, запись каждого события журнала завершается ошибкой.</p></div>
+<h3>Параметры LogEventsWebhook</h3>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>HttpEndPoint:Url</code></td><td>Адрес приёма событий во внешней системе (POST, JSON, таймаут 10 с)</td><td>—</td></tr>
@@ -37,8 +40,9 @@
   <tr><td><code>RabbitMQ:EventWebhookExchangeName</code></td><td>Обменник, должен совпадать с WebApi</td><td><code>eventswebhook</code></td></tr>
   <tr><td><code>RabbitMQ:Host</code>, <code>Port</code>, <code>VirtualHost</code>, <code>UserName</code>, <code>Password</code></td><td>Подключение к RabbitMQ</td><td>—</td></tr>
 </table></div>
+<h3>Формат события</h3>
 <p>Поля события в теле запроса: <code>Id</code>, <code>Event</code> (код события), <code>EventType</code>, <code>EntityId</code>, <code>EntityData</code>, <code>UserId</code>, <code>TenantId</code>, <code>IP</code>, <code>Text</code>, <code>OrchTimestampUtc</code>, <code>SendedAt</code>, <code>OperationKey</code>, <code>WorkerAdminName</code>, <code>Signature</code>, <code>OrchBaseUrl</code>. Коды событий — на странице <a href="../operate/events.html">События и их коды</a>.</p>
-<p>Пример приёмника в поставке — служба ArcSight: принимает события от LogEventsWebhook, переводит их в формат CEF и пишет текстовыми файлами в папку (<code>Files:Path</code>, <code>MaxCountEvents</code>=20, <code>MaxCountFiles</code>=60).</p>
+<p>Пример приёмника в поставке — служба ArcSight: принимает события от LogEventsWebhook, переводит их в формат CEF и пишет текстовыми файлами в папку (параметры службы ArcSight: <code>Files:Path</code>, <code>MaxCountEvents</code>=20, <code>MaxCountFiles</code>=60).</p>
 
 <h2>Аналитическая БД: служба Analytic</h2>
 <p>Analytic читает события Оркестратора из очереди RabbitMQ <code>dbevents2</code>, агрегирует их в БД <code>ltoolsanalytic</code> и периодически обновляет материализованные представления.</p>
@@ -46,10 +50,11 @@
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>DbConnection:Items:Analytic:*</code></td><td>Подключение к БД аналитики: <code>Hostname</code>, <code>Port</code>, <code>DbName</code>, <code>UserName</code>, <code>Password</code> и др.</td><td><code>DbName</code> в Docker — <code>ltoolsanalytic</code></td></tr>
   <tr><td><code>Orchestrator:BaseUrl</code></td><td>Адрес WebApi</td><td>—</td></tr>
+  <tr><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CronString</code></td><td>Расписание обновления (Quartz cron). Ключи: <code>mv_WorkersUsage</code>, <code>mv_RobotsUsage</code></td><td>не задано — не обновляются</td></tr>
   <tr data-ver="1.26.9"><td><code>Schedules:RefreshMaterializedViews:&lt;представление&gt;:CommandTimeoutInSeconds</code></td><td>Таймаут команды обновления, с; <code>0</code> — без ограничения</td><td><code>600</code></td></tr>
   <tr><td><code>Integration:Unloading</code>, <code>Observability:Unloading</code></td><td>Выгрузки в интеграционные таблицы (<code>Enabled</code>, <code>Items</code> с <code>CronString</code>, <code>ObjectFlow</code>, <code>LeaveIterations</code>)</td><td>выключены</td></tr>
 </table></div>
-<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>RobotsUsage</code>, <code>WorkersUsage</code> и другими — без префикса <code>mv_</code>. В коде распознаются только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Переопределите переменные с правильными ключами.</p></div>
+<div class="warn"><p>В Docker-образе Analytic расписания заданы ключами <code>RobotsUsage</code>, <code>WorkersUsage</code> и другими — без префикса <code>mv_</code>. Служба распознаёт только ключи с <code>mv_</code>, поэтому с такими настройками задания запускаются, но представления не обновляются. Задайте у сервиса <code>analytic</code> переменные с правильными ключами, например <code>Schedules__RefreshMaterializedViews__mv_RobotsUsage__CronString</code>.</p></div>
 
 <h2>Выгрузки WebApi в интеграционные таблицы</h2>
 <p>WebApi по расписанию копирует справочники в таблицы <code>IntegrationExchange*</code> БД <code>ltools</code>, откуда их забирает внешняя система.</p>
@@ -64,28 +69,50 @@
 <p>Отдельного механизма API-ключей в 1.26.9 нет. Внешняя система входит как обычный пользователь: <code>POST /api/Account</code> с телом <code>{"UserName": "…", "Password": "…"}</code> (для тенанта — заголовок <code>tenantId</code>) и получает в ответе поле <code>token</code>. Далее в запросах передаётся заголовок <code>Authorization: Bearer &lt;token&gt;</code>. Права определяются ролями пользователя, срок токена — <code>Security:Jwt:SessionLifetimeMin</code>.</p>
 <p>Описание API: Swagger UI по адресу <code>/api/doc</code>, спецификация — <code>/api/v1/swagger.json</code>. Подробнее — <a href="../reference/api.html">API</a>.</p>
 
-<h2>Пример (LogEventsWebhook)</h2>
-<pre><code>"HttpEndPoint": {
-  "Url": "https://siem-gw.example.local/api/OrchEvents",
-  "LoginUrl": "https://siem-gw.example.local/api/account",
-  "UserName": "orch",
-  "Password": "&lt;зашифрованный пароль&gt;"
-},
-"RabbitMQ": {
-  "Host": "rabbit.example.local", "Port": 5672,
-  "UserName": "orch", "Password": "&lt;зашифрованный пароль&gt;",
-  "EventWebhookQueueName": "eventswebhook-siem"
+<h2>Пример</h2>
+<p>Фрагменты файлов конфигурации; секции добавляются к имеющимся в файле. LogEventsWebhook:</p>
+<pre><code>{
+  "HttpEndPoint": {
+    "Url": "https://siem-gw.example.local/api/OrchEvents",
+    "LoginUrl": "https://siem-gw.example.local/api/account",
+    "UserName": "orch",
+    "Password": "&lt;зашифрованный пароль&gt;"
+  },
+  "RabbitMQ": {
+    "Host": "rabbit.example.local",
+    "Port": 5672,
+    "UserName": "orch",
+    "Password": "&lt;зашифрованный пароль&gt;",
+    "EventWebhookQueueName": "eventswebhook-siem"
+  }
 }</code></pre>
-<p>В WebApi: <code>"Integration": { "EventWebhook": { "Enabled": true } }</code>. В Analytic:</p>
-<pre><code>"Schedules": { "RefreshMaterializedViews": {
-  "mv_WorkersUsage": { "CronString": "0 0/5 * * * ?" },
-  "mv_RobotsUsage":  { "CronString": "0 0/5 * * * ?" }
-} }</code></pre>
+<p>WebApi:</p>
+<pre><code>{
+  "Integration": { "EventWebhook": { "Enabled": true } }
+}</code></pre>
+<p>Analytic:</p>
+<pre><code>{
+  "Schedules": {
+    "RefreshMaterializedViews": {
+      "mv_WorkersUsage": { "CronString": "0 0/5 * * * ?" },
+      "mv_RobotsUsage": { "CronString": "0 0/5 * * * ?" }
+    }
+  }
+}</code></pre>
+<p>В Docker те же параметры — переменные окружения сервисов:</p>
+<pre><code># web-api
+Integration__EventWebhook__Enabled: "True"
+# log-events-webhook
+HttpEndPoint__Url: https://siem-gw.example.local/api/OrchEvents
+RabbitMQ__EventWebhookQueueName: eventswebhook-siem
+# analytic
+Schedules__RefreshMaterializedViews__mv_RobotsUsage__CronString: "0 0/5 * * * ?"</code></pre>
 
 <h2>Как проверить</h2>
 <ol class="steps">
-  <li>Включите вебхуки, перезапустите WebApi и LogEventsWebhook, войдите в UI4. <span class="check">В RabbitMQ у обменника <code>eventswebhook</code> есть очередь экземпляра; во внешней системе появилось событие входа.</span></li>
-  <li>Сравните несколько записей журнала «События оркестратора» с принятыми событиями. <span class="check">Совпадают по <code>Id</code> и времени.</span></li>
+  <li>Включите вебхуки и перезапустите WebApi и LogEventsWebhook. <span class="check">В консоли управления RabbitMQ у обменника <code>eventswebhook</code> есть очередь экземпляра.</span></li>
+  <li>Войдите в UI4. <span class="check">Во внешней системе появилось событие входа.</span></li>
+  <li>Сравните несколько записей журнала <b>Журналы → События оркестратора</b> с принятыми событиями. <span class="check">Совпадают по <code>Id</code> и времени.</span></li>
   <li>Через 5–10 минут после старта Analytic выполните в БД <code>ltoolsanalytic</code> запрос к <code>mv_RobotsUsage</code>. <span class="check">Данные актуальны; в журнале Analytic нет ошибок обновления представлений.</span></li>
 </ol>
 

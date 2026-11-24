@@ -11,7 +11,7 @@
 <main>
 <h1>Переход с root на работу без root</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Linux</span></div>
-<p class="lead">По старым руководствам службы Оркестратора на Linux устанавливались от root. Начиная с поставки 1.26 основной вариант — пользовательские юниты systemd от обычного пользователя. На странице описан перевод действующей установки.</p>
+<p class="lead">На странице описан перевод действующей установки на Linux, в которой службы Оркестратора работают от root, на пользовательские юниты systemd. Начиная с поставки 1.26 работа от обычного пользователя — основной вариант.</p>
 <div class="meta">
   <div><b>Перед началом</b><a href="before.html">Перед обновлением: лицензия и бэкап</a></div>
   <div><b>Результат</b>службы и агент работают от пользователя, запускаются после перезагрузки без его входа</div>
@@ -19,6 +19,7 @@
 <p>Требования для работы без root и отличия юнитов — <a href="../deploy/install-services.html#linux-rootless">Установка служб → Linux: службы работают без root</a>.</p>
 
 <h2>Службы и nginx</h2>
+<p>Шаги выполняются на сервере Оркестратора. Шаги 1–3 — под учётной записью с правом <code>sudo</code>, шаг 4 — под пользователем служб <code>orch-user</code>.</p>
 <ol class="steps">
   <li>Остановите и удалите системные юниты (повторите для каждой службы и для <code>Primo.Orchestrator.Nginx</code>):
 <pre><code>sudo systemctl disable --now Primo.Orchestrator.WebApi
@@ -27,13 +28,16 @@ sudo systemctl daemon-reload</code></pre>
     <span class="check"><code>systemctl list-units 'Primo.Orchestrator.*'</code> ничего не выводит</span></li>
   <li>Создайте пользователя служб (если его нет) и включите linger:
 <pre><code>sudo useradd -m -s /bin/bash orch-user
-sudo loginctl enable-linger orch-user</code></pre></li>
+sudo loginctl enable-linger orch-user</code></pre>
+    <span class="check"><code>loginctl show-user orch-user -p Linger</code> выводит <code>Linger=yes</code></span></li>
   <li>Назначьте пользователя владельцем каталогов служб, nginx (включая созданные от root <code>logs</code> и <code>temp</code>) и каталогов данных:
 <pre><code>sudo chown -R orch-user:orch-user /opt/Primo
 sudo chown -R orch-user:orch-user &lt;каталоги данных из конфигов&gt;</code></pre>
     <span class="check"><code>find /opt/Primo ! -user orch-user</code> ничего не выводит</span></li>
-  <li>Под <code>orch-user</code> установите пользовательские юниты и запустите службы в обычном порядке (MachineInfo, WebApi, остальные, nginx):
-<pre><code>mkdir -p ~/.config/systemd/user
+  <li>Откройте оболочку <code>orch-user</code>, установите пользовательские юниты и запустите службы в обычном порядке (MachineInfo, WebApi, остальные, nginx). Команды для WebApi повторите для каждой службы:
+<pre><code>sudo su - orch-user
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+mkdir -p ~/.config/systemd/user
 cp /opt/Primo/WebApi/Primo.Orchestrator.WebApi.user.service ~/.config/systemd/user/Primo.Orchestrator.WebApi.service
 systemctl --user daemon-reload
 systemctl --user enable --now Primo.Orchestrator.WebApi</code></pre>
@@ -41,8 +45,16 @@ systemctl --user enable --now Primo.Orchestrator.WebApi</code></pre>
     <span class="check"><code>systemctl --user list-units 'Primo.Orchestrator.*'</code> — все <code>active running</code>; <code>ps -eo user,cmd | grep Primo.Orchestrator</code> показывает <code>orch-user</code></span></li>
   <li>Перезагрузите сервер. <span class="check">службы запустились без входа <code>orch-user</code> в систему</span></li>
 </ol>
-<p>Агент переводится аналогично: остановите и удалите <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>, включите linger для <code>agent</code> и под ним установите <code>Primo.Orchestrator.Agent.user.service</code> в <code>~/.config/systemd/user/</code>.</p>
-<p>Обратный переход на root выполняется в обратном порядке: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
+<h2>Агент на машине робота</h2>
+<p>Агент переводится так же, на каждой машине робота:</p>
+<ol class="steps">
+  <li>Остановите и удалите системный юнит <code>/etc/systemd/system/Primo.Orchestrator.Agent.service</code>.</li>
+  <li>Включите linger для пользователя <code>agent</code>.</li>
+  <li>Под пользователем <code>agent</code> установите <code>Primo.Orchestrator.Agent.user.service</code> из каталога агента в <code>~/.config/systemd/user/</code> и запустите службу. <span class="check">в UI4 на странице <b>Настройки → Система → Машины роботов</b> у машины в колонке <b>Доступна</b> обновляется дата</span></li>
+</ol>
+
+<h2>Возврат к работе от root</h2>
+<p>Обратный переход выполняется в обратном порядке: <code>systemctl --user disable --now</code> под пользователем, файлы <code>*.service</code> (без <code>.user</code>) — в <code>/etc/systemd/system/</code>, затем <code>sudo systemctl enable --now</code>. У nginx от root каталог <code>www</code> должен быть доступен всем на чтение.</p>
 
 
 <h2>Что дальше</h2>

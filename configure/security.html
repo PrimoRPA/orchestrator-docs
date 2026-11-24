@@ -11,30 +11,42 @@
 <main>
 <h1>Безопасность</h1>
 <div class="applies" data-sw="ver">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Шифрование паролей в конфигах, хранение секретов в HashiCorp Vault, учётные записи в CyberArk и Vault, сертификаты TLS и контроль изменения конфигурационных файлов.</p>
+<p class="lead">На странице описаны шифрование паролей в конфигурации служб, хранение секретов в HashiCorp Vault, учётные записи в CyberArk и Vault, параметры TLS и контроль изменения конфигурационных файлов.</p>
 
 <div class="meta">
   <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
   <div><b>Результат</b>пароли и ключи в конфигах служб зашифрованы</div>
 </div>
 
+<div class="note"><p>Параметры задаются в файле конфигурации службы — <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows) в её каталоге; секции <code>Vault</code>, <code>CyberArk</code> и <code>Security</code> относятся к WebApi. В Docker параметр задаётся переменной окружения сервиса в <code>docker-compose.yml</code>, уровни имени разделяются двойным подчёркиванием: <code>ConfigPasswordEncryptor__Algorithm</code>, <code>CyberArk__BaseUrl</code>. Переменные <code>PRIMOSALT</code>, <code>PRIMOSIGNINGKEY</code> и <code>VAULT_*</code> задаются только в окружении службы: на Linux — строкой <code>Environment=</code> в юните, в Docker — в разделе <code>environment</code> сервиса. После изменения перезапустите службу; в Docker выполните <code>sudo docker compose up -d</code>. Порядок чтения источников — на странице <a href="../reference/config.html#sources">Параметры конфигурации</a>.</p></div>
+
 <h2>Шифрование паролей в конфигах</h2>
 <p>Пароли и ключи в конфигах служб хранятся зашифрованными. Служба расшифровывает их при старте. Исключения: среда <code>Development</code> и режим <code>Secrets:External=1</code> (Vault) — в этих случаях значения используются без расшифровки.</p>
-<p>Что шифруется: пароли БД в строках подключения, <code>ActiveDirectory:MultyForest:*:AdminPassword</code>, <code>OpenId:KeyCloak:*:ClientSecret</code>, <code>Tenants:IncomingEmail:Password</code>, <code>RabbitMQ:Password</code> и <code>SslCertPassphrase</code>, <code>RobotDeployment:SslCertPassword</code> и <code>OrchPassword</code>, <code>CyberArk:Password</code>, <code>NuGet:ApiKey</code>, <code>FileStore:Minio:SecretKey</code>, <code>Redis:Password</code>, <code>Email:FromPassword</code> (Notifications), пароль сертификата Kestrel.</p>
+<p>Шифруются:</p>
+<ul>
+  <li>пароли БД в строках подключения;</li>
+  <li><code>RabbitMQ:Password</code> и <code>RabbitMQ:SslCertPassphrase</code>;</li>
+  <li><code>ActiveDirectory:MultyForest:*:AdminPassword</code>, <code>OpenId:KeyCloak:*:ClientSecret</code>;</li>
+  <li><code>Tenants:IncomingEmail:Password</code>, <code>Email:FromPassword</code> (Notifications);</li>
+  <li><code>RobotDeployment:SslCertPassword</code> и <code>RobotDeployment:OrchPassword</code>;</li>
+  <li><code>CyberArk:Password</code>, <code>NuGet:ApiKey</code>, <code>FileStore:Minio:SecretKey</code>, <code>Redis:Password</code>;</li>
+  <li>пароль сертификата Kestrel.</li>
+</ul>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр / переменная</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>ConfigPasswordEncryptor:Algorithm</code></td><td><code>AES</code> или <code>RSA</code>. Должен совпадать с утилитой, которой выполнено шифрование</td><td>не задан → AES (в Docker-образах <code>AES</code>)</td></tr>
   <tr><td>переменная окружения <code>PRIMOSALT</code></td><td>Собственная соль для AES. Если задана, должна быть одинаковой на всех серверах служб и агентов</td><td>—</td></tr>
   <tr><td>переменные <code>PRIMOSIGNINGKEY</code>, <code>PRIMOISSUER</code>, <code>PRIMOAUDIENCE</code></td><td>Ключ подписи и реквизиты JWT-токенов. Читаются всеми службами, которые проверяют токены, — задавайте одинаково</td><td>issuer <code>LToolsOrchestratorWebApi</code>, audience <code>LToolsOrchestratorUi</code></td></tr>
 </table></div>
-<div class="warn"><p>Для промышленной установки задайте свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code> и зашифруйте ими пароли.</p></div>
+<div class="warn"><p>Для промышленной установки задайте свои <code>PRIMOSALT</code> и <code>PRIMOSIGNINGKEY</code> и зашифруйте ими пароли. В Docker соль задаётся до запроса лицензии — см. <a href="../deploy/install-docker.html">Установку в Docker</a>.</p></div>
 <div class="warn"><p>Пароль сертификата Kestrel (<code>Kestrel:Endpoints:&lt;имя&gt;:Certificate:Password</code>) расшифровывается, только если <code>ConfigPasswordEncryptor:Algorithm</code> явно равен <code>AES</code> или <code>RSA</code>. Без параметра пароль используется без расшифровки, в открытом виде.</p></div>
 
 <h3>Как зашифровать пароль</h3>
 <ol class="steps">
-  <li>Запустите <code>Primo.Orchestrator.PasswordEncryptor</code> (для RSA — <code>Primo.Orchestrator.RsaPasswordEncryptor</code>).</li>
-  <li>Введите одной строкой пароль. Если <code>PRIMOSALT</code> на этой машине не задан, а на серверах задан, введите через пробел пароль и соль. <span class="check">Утилита выводит строку после «Copy following string:» и для проверки — расшифровку.</span></li>
-  <li>Скопируйте зашифрованную строку в конфиг и перезапустите службу. <span class="check">В журнале службы нет ошибок расшифровки, подключение к БД/RabbitMQ/AD проходит.</span></li>
+  <li>Распакуйте архив <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code> или <code>…-windows.zip</code> на любой машине и запустите <code>Primo.Orchestrator.PasswordEncryptor</code> (для RSA — <code>Primo.Orchestrator.RsaPasswordEncryptor</code>). На Linux перед запуском выполните <code>chmod +x Primo.Orchestrator.PasswordEncryptor</code>. <span class="check">Утилита запущена и ожидает ввода; приглашение не выводится.</span></li>
+  <li>Введите пароль одной строкой и нажмите Enter. Если <code>PRIMOSALT</code> на этой машине не задан, а на серверах задан, введите через пробел пароль и соль. <span class="check">Утилита выводит строку после «Copy following string:» и для проверки — расшифровку.</span></li>
+  <li>Скопируйте зашифрованную строку в конфигурацию службы (в Docker — в значение переменной окружения). <span class="check">Значение параметра заменено зашифрованной строкой.</span></li>
+  <li>Перезапустите службу. <span class="check">В журнале службы нет ошибок расшифровки, подключение к БД, RabbitMQ или AD проходит.</span></li>
 </ol>
 
 <figure class="shot"><img src="../assets/img/password-policies.png" alt="Политики паролей" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Администрирование → Политики паролей</b>.</figcaption></figure>
@@ -42,7 +54,7 @@
 <h2>HashiCorp Vault</h2>
 <p>Vault используется в трёх ролях.</p>
 <h3>1. Хранилище секретов служб</h3>
-<p>Включается <code>Secrets:External=1</code>. Значение <code>0</code> (БД секретов) устарело. Пароли, ключи и учётные записи служба получает из Vault, а не из конфига. Подключение к Vault задаётся только переменными окружения.</p>
+<p>Включается параметром <code>Secrets:External=1</code> в конфигурации каждой службы, которая читает секреты из Vault (в Docker — <code>Secrets__External: 1</code>; в образе WebApi переменная задана значением <code>False</code>). Значение <code>0</code> (БД секретов) устарело. Пароли, ключи и учётные записи служба получает из Vault, а не из конфига. Подключение к Vault задаётся только переменными окружения.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Переменная</th><th>Назначение</th></tr>
   <tr><td><code>VAULT_URL</code></td><td>Адрес Vault</td></tr>
@@ -54,9 +66,9 @@
 <p>Ключи внутри секрета повторяют имена параметров конфига: <code>RabbitMQ:Password</code>, <code>CyberArk:Password</code>, <code>FileStore:Minio:SecretKey</code> и т. п. Для WebApi учётные записи AD находятся в подпутях <code>ad/&lt;домен&gt;</code> (ключи <code>AdAdminUserName</code>, <code>AdAdminPassword</code>), почта тенантов — в <code>tenant/&lt;Id тенанта&gt;</code> (<code>TenantIncomingEmailUserName</code>, <code>TenantIncomingEmailLogin</code>, <code>TenantIncomingEmailPassword</code>).</p>
 
 <h3>2. Учётные записи ресурсов и RDP-пользователей</h3>
-<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётную запись в Vault. В UI4 в форме RDP-пользователя машины — поля «Тип внешнего хранения» и «Учетная запись Vault», в ресурсе — «Тип внешнего хранилища» и «Учетная запись Vault». Учётные записи RDP в Vault появились в 1.26.8.</p>
+<p>Ресурс типа Credentials и RDP-пользователь машины робота могут ссылаться на учётную запись в Vault. В UI4 в форме RDP-пользователя машины — поля <b>Тип внешнего хранения</b> и <b>Учетная запись Vault</b>, в ресурсе — <b>Тип внешнего хранилища</b> и <b>Учетная запись Vault</b>. Учётные записи RDP в Vault появились в 1.26.8.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><th>Параметр (WebApi)</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr data-ver="1.26.9"><td><code>Vault:AssetsCredentialsPath</code></td><td>Подпуть с учётными записями для ресурсов</td><td><code>asset</code></td></tr>
   <tr data-ver="1.26.9"><td><code>Vault:AllCredentialsPath</code></td><td>Подпуть с учётными записями, из которого выбираются RDP-пользователи машин</td><td><code>credentials</code></td></tr>
 </table></div>
@@ -67,9 +79,9 @@
 <div class="warn"><p>Клиент Vault в службах не проверяет сертификат сервера Vault (принимается любой). Защищайте канал до Vault сетевыми средствами.</p></div>
 
 <h2>CyberArk: секция <code>CyberArk</code></h2>
-<p>Ресурсы типа Credentials могут хранить логин и пароль в CyberArk. Поле в UI4 — «Учетная запись CyberArk».</p>
+<p>Ресурсы типа Credentials могут хранить логин и пароль в CyberArk. Поле в форме ресурса UI4 — <b>Учетная запись CyberArk</b>. Секция задаётся в конфигурации WebApi.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr><th>Параметр (внутри <code>CyberArk</code>)</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>BaseUrl</code></td><td>Адрес API CyberArk</td><td>—</td></tr>
   <tr><td><code>LogonType</code></td><td>Тип входа: <code>0</code> — CyberArk, <code>1</code> — LDAP, <code>2</code> — RADIUS, <code>3</code> — Windows</td><td><code>0</code></td></tr>
   <tr><td><code>UserName</code>, <code>Password</code></td><td>Учётная запись API, пароль зашифрован</td><td>—</td></tr>
@@ -92,19 +104,28 @@
 <h2>Контроль изменения конфигов</h2>
 <p>Службы WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook, RDP2 и агент при каждом старте читают <code>appsettings.json</code> и <code>appsettings.&lt;ASPNETCORE_ENVIRONMENT&gt;.json</code> и передают их в Оркестратор. Если содержимое изменилось с прошлого запуска, в журнал пишется событие с кодом <code>2</code> «Конфигурационный файл изменен» (тип «Инцидент безопасности»).</p>
 <ol class="steps">
-  <li>Откройте <b>Журналы → События оркестратора</b>, отфильтруйте по типу «Инцидент безопасности».</li>
-  <li>В событии нажмите «Просмотреть конфигурационный файл». <span class="check">Скачивается текст обоих файлов, разделённых строкой <code>&lt;*SPLIT*&gt;</code>; его можно сравнить с текущими файлами.</span></li>
+  <li>Откройте <b>Журналы → События оркестратора</b> и отфильтруйте события по типу <b>Инцидент безопасности</b>. <span class="check">В списке остались события «Конфигурационный файл изменен».</span></li>
+  <li>В событии нажмите <b>Просмотреть конфигурационный файл</b>. <span class="check">Скачивается текст обоих файлов, разделённых строкой <code>&lt;*SPLIT*&gt;</code>; его можно сравнить с текущими файлами.</span></li>
 </ol>
 <div class="note"><p>Контролируются только файлы. Значения из переменных окружения (так настраиваются Docker-образы, где оба файла пустые <code>{}</code>) в проверку не попадают.</p></div>
 
 <h2>Пример</h2>
-<pre><code>"ConfigPasswordEncryptor": { "Algorithm": "AES" },
-"Secrets": { "External": 1 },
-"Vault": { "AssetsCredentialsPath": "asset", "AllCredentialsPath": "credentials" },
-"CyberArk": { "BaseUrl": "https://cyberark.example.local", "LogonType": 0,
-              "UserName": "orch-api", "Password": "&lt;зашифрованный&gt;", "Timeout": 2000 },
-"Security": { "EnabledOrigins": [ "https://orch.example.local:44392" ] }</code></pre>
-<p>Переменные окружения для Vault (Linux, systemd или Docker):</p>
+<p>Фрагмент файла конфигурации WebApi; секции добавляются к имеющимся в файле.</p>
+<pre><code>{
+  "ConfigPasswordEncryptor": { "Algorithm": "AES" },
+  "Secrets": { "External": 1 },
+  "Vault": { "AssetsCredentialsPath": "asset", "AllCredentialsPath": "credentials" },
+  "CyberArk": {
+    "BaseUrl": "https://cyberark.example.local",
+    "LogonType": 0,
+    "UserName": "orch-api",
+    "Password": "&lt;зашифрованный пароль&gt;",
+    "Timeout": 2000
+  },
+  "Security": { "EnabledOrigins": [ "https://orch.example.local:44392" ] }
+}</code></pre>
+<p>В Docker те же параметры — переменные окружения сервиса <code>web-api</code>, например <code>CyberArk__BaseUrl</code>, <code>Security__EnabledOrigins__0</code>.</p>
+<p>Переменные окружения для Vault (Linux — в юните службы, по одной строке <code>Environment=</code> на переменную; Docker — в разделе <code>environment</code> сервиса):</p>
 <pre><code>WEBAPI_VAULT_URL=https://vault.example.local:8200
 WEBAPI_VAULT_MOUNT_POINT=orchestrator
 WEBAPI_VAULT_PATH=webapi
@@ -114,8 +135,8 @@ WEBAPI_VAULT_PASSWORD=&lt;пароль&gt;</code></pre>
 <h2>Как проверить</h2>
 <ol class="steps">
   <li>После смены паролей перезапустите службу. <span class="check">Служба стартует, <code>/health</code> отвечает <code>200</code>.</span></li>
-  <li>С Vault: в форме RDP-пользователя машины выберите «Тип внешнего хранения» = Vault. <span class="check">Список «Учетная запись Vault» заполнен учётными записями из <code>credentials</code>.</span></li>
-  <li>Измените любой параметр в <code>appsettings.json</code> и перезапустите службу. <span class="check">В журнале «События оркестратора» появилось событие «Конфигурационный файл изменен».</span></li>
+  <li>С Vault: в форме RDP-пользователя машины выберите в поле <b>Тип внешнего хранения</b> значение Vault. <span class="check">Список <b>Учетная запись Vault</b> заполнен учётными записями из <code>credentials</code>.</span></li>
+  <li>Измените любой параметр в файле конфигурации службы и перезапустите её. <span class="check">В журнале <b>Журналы → События оркестратора</b> появилось событие «Конфигурационный файл изменен».</span></li>
 </ol>
 
 <h2>Что дальше</h2>

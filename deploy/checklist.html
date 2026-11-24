@@ -76,8 +76,8 @@
 <h3>Администратор БД</h3>
 <ul class="ticks">
   <li>PostgreSQL установлен. <span data-only="docker">В Docker PostgreSQL 14 уже есть в compose-файле.</span><span data-only="windows"> Вместо него допускается MS SQL Server — только для служб на Windows Server.</span></li>
-  <li>Базы <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, <code>ltoolslogs</code>, <code>ltoolsanalytic</code>, <code>ltoolsnuget</code> созданы — или пользователю миграций дано право создавать БД.</li>
-  <li>Созданы пользователь для работы и пользователь для миграций (может быть один).</li>
+  <li>Базы <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code>, <code>ltoolslogs</code>, <code>ltoolsanalytic</code>, <code>ltoolsnuget</code> созданы и принадлежат пользователю СУБД Оркестратора — или этому пользователю дано право создавать БД.</li>
+  <li>Создан пользователь СУБД для служб Оркестратора с правами на создание и изменение объектов в этих базах: под ним службы работают и применяют миграции — см. <a href="service-accounts.html#db">СУБД и RabbitMQ</a>.</li>
 </ul>
 
 <h3>Сетевой администратор</h3>

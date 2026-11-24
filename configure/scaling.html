@@ -11,15 +11,18 @@
 <main>
 <h1>Масштабирование и отказоустойчивость</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Возможности кода 1.26.9 для работы нескольких экземпляров служб: узлы WebApi, балансировка через nginx, прямые адреса между службами, кластер RabbitMQ, Redis, привязка лицензий к нескольким серверам, helm-чарты.</p>
+<p class="lead">На странице описаны параметры для работы нескольких экземпляров служб: узлы WebApi, балансировка через nginx, прямые адреса между службами, кластер RabbitMQ, Redis, привязка лицензий к нескольким серверам, helm-чарты.</p>
 
 <div class="meta">
   <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a></div>
   <div><b>Результат</b>работает несколько узлов WebApi, остановка одного узла не прерывает работу UI4 и роботов</div>
 </div>
 
+<div class="note"><p>Параметры страницы задаются в конфигурации службы WebApi, если в разделе не названа другая служба: файл <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows) в каталоге службы. В Docker и Kubernetes — переменные окружения контейнера (в <code>docker-compose.yml</code> — сервис <code>web-api</code>); уровни имени разделяются двойным подчёркиванием, элемент массива указывается номером: <code>InstanceInfo__Id</code>, <code>RabbitMQ__Hosts__0</code>. После изменения перезапустите службу; в Docker выполните <code>sudo docker compose up -d</code>. Порядок чтения источников — на странице <a href="../reference/config.html#sources">Параметры конфигурации</a>.</p></div>
+
 <h2>Несколько экземпляров WebApi</h2>
-<p>Экземпляры WebApi работают с общими БД и общим RabbitMQ. Каждый экземпляр — узел со своим номером. Узлы раз в несколько секунд отмечаются в БД; по этим отметкам определяется состав кластера и записываются события «Добавился узел» (<code>90500</code>) и «Потерян узел» (<code>90501</code>). Часть очередей RabbitMQ создаётся на каждый узел отдельно — имя очереди дополняется номером узла (события для веб-сокетов, KeepAlive роботов, сброс кэшей).</p>
+<p>Экземпляры WebApi работают с общими БД и общим RabbitMQ. Каждый экземпляр — узел со своим номером. Узлы раз в несколько секунд отмечаются в БД; по этим отметкам определяется состав кластера и записываются события «Добавился узел» (<code>90500</code>) и «Потерян узел» (<code>90501</code>).</p>
+<p>Часть очередей RabbitMQ создаётся на каждый узел отдельно — имя очереди дополняется номером узла (события для веб-сокетов, KeepAlive роботов, сброс кэшей).</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>InstanceInfo:Id</code></td><td>Номер узла. У каждого экземпляра — свой. Отрицательное значение — номер генерируется автоматически и сохраняется в файл <code>InstanceInfoId</code> в рабочей папке службы</td><td><code>0</code> (в Docker <code>0</code>)</td></tr>
@@ -34,19 +37,21 @@
 <p>Дистрибутивы робота и агента без S3 хранятся в папке каждого узла, и каждый узел проверяет их локально. Для нескольких узлов предпочтительнее S3 (см. <a href="storage.html">Хранилища</a>).</p>
 
 <h2>Балансировка и nginx</h2>
-<p>В поставочных <code>nginx/nginx.*.conf</code> каждая служба описана блоком <code>upstream</code> с одним сервером (<code>app_server</code> — WebApi, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>rdpstream</code> и др.). Для балансировки добавьте серверы в нужный <code>upstream</code>. Веб-сокеты UI4 проходят через <code>/events/</code> к WebApi; вместо веб-сокетов можно включить long polling: <code>WS:LongPolling=true</code> (путь — <code>WS:Path</code>, по умолчанию <code>/events</code>).</p>
+<p>В поставочных <code>nginx/nginx.*.conf</code> каждая служба описана блоком <code>upstream</code> с одним сервером (<code>app_server</code> — WebApi, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>rdpstream</code> и др.). Для балансировки добавьте серверы в нужный <code>upstream</code> и перезапустите nginx.</p>
+<p>Веб-сокеты UI4 проходят через <code>/events/</code> к WebApi. Вместо веб-сокетов допускается long polling: параметр WebApi <code>WS:LongPolling=true</code> (путь — <code>WS:Path</code>, по умолчанию <code>/events</code>).</p>
 <p>Проверка живости для балансировщика — <code>/health</code>, <code>/health/readiness</code>, <code>/health/liveness</code> у каждой службы.</p>
 
 <h2>Прямые адреса между службами</h2>
-<p>По умолчанию службы обращаются друг к другу через внешний адрес Оркестратора (nginx). Можно задать внутренние адреса — так удобнее в Kubernetes.</p>
+<p>По умолчанию службы обращаются друг к другу через внешний адрес Оркестратора (nginx). Допускается задать внутренние адреса, например в Kubernetes. Параметр задаётся в конфигурации службы, которая отправляет запрос (в первой колонке — слева от стрелки).</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Служба</th><th>Параметр</th><th>Если не задан</th></tr>
+  <tr><th>Кто → к кому</th><th>Параметр</th><th>Если не задан</th></tr>
   <tr><td>WebApi → RobotLogs</td><td><code>RobotLogs:BaseUrl</code> (к нему добавляется <code>/api</code>)</td><td><code>RobotDeployment:RobotLogsBaseUrl</code> или <code>RobotDeployment:OrchBaseUrl</code> + <code>/logs</code></td></tr>
   <tr><td>RobotLogs, States, Analytic, RDP2 → WebApi</td><td><code>Orchestrator:BaseUrl</code></td><td>States берёт адрес из полученных событий</td></tr>
-  <tr><td>WebApi → MachineInfo</td><td><code>License:MachineInfoUrl</code></td><td>сведения о «железе» для лицензии читаются SQL-запросом на сервере БД</td></tr>
+  <tr><td>WebApi → MachineInfo</td><td><code>License:MachineInfoUrl</code></td><td>сведения об оборудовании для лицензии читаются SQL-запросом на сервере БД</td></tr>
 </table></div>
 
 <h2>RabbitMQ</h2>
+<p>Секция <code>RabbitMQ</code> есть в конфигурации каждой службы, которая работает с брокером; параметры задаются в каждой из них.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>RabbitMQ:Hosts</code></td><td>Список узлов кластера RabbitMQ. Используется, только если <code>Host</code> пуст</td><td>—</td></tr>
@@ -79,16 +84,28 @@
 <p>В <code>k8s/helm</code> есть чарты <code>webapi</code>, <code>robotlogs</code>, <code>queues</code>, <code>licenses</code>, <code>machineinfo</code>, <code>nuget2</code>, <code>ui</code>. Чарт создаёт Deployment и Service: порт <code>8080</code> (http, сервис — 80) и <code>10052</code> (метрики), пробы <code>/health</code>, <code>/health/liveness</code>, <code>/health/readiness</code>. Параметры службы передаются переменными окружения из <code>values.yaml</code> (<code>env:</code>).</p>
 
 <h2>Пример: второй узел WebApi</h2>
-<pre><code>"InstanceInfo": { "Id": 2 },
-"RobotLogs": { "BaseUrl": "http://robotlogs" },
-"RabbitMQ": { "Hosts": [ "rabbit1", "rabbit2", "rabbit3" ], "VirtualHost": "orch-prod" },
-"UseRedis": true,
-"Redis": { "ConnectionString": "redis:6379", "Password": "&lt;зашифрованный&gt;" },
-"License": { "MachineInfoUrls": [ "http://app1:&lt;порт&gt;", "http://app2:&lt;порт&gt;" ] }</code></pre>
+<p>Фрагмент файла конфигурации WebApi на втором узле; секции добавляются к имеющимся в файле. Вместо <code>&lt;порт&gt;</code> укажите порт службы MachineInfo.</p>
+<pre><code>{
+  "InstanceInfo": { "Id": 2 },
+  "RobotLogs": { "BaseUrl": "http://robotlogs" },
+  "RabbitMQ": { "Hosts": [ "rabbit1", "rabbit2", "rabbit3" ], "VirtualHost": "orch-prod" },
+  "UseRedis": true,
+  "Redis": { "ConnectionString": "redis:6379", "Password": "&lt;зашифрованный пароль&gt;" },
+  "License": { "MachineInfoUrls": [ "http://app1:&lt;порт&gt;", "http://app2:&lt;порт&gt;" ] }
+}</code></pre>
+<p>Те же параметры переменными окружения (Docker, Kubernetes):</p>
+<pre><code>InstanceInfo__Id: 2
+RobotLogs__BaseUrl: http://robotlogs
+RabbitMQ__Hosts__0: rabbit1
+RabbitMQ__Hosts__1: rabbit2
+RabbitMQ__Hosts__2: rabbit3
+RabbitMQ__VirtualHost: orch-prod
+UseRedis: "True"
+Redis__ConnectionString: redis:6379</code></pre>
 
 <h2>Как проверить</h2>
 <ol class="steps">
-  <li>Запустите второй узел. <span class="check">В «События оркестратора» есть «Добавился узел».</span></li>
+  <li>Запустите второй узел. <span class="check">В журнале <b>Журналы → События оркестратора</b> есть событие «Добавился узел».</span></li>
   <li>Остановите один узел. <span class="check">Через несколько секунд — «Потерян узел»; UI4 и роботы продолжают работать через оставшийся.</span></li>
   <li>Загрузите дистрибутив робота. <span class="check">Нет события <code>1204</code> «Рассинхронизация дистрибутива робота на узлах».</span></li>
 </ol>

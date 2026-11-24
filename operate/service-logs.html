@@ -19,7 +19,7 @@
 </div>
 
 <h2>Как устроено</h2>
-<p>Все службы (WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, Агент) пишут журнал через Serilog. Место и уровень записи полностью задаются секцией <code>Serilog</code> конфига службы. В коде пути к файлам журналов не заданы.</p>
+<p>Все службы (WebApi, RobotLogs, States, Queues, Notifications, MachineInfo, Analytic, Licenses, LogEventsWebhook, ArcSight, RDP2, Агент) пишут журнал через Serilog. Место и уровень записи полностью задаются секцией <code>Serilog</code> конфига службы: <code>appsettings.ProdLinux.json</code> (Linux), <code>appsettings.ProdWin.json</code> (Windows) или переменные окружения контейнера (Docker). Встроенного пути к файлам журналов нет: если файловый приёмник в секции не настроен, журнал в файл не пишется.</p>
 <p>К каждой записи добавляется версия службы (<code>ApplicationVersion</code>); у WebApi — ещё идентификатор узла кластера.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th></tr>
@@ -30,23 +30,31 @@
 </table></div>
 
 <h2>Docker</h2>
-<p>В образах поставки (<code>k8s/*.Dockerfile</code>) журнал пишется в консоль контейнера в формате compact JSON, уровень <code>Warning</code>:</p>
+<p>В образах поставки журнал пишется в консоль контейнера в формате compact JSON, уровень <code>Warning</code>:</p>
 <pre><code>Serilog__MinimumLevel__Default=Warning
 Serilog__WriteTo__0__Name=Console
 Serilog__WriteTo__0__Args__Formatter=Serilog.Formatting.Compact.RenderedCompactJsonFormatter,Serilog.Formatting.Compact</code></pre>
-<p>Просмотр: <code>docker logs &lt;контейнер&gt;</code> или <code>kubectl logs &lt;под&gt;</code>. Журналы nginx в контейнере UI также выводятся в stdout/stderr.</p>
+<p>Просмотр на Docker-хосте: <code>docker logs &lt;контейнер&gt;</code> (в Kubernetes — <code>kubectl logs &lt;под&gt;</code>). Журналы nginx в контейнере UI также выводятся в stdout/stderr.</p>
 
 <h2>Linux (systemd)</h2>
-<p>Службы устанавливаются в <code>/opt/Primo/&lt;Служба&gt;</code> и запускаются с ключом <code>--console</code>. В unit-файлах задан <code>SyslogIdentifier</code> вида <code>Primo.Orchestrator.&lt;Служба&gt;</code>, поэтому всё, что служба пишет в консоль, попадает в journald:</p>
-<pre><code>journalctl -t Primo.Orchestrator.WebApi --since "1 hour ago"
-journalctl -u Primo.Orchestrator.RobotLogs -f</code></pre>
-<p>Если в секции <code>Serilog</code> настроен вывод в файл, путь указан в <code>Serilog:WriteTo:…:Args:path</code>. Относительный путь считается от папки службы.</p>
-<p>Агент на Linux-машине робота при установке скриптом <code>k8s/agent/install.sh</code> пишет в файл <code>~/primo/log/log-.txt</code> пользователя робота: новый файл каждый день, хранятся 20 последних, уровень <code>Warning</code>.</p>
+<p>Службы устанавливаются в <code>/opt/Primo/&lt;Служба&gt;</code> и запускаются с ключом <code>--console</code>. С поставочным <code>appsettings.ProdLinux.json</code> журнал пишется в два места:</p>
+<ul>
+  <li><b>Файл</b> <code>/opt/Primo/&lt;Служба&gt;/Logs/log-.txt</code> (к имени добавляется дата): новый файл каждый день, хранятся 20 последних. У Агента на машине робота — <code>/opt/Primo/Agent/Logs/log-.txt</code>.</li>
+  <li><b>Консоль</b>, то есть journald: в юнитах задан <code>SyslogIdentifier</code> вида <code>Primo.Orchestrator.&lt;Служба&gt;</code>.</li>
+</ul>
+<p>Уровень в поставочных конфигах — <code>Warning</code>; у RDP2 — <code>Error</code>, у Notifications — <code>Information</code>.</p>
+<p>Просмотр journald, если службы работают без root (под пользователем служб <code>orch-user</code>):</p>
+<pre><code>journalctl --user -u Primo.Orchestrator.WebApi --since "1 hour ago"
+journalctl --user -u Primo.Orchestrator.RobotLogs -f</code></pre>
+<p>Если службы работают от root (под учётной записью с правом <code>sudo</code>):</p>
+<pre><code>sudo journalctl -u Primo.Orchestrator.WebApi --since "1 hour ago"
+sudo journalctl -t Primo.Orchestrator.RobotLogs -f</code></pre>
+<p>Путь к файлу задаётся в параметре <code>path</code> файлового приёмника в <code>Serilog:WriteTo</code>. Относительный путь считается от папки службы.</p>
 
 <h2>Windows</h2>
-<p>Службы работают как службы Windows; рабочая папка — папка службы. Куда пишется журнал, определяется секцией <code>Serilog</code> в <code>appsettings.json</code> / <code>appsettings.ProdWin.json</code>.</p>
+<p>Службы работают как службы Windows; рабочая папка — папка службы. Куда пишется журнал, определяется секцией <code>Serilog</code> в <code>appsettings.ProdWin.json</code>: путь к файлу — параметр <code>path</code> файлового приёмника в <code>Serilog:WriteTo</code>.</p>
 
-<h2>Уровень без перезапуска</h2>
+<h2>Изменение уровня без перезапуска</h2>
 <p>Текущие уровни доступны по HTTP и изменяются без перезапуска службы (изменение действует до перезапуска):</p>
 <ul>
   <li><code>GET /loggers</code> — список: <code>default</code> и все переопределения из <code>Serilog:MinimumLevel:Override</code>.</li>

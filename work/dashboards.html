@@ -19,7 +19,7 @@
 </div>
 
 <h2>Аналитика → Дашборды</h2>
-<p>Набор карточек фиксирован: порядок и видимость в 1.26.9 не настраиваются. Данные возвращает метод <code>GET api/Stats</code>, для него требуется право <code>Stats.View</code> (в старых подписях — «Главная» / «Мониторинг»).</p>
+<p>Набор карточек фиксирован: порядок и видимость не настраиваются. Данные возвращает метод <code>GET api/Stats</code>, для него требуется право <code>Stats.View</code> (в старых подписях — «Главная» / «Мониторинг»).</p>
 <div class="tbl-wrap"><table>
   <tr><th>Карточка</th><th>Что показывает</th></tr>
   <tr><td>Роботы</td><td>Выполняют проект, свободные, не развернутые.</td></tr>
@@ -48,7 +48,7 @@
   <li>Добавьте в конфигурацию WebApi секцию <code>Grafana:ReportItems</code> со ссылками на дашборды Grafana и перезапустите WebApi.</li>
   <li>Выйдите из UI4 и войдите снова: список читается при входе и кешируется в браузере. <span class="check">В <b>Аналитика → Grafana</b> появились вкладки с плитками</span></li>
 </ol>
-<p>Данные для отчётов собирает служба Analytic (отдельная БД, подключение <code>AnalyticConnection</code>). Права службы —<code>Analytic.View</code> и <code>Analytic.AnalyticUpdate</code>.</p>
+<p>Данные для отчётов собирает служба Analytic (отдельная БД, подключение <code>AnalyticConnection</code>). Права службы — <code>Analytic.View</code> и <code>Analytic.AnalyticUpdate</code>.</p>
 
 <h2>Что дальше</h2>
 <div class="next">

@@ -29,8 +29,8 @@
 <p>Перевод стенда в промышленную эксплуатацию заменой паролей после запуска не предусмотрен: лицензия привязывается к ключу из compose-файла, а пароли в базе шифруются при первом запуске. Для промышленной установки шаг 5 выполняется до первого запуска.</p>
 <div class="note"><p>В Docker Оркестратор работает только с PostgreSQL. Для работы с MS SQL Server используйте <a href="install-services.html#windows">Установку служб на Windows Server</a>.</p></div>
 
-<h2 id="steps">Шаги</h2>
-<p>Команды выполняются на сервере. В примерах сервер — Ubuntu 24.04, рабочий каталог — <code>/opt/Docker</code>.</p>
+<h2 id="steps">Порядок установки</h2>
+<p>Команды выполняются на сервере под учётной записью с правами <code>sudo</code>. В примерах сервер — Ubuntu 24.04, рабочий каталог — <code>/opt/Docker</code>.</p>
 <ol class="steps">
   <li><b>Установите Docker.</b> Если Docker уже установлен, перейдите к проверке в конце шага.
 <pre><code>sudo apt-get update
@@ -87,7 +87,9 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
     </ul>
     <span class="check">в блоке <code>x-secrets</code> нет значений из поставки (сверяется с исходным файлом построчно)</span></li>
 
-  <li><b>Только если роботам нужны RDP-сессии: укажите адрес RDP2.</b> Служба RDP2 не входит в compose-файл и устанавливается отдельно как служба — см. <a href="install-services.html">Установку служб</a>. Рекомендуется отдельная машина; при небольшом числе RDP-сессий допускается установка на этот же сервер. В <code>nginx.conf</code> найдите блок <code>upstream rdpstream</code> и замените в нём адрес на адрес машины с RDP2, порт <code>5102</code> оставьте.
+  <li><b>Только если роботам нужны RDP-сессии: укажите адрес RDP2.</b> Если RDP2 не используется или решение о ней не принято, пропустите шаг: адрес из примера в <code>nginx.conf</code> не препятствует запуску и может быть изменён позднее.
+    <p>Служба RDP2 не входит в compose-файл и устанавливается отдельно как служба — см. <a href="install-services.html">Установку служб</a>. Рекомендуется отдельная машина; при небольшом числе RDP-сессий допускается установка на этот же сервер.</p>
+    <p>В <code>nginx.conf</code> найдите блок <code>upstream rdpstream</code> и замените в нём адрес на адрес машины с RDP2, порт <code>5102</code> оставьте.</p>
     <p>В файле <code>appsettings.ProdLinux.json</code> службы RDP2 укажите внешний адрес Оркестратора, а не адрес WebApi: в Docker порт WebApi на сервере не открыт.</p>
     <div class="tbl-wrap"><table>
       <tr><th>Параметр RDP2</th><th>Значение</th></tr>
@@ -96,8 +98,7 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
       <tr><td><code>Host</code></td><td>IP машины с RDP2</td></tr>
     </table></div>
     <p>Если <code>nginx.conf</code> изменён после запуска Оркестратора, перезапустите веб-интерфейс: <code>sudo docker compose restart ui</code>.</p>
-    <span class="check">после запуска Оркестратора и RDP2 команда <code>curl -k https://localhost:44392/rdpstream/health</code> отвечает <code>Healthy</code></span>
-    Если RDP2 не используется или решение о ней не принято, оставьте файл без изменений: адрес из примера не препятствует запуску и может быть изменён позднее.</li>
+    <span class="check">после запуска Оркестратора и RDP2 команда <code>curl -k https://localhost:44392/rdpstream/health</code> отвечает <code>Healthy</code></span></li>
 
   <li><b>Запустите.</b>
 <pre><code>sudo docker compose up -d</code></pre>
@@ -112,8 +113,9 @@ RDP__RdpBaseUrl: https://10.0.0.18:44392/rdpstream</code></pre>
     <span class="check">открылась страница входа</span></li>
 </ol>
 
-<h2 id="offline">Сервер без доступа в интернет</h2>
 <div class="note"><p>После перезагрузки сервера контейнеры запускаются автоматически. Служба <code>analytic</code> при этом может остаться в состоянии <code>unhealthy</code>; в таком случае выполните <code>sudo docker compose restart analytic</code>. При проверке состояния учитывайте, что строка <code>unhealthy</code> содержит слово <code>healthy</code>.</p></div>
+
+<h2 id="offline">Сервер без доступа в интернет</h2>
 <details>
   <summary>Как перенести образы на сервер в закрытом контуре</summary>
   <p>Образы скачиваются на компьютере с доступом в интернет и установленным Docker, переносятся файлом и загружаются на сервере. Docker на сервере устанавливается из пакетов ОС или внутреннего репозитория.</p>
@@ -158,8 +160,8 @@ docker save -o images.tar $(docker compose config --images)</code></pre>
 
 <h2>Что дальше</h2>
 <div class="next">
-  <a href="first-run.html">Первый запуск<small>войти, получить лицензию, добавить робота</small></a>
-  <a href="agent.html">Машины роботов и агент<small>поставить агент на машины, где будут работать роботы</small></a>
+  <a href="first-run.html">Первый запуск<small>вход, лицензия, первый робот</small></a>
+  <a href="agent.html">Машины роботов и агент<small>установка агента на машины роботов</small></a>
 </div>
 
 </main>

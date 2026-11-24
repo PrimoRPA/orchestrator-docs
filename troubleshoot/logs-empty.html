@@ -19,45 +19,47 @@
 
 <h2>Симптомы</h2>
 <ul>
-  <li>Журнал робота открывается, но записей нет, хотя робот работал.</li>
-  <li>«Server error - check the terminal for more info!» или «Истек таймаут запроса. Попробуйте повторить запрос!».</li>
-  <li>Записи есть за одни периоды и отсутствуют за другие.</li>
-  <li>Длинные сообщения обрезаны.</li>
+  <li>Журнал робота открывается, но записей нет, хотя робот работал — <a href="#checks">Что проверить</a> по порядку: период, связь WebApi с RobotLogs, журнал RobotLogs.</li>
+  <li>«Server error - check the terminal for more info!» или «Истек таймаут запроса. Попробуйте повторить запрос!» — <a href="ui-not-opening.html#ui-errors">Ошибки в UI4 и что они означают</a>; при большом журнале — <a href="slow.html">Оркестратор и БД работают медленно</a>.</li>
+  <li>Записи есть за одни периоды и отсутствуют за другие — <a href="#lost">Записи теряются</a>.</li>
+  <li>Длинные сообщения обрезаны — <a href="#long">Длинные сообщения</a>.</li>
 </ul>
 
 <figure class="shot"><img src="../assets/img/robot-journal.png" alt="Операции робота" loading="lazy" width="1440" height="900"><figcaption>Список операций робота: период выбирается над таблицей, записи запуска открывает кнопка <b>События</b>.</figcaption></figure>
 
 <h2>Вероятные причины</h2>
 <ul>
-  <li>Выбран период по умолчанию: журнал открывается за последний час.</li>
-  <li>WebApi не может обратиться к RobotLogs по адресу из конфигурации.</li>
-  <li>Службе RobotLogs неизвестен адрес WebApi, и записи робота отклоняются.</li>
-  <li>RobotLogs не успевает записывать в БД: буфер переполнен или запись в БД завершается ошибкой.</li>
-  <li>Робот отключён или перенесён в папку, к которой у пользователя нет доступа.</li>
+  <li>Выбран период по умолчанию: журнал открывается за последний час — шаг 1 проверки.</li>
+  <li>WebApi не может обратиться к RobotLogs по адресу из конфигурации — <a href="#robotlogs-url">исправление</a>.</li>
+  <li>Службе RobotLogs неизвестен адрес WebApi, и записи робота отклоняются — <a href="#webapi-url">исправление</a>.</li>
+  <li>RobotLogs не успевает записывать в БД: буфер переполнен или запись в БД завершается ошибкой — <a href="#lost">исправление</a>.</li>
+  <li>Робот отключён или перенесён в папку, к которой у пользователя нет доступа — <a href="#folders">Папки и отключённые роботы</a>.</li>
 </ul>
 
-<h2>Что проверить</h2>
+<h2 id="checks">Что проверить</h2>
 <ol class="steps">
   <li>В журнале робота выберите период <b>Последние 24 часа</b> или <b>Выбрать диапазон</b>. <span class="check">Записи за нужное время видны</span></li>
   <li>Проверьте журнал WebApi на «RobotLogs error occurred. For more details, see WebApi and RobotLogs log files». Строка означает, что WebApi не получил ответ от RobotLogs. В UI4 ошибка в этом случае не отображается, журнал пуст. <span class="check">Строки нет</span></li>
-  <li>Проверьте журнал RobotLogs на строки ниже. <span class="check">Таких строк нет</span></li>
+  <li>Проверьте журнал RobotLogs на строки из таблицы под шагами. <span class="check">Таких строк нет</span></li>
 </ol>
 <div class="tbl-wrap"><table>
   <tr><th>Строка в журнале RobotLogs</th><th>Что означает</th></tr>
-  <tr><td>«Не найден робот с ключом …»</td><td>RobotLogs не получил робота от WebApi. Запись отклонена с 404 «Робот не найден.» Пустой ответ кэшируется на <code>Cache:Robots:DurationInMinutes</code></td></tr>
-  <tr><td>«Ошибка при обращении к Оркестратору»</td><td>WebApi недоступен для RobotLogs</td></tr>
-  <tr><td>«Сообщение [LogEvent] потеряно по причине ограничения входного буфера.»</td><td>Буфер <code>InputBufferRobotLogs:MaxQueueLength</code> полон: БД не успевает</td></tr>
-  <tr><td>«Ошибка сброса буфера логов в БД.»</td><td>Запись пакета в БД завершилась ошибкой. Повторной попытки нет, пакет потерян</td></tr>
+  <tr><td>«Не найден робот с ключом …»</td><td>RobotLogs не получил робота от WebApi. Запись отклонена с 404 «Робот не найден.» Пустой ответ кэшируется на <code>Cache:Robots:DurationInMinutes</code>. См. <a href="#webapi-url">Службе RobotLogs неизвестен адрес WebApi</a></td></tr>
+  <tr><td>«Ошибка при обращении к Оркестратору»</td><td>WebApi недоступен для RobotLogs. См. <a href="#webapi-url">Службе RobotLogs неизвестен адрес WebApi</a></td></tr>
+  <tr><td>«Сообщение [LogEvent] потеряно по причине ограничения входного буфера.»</td><td>Буфер <code>InputBufferRobotLogs:MaxQueueLength</code> полон: БД не успевает. См. <a href="#lost">Записи теряются</a></td></tr>
+  <tr><td>«Ошибка сброса буфера логов в БД.»</td><td>Запись пакета в БД завершилась ошибкой. Повторной попытки нет, пакет потерян. См. <a href="#lost">Записи теряются</a></td></tr>
 </table></div>
 
 <h2>Как исправить</h2>
-<h3>RobotLogs недоступен для WebApi</h3>
-<p>Если <code>RobotLogs:BaseUrl</code> в WebApi не задан, WebApi обращается к RobotLogs через внешний адрес <code>RobotDeployment:RobotLogsBaseUrl</code> или <code>RobotDeployment:OrchBaseUrl</code> и путь <code>/logs/</code>, который nginx проксирует в RobotLogs. Этот адрес должен быть доступен с сервера WebApi. Иначе задайте прямой адрес службы: <code>RobotLogs:BaseUrl</code> (в поставке nginx RobotLogs слушает <code>127.0.0.1:56748</code>) и перезапустите WebApi. Таймаут запроса — <code>RobotLogs:ClientTimeoutInSec</code>, по умолчанию 50 с.</p>
+<h3 id="robotlogs-url">RobotLogs недоступен для WebApi</h3>
+<p>Если <code>RobotLogs:BaseUrl</code> в WebApi не задан, WebApi обращается к RobotLogs через внешний адрес <code>RobotDeployment:RobotLogsBaseUrl</code> или <code>RobotDeployment:OrchBaseUrl</code> и путь <code>/logs/</code>, который nginx проксирует в RobotLogs. Этот адрес должен быть доступен с сервера WebApi.</p>
+<p>Иначе задайте прямой адрес службы: <code>RobotLogs:BaseUrl</code> (в поставке nginx RobotLogs слушает <code>127.0.0.1:56748</code>) и перезапустите WebApi. <span class="check">В журнале WebApi нет «RobotLogs error occurred», журнал робота содержит записи</span></p>
+<p>Таймаут запроса WebApi к RobotLogs — <code>RobotLogs:ClientTimeoutInSec</code>, по умолчанию 50 с.</p>
 
-<h3>Службе RobotLogs неизвестен адрес WebApi</h3>
+<h3 id="webapi-url">Службе RobotLogs неизвестен адрес WebApi</h3>
 <p>Если в RobotLogs не задан <code>Orchestrator:BaseUrl</code>, адрес WebApi определяется по первому событию, которое WebApi отправляет через RabbitMQ. До этого записи робота не принимаются. Такое возможно, если RobotLogs запущен раньше WebApi. Задайте <code>Orchestrator:BaseUrl</code> в конфигурации RobotLogs и перезапустите службу. <span class="check">Новые записи появляются в журнале</span></p>
 
-<h3>Записи теряются</h3>
+<h3 id="lost">Записи теряются</h3>
 <p>Ускорьте работу БД журналов: секционирование и удаление старых секций, см. <a href="slow.html">Оркестратор и БД работают медленно</a>. Таймауты подключения к БД журналов — <code>DbConnection:Items:Logs:Timeout</code> и <code>…:CommandTimeOut</code>. Буферы службы:</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр RobotLogs</th><th>Назначение</th><th>По умолчанию</th></tr>
@@ -66,11 +68,11 @@
   <tr><td><code>RobotEventFilter:TextLengthLimit</code>, <code>ParsedMessageLengthLimit</code></td><td>Сколько символов сообщения возвращается при чтении списка</td><td>2000</td></tr>
 </table></div>
 
-<h3>Длинные сообщения</h3>
+<h3 id="long">Длинные сообщения</h3>
 <p>Сообщение длиннее 300 символов в UI4 обрезается; рядом отображается кнопка, которая открывает полный текст в боковой панели. Текст сообщения хранится целиком.</p>
 <p>При выдаче списка записей RobotLogs обрезает поля текста до <code>RobotEventFilter:TextLengthLimit</code> и <code>RobotEventFilter:ParsedMessageLengthLimit</code> (по 2000 символов) для записей любого источника — «Робот», «Оркестратор», «Проект». Полный текст кнопка запрашивает отдельно, без ограничения. Если полный текст нужен прямо в списке, увеличьте оба параметра в конфигурации RobotLogs и перезапустите службу; объём ответа при этом растёт.</p>
 
-<h3>Папки и отключённые роботы</h3>
+<h3 id="folders">Папки и отключённые роботы</h3>
 <p>Записи журнала привязаны к роботу, а не к папке. При включённых папках пользователь видит журнал роботов из доступных ему папок, кроме отключённых роботов. После переноса робота в другую папку его журнал виден тем, у кого есть доступ к новой папке.</p>
 
 <h2>Что дальше</h2>

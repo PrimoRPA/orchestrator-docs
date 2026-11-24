@@ -11,10 +11,10 @@
 <main>
 <h1>События и их коды</h1>
 <div class="applies" data-sw="">Применимо: <span>1.26.9</span><span>Windows</span><span>Linux</span><span>Docker</span></div>
-<p class="lead">Справочник событий журнала Оркестратора: код, имя в коде, описание и класс. Используется при разборе журнала, настройке выгрузки событий во внешние системы и запросах к БД. Заменяет «Приложение 3 — События Оркестратора» прежнего сайта.</p>
+<p class="lead">Справочник событий журнала Оркестратора: код, имя, описание и класс каждого события. Используется при разборе журнала, настройке выгрузки событий во внешние системы и запросах к БД.</p>
 
 <h2>Где хранятся и где видны</h2>
-<p>WebApi и другие службы публикуют события в RabbitMQ, служба RobotLogs записывает их в таблицу <code>OrchEvents</code> БД журналов (<code>ltoolslogs</code>). В UI4 события отображаются на странице «События оркестратора»; доступны фильтры «Тип события» (конкретный код) и «Класс события». Право на просмотр — <code>OrchEvents.View</code>.</p>
+<p>WebApi и другие службы публикуют события в RabbitMQ, служба RobotLogs записывает их в таблицу <code>OrchEvents</code> БД журналов (<code>ltoolslogs</code>). В UI4 события отображаются на странице <b>Журналы → События оркестратора</b>; доступны фильтры <b>Тип события</b> (конкретный код) и <b>Класс события</b>. Право на просмотр — <code>OrchEvents.View</code>.</p>
 <p>Основные поля записи:</p>
 <div class="tbl-wrap"><table>
   <tr><th>Поле</th><th>Что содержит</th></tr>
@@ -22,8 +22,8 @@
   <tr><td><code>EventType</code></td><td>Класс: <code>1</code> — информационное, <code>2</code> — ошибка, <code>3</code> — инцидент безопасности, <code>4</code> — корректировка.</td></tr>
   <tr><td><code>EntityId</code></td><td>Идентификатор объекта события (робота, машины, проекта и т.п.).</td></tr>
   <tr><td><code>UserId</code>, <code>IP</code></td><td>Кто и откуда выполнил действие.</td></tr>
-  <tr><td><code>OrchTimestampUtc</code></td><td>Время события, UTC. В UI показывается со смещением часового пояса тенанта.</td></tr>
-  <tr><td><code>OperationKey</code></td><td>Идентификатор бизнес-операции; объединяет события одной операции. В UI — фильтр «Код операции».</td></tr>
+  <tr><td><code>OrchTimestampUtc</code></td><td>Время события, UTC. В UI4 показывается со смещением часового пояса тенанта.</td></tr>
+  <tr><td><code>OperationKey</code></td><td>Идентификатор бизнес-операции; объединяет события одной операции. В UI4 — фильтр <b>Код операции</b>.</td></tr>
   <tr><td><code>Text</code></td><td>Дополнительные данные события.</td></tr>
   <tr><td><code>TenantId</code>, <code>ProjectId</code>, <code>ProjectName</code>, <code>AssignmentId</code></td><td>Тенант, связанный проект и задание.</td></tr>
   <tr><td><code>NodeId</code></td><td>Узел кластера WebApi, на котором произошло событие.</td></tr>
@@ -32,7 +32,7 @@
 <figure class="shot"><img src="../assets/img/events.png" alt="Журнал событий Оркестратора" loading="lazy" width="1440" height="900"><figcaption><b>Журналы → События оркестратора</b>: записи журнала с датой, пользователем и проектом.</figcaption></figure>
 
 <h2>Классы событий</h2>
-<p>Класс назначается по коду события (метод <code>OrchEventManager.GetOrchestratorEventType</code>). Всё, что не отнесено к ошибкам, инцидентам или корректировкам, — информационное. В отдельных местах кода класс задаётся явно (например, ошибка обработки ответа Агента).</p>
+<p>Класс назначается по коду события. Всё, что не отнесено к ошибкам, инцидентам или корректировкам, — информационное. Для отдельных записей класс задаётся при записи события и может отличаться от указанного в таблице (например, ошибка обработки ответа Агента).</p>
 <ul>
   <li><b>Инцидент безопасности</b> — входы и выходы, изменения пользователей, ролей и прав, лицензий, защищённых ассетов, изменение конфигурационного файла (код 2), очистка журналов (20000) и др.</li>
   <li><b>Ошибка</b> — недоступность машины, ошибки запуска и выполнения робота, переполнение внутренней очереди триггеров (9018), ошибки разлогинивания RDP, рассинхронизация узлов кластера и др.</li>
@@ -41,7 +41,7 @@
 <div class="note"><p>Без фильтра по классу инциденты безопасности в списке не показываются. Когда пользователь открывает инциденты безопасности, в журнал пишется событие 92000 «Просмотр журнала регистрации событий ИБ» (не чаще раза в 20 секунд на пользователя).</p></div>
 
 <h2>Как найти события в БД</h2>
-<p>Пример для PostgreSQL — события переполнения очереди триггеров за период:</p>
+<p>Пример запроса к БД <code>ltoolslogs</code> в PostgreSQL — события переполнения очереди триггеров за период:</p>
 <pre><code>SELECT "OrchTimestampUtc", "Event", "EntityId", "NodeId"
 FROM "OrchEvents"
 WHERE "Event" IN (9016, 9017, 9018)
@@ -50,7 +50,7 @@ ORDER BY "OrchTimestampUtc";</code></pre>
 <p>Те же события передаются во внешние системы через службу LogEventsWebhook — см. <a href="../configure/integrations.html">Интеграции</a>.</p>
 
 <h2>Перечень событий</h2>
-<p>Описания — дословно из кода (словарь <code>OrchEventsController.AllOrchestratorEvents</code>). Класс — по умолчанию для кода события.</p>
+<p>Описания приведены дословно, как они заданы в Оркестраторе, с сохранением орфографии. Класс — тот, что назначается коду события по умолчанию.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Код</th><th>Имя</th><th>Описание</th><th>Класс</th></tr>
   <tr><td>1</td><td><code>OrchestratorStarted</code></td><td>Оркестратор стартовал</td><td>Инцидент безопасности</td></tr>
@@ -81,8 +81,8 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>310</td><td><code>WorkerIncreaseLoading</code></td><td>На машине робота растет нагрузка</td><td>Информационное</td></tr>
   <tr><td>311</td><td><code>WorkerDecreaseLoading</code></td><td>На машине робота падает нагрузка</td><td>Информационное</td></tr>
   <tr><td>312</td><td><code>WorkerOverflowLoading</code></td><td>На машине робота нагрузка превышает допустимую</td><td>Ошибка</td></tr>
-  <tr><td>313</td><td><code>WorkerStarted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>314</td><td><code>WorkerStopped</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>313</td><td><code>WorkerStarted</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>314</td><td><code>WorkerStopped</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>315</td><td><code>WorkerTagsAdded</code></td><td>К машине робота добавлены теги</td><td>Информационное</td></tr>
   <tr><td>316</td><td><code>WorkerTagsDeleted</code></td><td>У машины робота удалены теги</td><td>Информационное</td></tr>
   <tr><td>401</td><td><code>ProjectCreated</code></td><td>Проект создан</td><td>Информационное</td></tr>
@@ -281,7 +281,7 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>30001</td><td><code>ProductionCalendarsCreated</code></td><td>Создание производственного календаря</td><td>Информационное</td></tr>
   <tr><td>30002</td><td><code>ProductionCalendarsChanged</code></td><td>Изменение производственного календаря</td><td>Информационное</td></tr>
   <tr><td>30003</td><td><code>ProductionCalendarsDeleted</code></td><td>Удаление производственного календаря</td><td>Информационное</td></tr>
-  <tr><td>30004</td><td><code>ProductionCalendarsItemsChanged</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>30004</td><td><code>ProductionCalendarsItemsChanged</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>40001</td><td><code>AgentCreated</code></td><td>Агент создан</td><td>Информационное</td></tr>
   <tr><td>40002</td><td><code>AgentChanged</code></td><td>Агент изменен</td><td>Информационное</td></tr>
   <tr><td>40003</td><td><code>AgentDeleted</code></td><td>Агент удален</td><td>Информационное</td></tr>
@@ -295,8 +295,8 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>40011</td><td><code>AgentLogOffCompletedError</code></td><td>RDP - LogOffCompletedError</td><td>Ошибка</td></tr>
   <tr><td>40012</td><td><code>AgentMaxAttemptStartLogOff</code></td><td>RDP - MaxAttemptStartLogOff</td><td>Ошибка</td></tr>
   <tr><td>40013</td><td><code>AgentMaxAttemptLogOff</code></td><td>RDP - MaxAttemptLogOff</td><td>Ошибка</td></tr>
-  <tr><td>40014</td><td><code>AgentSetNeedForLogOffRDPSessionUser</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>40015</td><td><code>AgentUpdateConnectionStatus</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>40014</td><td><code>AgentSetNeedForLogOffRDPSessionUser</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>40015</td><td><code>AgentUpdateConnectionStatus</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>40016</td><td><code>AgentConnectedFlickers</code></td><td>Мерцание RDP-сессии</td><td>Ошибка</td></tr>
   <tr><td>40017</td><td><code>AgentRdpSessionLost</code></td><td>Потеря RDP-сессии</td><td>Информационное</td></tr>
   <tr><td>50001</td><td><code>TenantCreated</code></td><td>Тенант создан</td><td>Информационное</td></tr>
@@ -366,8 +366,8 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>90630</td><td><code>MainRpaProjectGroupCreated</code></td><td>Группа main-процессов создана</td><td>Информационное</td></tr>
   <tr><td>90631</td><td><code>MainRpaProjectGroupChanged</code></td><td>Группа main-процессов изменена</td><td>Информационное</td></tr>
   <tr><td>90632</td><td><code>MainRpaProjectGroupDeleted</code></td><td>Группа main-процессов удалена</td><td>Информационное</td></tr>
-  <tr><td>90633</td><td><code>ProcessRepositorySubscriptionCreated</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>90634</td><td><code>ProcessRepositorySubscriptionDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90633</td><td><code>ProcessRepositorySubscriptionCreated</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>90634</td><td><code>ProcessRepositorySubscriptionDeleted</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>90635</td><td><code>TagCreated</code></td><td>Тэг создан</td><td>Информационное</td></tr>
   <tr><td>90636</td><td><code>TagChanged</code></td><td>Тэг изменен</td><td>Информационное</td></tr>
   <tr><td>90637</td><td><code>TagDeleted</code></td><td>Тэг удален</td><td>Информационное</td></tr>
@@ -386,8 +386,8 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>90901</td><td><code>SelectorChanged</code></td><td>Селектор изменен</td><td>Информационное</td></tr>
   <tr><td>90902</td><td><code>SelectorDeleted</code></td><td>Селектор удален</td><td>Информационное</td></tr>
   <tr><td>90903</td><td><code>SelectorMovedToGroup</code></td><td>Селектор перемещен в группу</td><td>Информационное</td></tr>
-  <tr><td>90904</td><td><code>SelectorScreenFileCreated</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>90905</td><td><code>SelectorScreenFileDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90904</td><td><code>SelectorScreenFileCreated</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>90905</td><td><code>SelectorScreenFileDeleted</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>90910</td><td><code>MainRpaProjectCreated</code></td><td>Main-процесс создан</td><td>Информационное</td></tr>
   <tr><td>90911</td><td><code>MainRpaProjectChanged</code></td><td>Main-процесс изменен</td><td>Информационное</td></tr>
   <tr><td>90912</td><td><code>MainRpaProjectDeleted</code></td><td>Main-процесс удален</td><td>Информационное</td></tr>
@@ -402,7 +402,7 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>90921</td><td><code>MainRpaProjectCloned</code></td><td>Main-процесс клонирован</td><td>Информационное</td></tr>
   <tr><td>90922</td><td><code>MainRpaProjectChangeAssetValues</code></td><td>Main-процесс: изменены значения</td><td>Информационное</td></tr>
   <tr><td>90923</td><td><code>MainRpaProjectUserCreated</code></td><td>Main-процесс: привязка пользователя</td><td>Информационное</td></tr>
-  <tr><td>90924</td><td><code>MainRpaProjectUserDeleted</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>90924</td><td><code>MainRpaProjectUserDeleted</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>90925</td><td><code>OnlyNotifyMainRpaProjectDownloadedByRobot</code></td><td>Main-процесс-читатель: загружен роботом</td><td>Информационное</td></tr>
   <tr><td>90926</td><td><code>OnlyNotifyMainRpaProjectDownloadedByUI</code></td><td>Main-процесс-читатель: загружен через UI</td><td>Информационное</td></tr>
   <tr><td>90927</td><td><code>MainRpaProjectUsersCreatedFromCandidates</code></td><td>Main-процесс: привязка пользователей-кандидатов</td><td>Информационное</td></tr>
@@ -438,9 +438,9 @@ ORDER BY "OrchTimestampUtc";</code></pre>
   <tr><td>93002</td><td><code>OrgIntegrationSwapState</code></td><td>OrgIntegrationSwapState</td><td>Информационное</td></tr>
   <tr><td>93003</td><td><code>OrgIntegrationProcessing</code></td><td>OrgIntegrationProcessing</td><td>Информационное</td></tr>
   <tr><td>93004</td><td><code>OrgIntegrationCompleted</code></td><td>OrgIntegrationCompleted</td><td>Информационное</td></tr>
-  <tr><td>93005</td><td><code>OrgIntegrationAgentWorkersReset</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>94000</td><td><code>MainRpaProjectGlobalGroupComplete</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
-  <tr><td>94001</td><td><code>MainRpaProjectGlobalGroupUnComplete</code></td><td>— (описания в коде нет)</td><td>Информационное</td></tr>
+  <tr><td>93005</td><td><code>OrgIntegrationAgentWorkersReset</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>94000</td><td><code>MainRpaProjectGlobalGroupComplete</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
+  <tr><td>94001</td><td><code>MainRpaProjectGlobalGroupUnComplete</code></td><td>— (описание не задано)</td><td>Информационное</td></tr>
   <tr><td>95000</td><td><code>AgentWorkersUpdated</code></td><td>AgentWorkersUpdated</td><td>Информационное</td></tr>
   <tr><td>95001</td><td><code>AgentWorkerSetEvent</code></td><td>AgentWorkerSetEvent</td><td>Информационное</td></tr>
   <tr><td>96000</td><td><code>StaticProjectQueueLimiterMaxCount</code></td><td>StaticProjectQueueLimiterMaxCount</td><td>Ошибка</td></tr>

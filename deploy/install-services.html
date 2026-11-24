@@ -16,6 +16,7 @@
   <div><b>Перед началом</b><a href="checklist.html">Что подготовить</a></div>
   <div><b>Результат</b>службы запущены и отвечают на <code>/health</code>, UI открывается по <code>https://&lt;адрес&gt;:44392</code></div>
 </div>
+<div data-only="linux">
 <h2 id="linux-rootless">Linux: службы работают без root</h2>
 <p>На Linux все службы Оркестратора и nginx работают от одного обычного пользователя через пользовательские юниты systemd. Такой вариант безопаснее; все порты поставки выше 1024, поэтому root не требуется. Инструкции на вкладках ниже составлены для этого варианта; вариант от root — в конце каждой вкладки.</p>
 <details>
@@ -50,12 +51,22 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
   <tr><td>nginx</td><td>главный процесс от root, рабочие — от пользователя сборки nginx (Astra, Ubuntu — обычно <code>nobody</code>)</td><td>все процессы — от пользователя служб</td></tr>
 </table></div>
 </details>
+</div>
 
 <h2>Установка по ОС</h2>
 <p>Выбор вкладки запоминается, а ссылка с адресом вкладки (например, <code>install-services.html#astra</code>) открывает сразу нужную ОС.</p>
 <div class="tabs" data-key="server-os">
 <section class="tab" id="astra" data-title="Astra Linux" data-os="linux">
-<p>Полная установка серверной части Оркестратора на Astra Linux: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку.Вариант от root — в конце страницы.</p>
+<p>Полная установка серверной части Оркестратора на Astra Linux: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку. Вариант от root — в конце вкладки.</p>
+<div class="path">
+  <a href="#astra-prepare">1. Сервер</a><span>→</span>
+  <a href="#astra-db">2. СУБД и RabbitMQ</a><span>→</span>
+  <a href="#astra-passwords">3. Пароли</a><span>→</span>
+  <a href="#astra-services">4. Службы</a><span>→</span>
+  <a href="#astra-nginx">5. nginx и UI4</a><span>→</span>
+  <a href="#astra-check">6. Проверка</a><span>→</span>
+  <a href="#astra-robots">7. Машины роботов</a>
+</div>
 
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя допускается любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
@@ -88,7 +99,7 @@ export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 
-<h3>1. Подготовка сервера</h3>
+<h3 id="astra-prepare">1. Подготовка сервера</h3>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt update
@@ -100,7 +111,7 @@ sudo apt install nginx unzip curl libicu72</code></pre>
     <span class="check"><code>systemctl is-enabled nginx</code> — <code>disabled</code>, <code>systemctl is-active nginx</code> — <code>inactive</code></span></li>
   <li>Для MachineInfo установите <code>cpuid</code>:
 <pre><code>sudo apt install cpuid</code></pre>
-    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает<code>000000000000</code>.
+    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает <code>000000000000</code>.
     <span class="check"><code>cpuid | grep 'processor serial number'</code> выводит строку</span></li>
   <li>Создайте пользователя служб и разрешите его юнитам работать без входа в систему:
 <pre><code>sudo useradd -m -s /bin/bash orch-user
@@ -120,16 +131,16 @@ sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
-<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
+<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
 
 
 
-<h3>2. СУБД и RabbitMQ</h3>
+<h3 id="astra-db">2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Для Оркестратора требуются:</p>
 <ul>
   <li>Базы PostgreSQL: <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code> (WebApi), <code>ltoolslogs</code> (RobotLogs), <code>ltoolsanalytic</code> (Analytic), <code>ltoolsnuget</code> (NuGet2). Licenses работает с <code>ltools</code>.</li>
-  <li>Для каждой БД — рабочий пользователь и пользователь миграций (допускается один и тот же). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
+  <li>Для каждой БД — один пользователь: службы подключаются и применяют миграции под ним. WebApi применяет миграции при каждом старте, поэтому пользователю нужны права на создание и изменение объектов в базе, а если базы не созданы заранее — и на создание БД. Подробнее — <a href="service-accounts.html#db">«Учётные записи и права служб»</a>.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
 
@@ -146,10 +157,10 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб в разделе 4.</p>
 
-<h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<h3 id="astra-passwords">3. Пароли для конфигов</h3>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Для шифрования используется утилита PasswordEncryptor из архива <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Утилита запускается дважды, по одному разу на каждый пароль; обе полученные строки используются в разделе 4.</p>
 <ol class="steps">
   <li>Под пользователем служб распакуйте и запустите утилиту:
 <pre><code>sudo su - orch-user
@@ -157,17 +168,20 @@ cd ~/dist
 unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
-  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
-    <span class="check">утилита выводит <code>Copy following string:</code> и зашифрованную строку; эта строка вставляется в конфиг. Для выхода нажмите любую клавишу</span></li>
+  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
+    <span class="check">утилита выводит <code>Copy following string:</code> и на следующей строке — зашифрованный пароль; эта строка вставляется в конфиг</span></li>
+  <li>Нажмите любую клавишу для выхода и запустите утилиту повторно для второго пароля: <code>~/encryptor/Primo.Orchestrator.PasswordEncryptor</code>.
+    <span class="check">получены две зашифрованные строки: для пароля БД и для пароля RabbitMQ</span></li>
 </ol>
 <div class="note"><p>Пароль не должен содержать пробелов: утилита делит строку по пробелу. Если <code>PRIMOSALT</code> задан, он должен быть одинаковым на всех службах и агентах; в пользовательских юнитах для него есть закомментированная строка <code>#Environment=PRIMOSALT=</code>.</p></div>
 
-<h3>4. Службы Оркестратора</h3>
+<h3 id="astra-services">4. Службы Оркестратора</h3>
 <p>Все шаги этого раздела выполняйте под <code>orch-user</code>, не через <code>sudo</code>: иначе файлы получат владельца root и юниты не запустятся.</p>
 <ol class="steps">
   <li>Откройте оболочку пользователя служб — войдите по SSH под <code>orch-user</code> или из текущей сессии:
 <pre><code>sudo su - orch-user
 export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
+    Если оболочка <code>orch-user</code> осталась открытой после раздела 3, выполните только вторую команду.
     <span class="check"><code>whoami</code> — <code>orch-user</code>; <code>systemctl --user status</code> отвечает без ошибки подключения к шине</span></li>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
@@ -179,7 +193,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. <a href="#astra-min">Минимальные изменения для запуска</a>. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -207,9 +221,9 @@ done</code></pre>
 <pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
-<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
+<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. шаг 5 в <a href="#astra-min">минимальных изменениях</a>.</p>
 
-<h4>Минимальные изменения для запуска</h4>
+<h4 id="astra-min">Минимальные изменения для запуска</h4>
 <p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
 <ol class="steps">
   <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
@@ -237,8 +251,9 @@ done</code></pre>
 </ol>
 <p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
-<h4>Что задать в конфигах</h4>
-<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<details>
+<summary>Справка: все параметры, которые задаются при установке</summary>
+<p>Таблица требуется при установке на несколько серверов и для сверки конфигов. Значения приведены для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -256,13 +271,14 @@ done</code></pre>
   <tr><td>NuGet2</td><td>строка <code>Database:ConnectionString</code>, <code>FileSystem:Path</code>, <code>ApiKey</code></td><td>БД <code>ltoolsnuget</code>; каталог пакетов с правом записи</td></tr>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
+</details>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
-<h3>5. nginx и UI4</h3>
+<h3 id="astra-nginx">5. nginx и UI4</h3>
 <p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
@@ -285,7 +301,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 </ol>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
 
-<h3>6. Проверка</h3>
+<h3 id="astra-check">6. Проверка</h3>
 <ol class="steps">
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
@@ -296,7 +312,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 </ol>
 <p>Далее — <a href="../deploy/first-run.html">Первый запуск</a> (лицензия, администратор) и <a href="../deploy/verify.html">Проверка установки</a>.</p>
 
-<h3>7. Машины роботов на Astra Linux</h3>
+<h3 id="astra-robots">7. Машины роботов на Astra Linux</h3>
 <p>На каждую машину роботов устанавливается агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
 <p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
@@ -305,10 +321,10 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
     Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическая оболочка Fly (<code>/usr/bin/fly-wm</code>). На Astra 1.8 — ещё <code>/usr/bin/dbus-launch</code>: агент вызывает его перед запуском сеанса робота.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/fly-wm /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и не зависят от ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
-<p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
+<p>Проверки, которые агент выполняет при запуске, и предупреждения в журнале описаны на странице <a href="agent.html">Машины роботов и агент</a>.</p>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -333,7 +349,16 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </details>
 </section>
 <section class="tab" id="redos" data-title="РЕД ОС" data-os="linux">
-<p>Полная установка серверной части Оркестратора на РЕД ОС: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку.Вариант от root — в конце страницы.</p>
+<p>Полная установка серверной части Оркестратора на РЕД ОС: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку. Вариант от root — в конце вкладки.</p>
+<div class="path">
+  <a href="#redos-prepare">1. Сервер</a><span>→</span>
+  <a href="#redos-db">2. СУБД и RabbitMQ</a><span>→</span>
+  <a href="#redos-passwords">3. Пароли</a><span>→</span>
+  <a href="#redos-services">4. Службы</a><span>→</span>
+  <a href="#redos-nginx">5. nginx и UI4</a><span>→</span>
+  <a href="#redos-check">6. Проверка</a><span>→</span>
+  <a href="#redos-robots">7. Машины роботов</a>
+</div>
 
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя допускается любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
@@ -366,18 +391,18 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 
-<h3>1. Подготовка сервера</h3>
+<h3 id="redos-prepare">1. Подготовка сервера</h3>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo dnf install nginx unzip curl</code></pre>
-    От пакета nginx нужны только <code>/usr/sbin/nginx</code> и <code>/etc/nginx/mime.types</code>. Службам также требуется библиотека ICU для .NET (в образы Docker на Astra и Ubuntu устанавливается<code>libicu72</code> / <code>libicu74</code>) — проверьте, что она установлена.
+    От пакета nginx нужны только <code>/usr/sbin/nginx</code> и <code>/etc/nginx/mime.types</code>. Службам также требуется библиотека ICU для .NET (в образы Docker на Astra и Ubuntu устанавливается <code>libicu72</code> / <code>libicu74</code>) — проверьте, что она установлена.
     <span class="check"><code>nginx -v</code> выводит версию, файл <code>/etc/nginx/mime.types</code> существует</span></li>
   <li>Отключите стандартный юнит nginx, иначе он запустит второй nginx со своим конфигом:
 <pre><code>sudo systemctl disable --now nginx</code></pre>
     <span class="check"><code>systemctl is-enabled nginx</code> — <code>disabled</code>, <code>systemctl is-active nginx</code> — <code>inactive</code></span></li>
   <li>Для MachineInfo установите <code>cpuid</code>:
 <pre><code>sudo dnf install cpuid</code></pre>
-    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает<code>000000000000</code>.
+    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает <code>000000000000</code>.
     <span class="check"><code>cpuid | grep 'processor serial number'</code> выводит строку</span></li>
   <li>Создайте пользователя служб и разрешите его юнитам работать без входа в систему:
 <pre><code>sudo useradd -m -s /bin/bash orch-user
@@ -397,16 +422,16 @@ sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
-<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
+<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
 
 
 
-<h3>2. СУБД и RabbitMQ</h3>
+<h3 id="redos-db">2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Для Оркестратора требуются:</p>
 <ul>
   <li>Базы PostgreSQL: <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code> (WebApi), <code>ltoolslogs</code> (RobotLogs), <code>ltoolsanalytic</code> (Analytic), <code>ltoolsnuget</code> (NuGet2). Licenses работает с <code>ltools</code>.</li>
-  <li>Для каждой БД — рабочий пользователь и пользователь миграций (допускается один и тот же). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
+  <li>Для каждой БД — один пользователь: службы подключаются и применяют миграции под ним. WebApi применяет миграции при каждом старте, поэтому пользователю нужны права на создание и изменение объектов в базе, а если базы не созданы заранее — и на создание БД. Подробнее — <a href="service-accounts.html#db">«Учётные записи и права служб»</a>.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
 
@@ -423,10 +448,10 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб в разделе 4.</p>
 
-<h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<h3 id="redos-passwords">3. Пароли для конфигов</h3>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Для шифрования используется утилита PasswordEncryptor из архива <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Утилита запускается дважды, по одному разу на каждый пароль; обе полученные строки используются в разделе 4.</p>
 <ol class="steps">
   <li>Под пользователем служб распакуйте и запустите утилиту:
 <pre><code>sudo su - orch-user
@@ -434,17 +459,20 @@ cd ~/dist
 unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
-  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
-    <span class="check">утилита выводит <code>Copy following string:</code> и зашифрованную строку; эта строка вставляется в конфиг. Для выхода нажмите любую клавишу</span></li>
+  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
+    <span class="check">утилита выводит <code>Copy following string:</code> и на следующей строке — зашифрованный пароль; эта строка вставляется в конфиг</span></li>
+  <li>Нажмите любую клавишу для выхода и запустите утилиту повторно для второго пароля: <code>~/encryptor/Primo.Orchestrator.PasswordEncryptor</code>.
+    <span class="check">получены две зашифрованные строки: для пароля БД и для пароля RabbitMQ</span></li>
 </ol>
 <div class="note"><p>Пароль не должен содержать пробелов: утилита делит строку по пробелу. Если <code>PRIMOSALT</code> задан, он должен быть одинаковым на всех службах и агентах; в пользовательских юнитах для него есть закомментированная строка <code>#Environment=PRIMOSALT=</code>.</p></div>
 
-<h3>4. Службы Оркестратора</h3>
+<h3 id="redos-services">4. Службы Оркестратора</h3>
 <p>Все шаги этого раздела выполняйте под <code>orch-user</code>, не через <code>sudo</code>: иначе файлы получат владельца root и юниты не запустятся.</p>
 <ol class="steps">
   <li>Откройте оболочку пользователя служб — войдите по SSH под <code>orch-user</code> или из текущей сессии:
 <pre><code>sudo su - orch-user
 export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
+    Если оболочка <code>orch-user</code> осталась открытой после раздела 3, выполните только вторую команду.
     <span class="check"><code>whoami</code> — <code>orch-user</code>; <code>systemctl --user status</code> отвечает без ошибки подключения к шине</span></li>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
@@ -456,7 +484,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. <a href="#redos-min">Минимальные изменения для запуска</a>. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -484,9 +512,9 @@ done</code></pre>
 <pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
-<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
+<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. шаг 5 в <a href="#redos-min">минимальных изменениях</a>.</p>
 
-<h4>Минимальные изменения для запуска</h4>
+<h4 id="redos-min">Минимальные изменения для запуска</h4>
 <p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
 <ol class="steps">
   <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
@@ -514,8 +542,9 @@ done</code></pre>
 </ol>
 <p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
-<h4>Что задать в конфигах</h4>
-<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<details>
+<summary>Справка: все параметры, которые задаются при установке</summary>
+<p>Таблица требуется при установке на несколько серверов и для сверки конфигов. Значения приведены для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -533,13 +562,14 @@ done</code></pre>
   <tr><td>NuGet2</td><td>строка <code>Database:ConnectionString</code>, <code>FileSystem:Path</code>, <code>ApiKey</code></td><td>БД <code>ltoolsnuget</code>; каталог пакетов с правом записи</td></tr>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
+</details>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
-<h3>5. nginx и UI4</h3>
+<h3 id="redos-nginx">5. nginx и UI4</h3>
 <p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
@@ -563,7 +593,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
 
 
-<h3>6. Проверка</h3>
+<h3 id="redos-check">6. Проверка</h3>
 <ol class="steps">
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
@@ -574,7 +604,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 </ol>
 <p>Далее — <a href="../deploy/first-run.html">Первый запуск</a> (лицензия, администратор) и <a href="../deploy/verify.html">Проверка установки</a>.</p>
 
-<h3>7. Машины роботов на РЕД ОС</h3>
+<h3 id="redos-robots">7. Машины роботов на РЕД ОС</h3>
 <p>На каждую машину роботов устанавливается агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
 <p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
@@ -582,10 +612,10 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 <pre><code>sudo dnf install expect</code></pre>
     Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; окружение MATE (<code>/usr/bin/mate-session</code>).
     <span class="check"><code>ls /usr/bin/expect /usr/bin/mate-session /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и не зависят от ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
-<p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
+<p>Проверки, которые агент выполняет при запуске, и предупреждения в журнале описаны на странице <a href="agent.html">Машины роботов и агент</a>.</p>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -610,7 +640,16 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </details>
 </section>
 <section class="tab" id="ubuntu" data-title="Ubuntu" data-os="linux">
-<p>Полная установка серверной части Оркестратора на Ubuntu: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку.Вариант от root — в конце страницы.</p>
+<p>Полная установка серверной части Оркестратора на Ubuntu: подготовка сервера, службы как пользовательские юниты systemd (без root), nginx с UI4, проверка и агент на машинах роботов. Разделы выполняются по порядку. Вариант от root — в конце вкладки.</p>
+<div class="path">
+  <a href="#ubuntu-prepare">1. Сервер</a><span>→</span>
+  <a href="#ubuntu-db">2. СУБД и RabbitMQ</a><span>→</span>
+  <a href="#ubuntu-passwords">3. Пароли</a><span>→</span>
+  <a href="#ubuntu-services">4. Службы</a><span>→</span>
+  <a href="#ubuntu-nginx">5. nginx и UI4</a><span>→</span>
+  <a href="#ubuntu-check">6. Проверка</a><span>→</span>
+  <a href="#ubuntu-robots">7. Машины роботов</a>
+</div>
 
 <h3>Что получится</h3>
 <p>Все службы работают от одного пользователя ОС (ниже — <code>orch-user</code>, так он называется в образах Docker; имя допускается любое). Каталоги и юниты заданы в файлах юнитов из архивов.</p>
@@ -643,7 +682,7 @@ sudo systemctl enable --now Primo.Orchestrator.WebApi</code></pre>
 </ul>
 <p>Ресурсы сервера — см. <a href="../deploy/hardware.html">Требования к железу</a>.</p>
 
-<h3>1. Подготовка сервера</h3>
+<h3 id="ubuntu-prepare">1. Подготовка сервера</h3>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt update
@@ -655,7 +694,7 @@ sudo apt install nginx unzip curl libicu74</code></pre>
     <span class="check"><code>systemctl is-enabled nginx</code> — <code>disabled</code>, <code>systemctl is-active nginx</code> — <code>inactive</code></span></li>
   <li>Для MachineInfo установите <code>cpuid</code>:
 <pre><code>sudo apt install cpuid</code></pre>
-    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает<code>000000000000</code>.
+    MachineInfo собирает параметры машины для лицензии командами <code>hostname</code>, <code>cpuid</code> и <code>lsblk --nodeps -no serial &lt;Devices:HDD&gt;</code>. Если <code>cpuid</code> не установлен, вместо серийного номера процессора служба возвращает <code>000000000000</code>.
     <span class="check"><code>cpuid | grep 'processor serial number'</code> выводит строку</span></li>
   <li>Создайте пользователя служб и разрешите его юнитам работать без входа в систему:
 <pre><code>sudo useradd -m -s /bin/bash orch-user
@@ -675,15 +714,15 @@ sudo chown -R orch-user:orch-user /home/orch-user/dist</code></pre>
     <span class="check"><code>sudo ls /home/orch-user/dist</code> показывает архивы служб, архив UI4, <code>nginx.linux.conf</code> и юнит nginx</span></li>
   <li>Откройте на файерволе входящий <code>44392/tcp</code>, если файервол включён. Для <code>ufw</code>: состояние выводит <code>sudo ufw status</code>; если оно <code>active</code>, выполните <code>sudo ufw allow 44392/tcp</code>. С сервера должны быть доступны СУБД (<code>5432</code> для PostgreSQL) и RabbitMQ (<code>5672</code>); при установке на этот же сервер дополнительных действий не требуется.</li>
 </ol>
-<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите<code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
+<div class="warn"><p>Параметры, которые возвращает MachineInfo (имя хоста, серийные номера процессора и диска), используются для лицензии. Установите <code>cpuid</code>, задайте <code>Devices:HDD</code> и имя хоста до запроса лицензии и не изменяйте их после этого.</p></div>
 
 
 
-<h3>2. СУБД и RabbitMQ</h3>
+<h3 id="ubuntu-db">2. СУБД и RabbitMQ</h3>
 <p>Установите их по инструкции поставщика или используйте существующие. Для Оркестратора требуются:</p>
 <ul>
   <li>Базы PostgreSQL: <code>ltools</code>, <code>ltoolsidentity</code>, <code>ltoolslicense</code>, <code>ltoolsltwrepo</code> (WebApi), <code>ltoolslogs</code> (RobotLogs), <code>ltoolsanalytic</code> (Analytic), <code>ltoolsnuget</code> (NuGet2). Licenses работает с <code>ltools</code>.</li>
-  <li>Для каждой БД — рабочий пользователь и пользователь миграций (допускается один и тот же). WebApi применяет миграции при каждом старте, поэтому пользователю миграций нужны права на создание объектов, а если базы не созданы заранее — и на создание БД.</li>
+  <li>Для каждой БД — один пользователь: службы подключаются и применяют миграции под ним. WebApi применяет миграции при каждом старте, поэтому пользователю нужны права на создание и изменение объектов в базе, а если базы не созданы заранее — и на создание БД. Подробнее — <a href="service-accounts.html#db">«Учётные записи и права служб»</a>.</li>
   <li>Пользователь RabbitMQ для служб, порт <code>5672</code>.</li>
 </ul>
 
@@ -700,10 +739,10 @@ done</code></pre>
 sudo rabbitmqctl set_permissions -p / orch ".*" ".*" ".*"</code></pre>
     <span class="check"><code>sudo rabbitmqctl list_users</code> показывает пользователя <code>orch</code></span></li>
 </ol>
-<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб на шаге 4.</p>
+<p>База <code>ltoolssecrets</code>, которая упоминается в конфигах служб, для запуска не требуется: она используется только при хранении паролей во внешней базе секретов. В примере базы принадлежат пользователю <code>orch</code>, поэтому он же применяет миграции. Имя пользователя и пароли указываются в конфигах служб в разделе 4.</p>
 
-<h3>3. Пароли для конфигов</h3>
-<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Утилиту запускают дважды, по разу на каждый пароль; обе полученные строки понадобятся в разделе 4. Для шифрования используется утилита из архива <code>PasswordEncryptor-linux</code>.</p>
+<h3 id="ubuntu-passwords">3. Пароли для конфигов</h3>
+<p>Пароли СУБД и RabbitMQ в конфигах указываются зашифрованными. Зашифруйте два пароля, заданные в разделе 2: пароль пользователя БД и пароль пользователя RabbitMQ. Для шифрования используется утилита PasswordEncryptor из архива <code>primo-rpa-orchestrator-passwordencryptor-&lt;версия&gt;-linux.zip</code>. Утилита запускается дважды, по одному разу на каждый пароль; обе полученные строки используются в разделе 4.</p>
 <ol class="steps">
   <li>Под пользователем служб распакуйте и запустите утилиту:
 <pre><code>sudo su - orch-user
@@ -711,17 +750,20 @@ cd ~/dist
 unzip primo-rpa-orchestrator-passwordencryptor-*-linux.zip -d ~/encryptor
 chmod +x ~/encryptor/Primo.Orchestrator.PasswordEncryptor
 ~/encryptor/Primo.Orchestrator.PasswordEncryptor</code></pre></li>
-  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль<code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
-    <span class="check">утилита выводит <code>Copy following string:</code> и зашифрованную строку; эта строка вставляется в конфиг. Для выхода нажмите любую клавишу</span></li>
+  <li>Утилита ничего не выводит и ожидает ввода строки. Введите пароль и нажмите Enter. Если используется собственная соль <code>PRIMOSALT</code>, введите через пробел: <code>&lt;пароль&gt; &lt;соль&gt;</code>.
+    <span class="check">утилита выводит <code>Copy following string:</code> и на следующей строке — зашифрованный пароль; эта строка вставляется в конфиг</span></li>
+  <li>Нажмите любую клавишу для выхода и запустите утилиту повторно для второго пароля: <code>~/encryptor/Primo.Orchestrator.PasswordEncryptor</code>.
+    <span class="check">получены две зашифрованные строки: для пароля БД и для пароля RabbitMQ</span></li>
 </ol>
 <div class="note"><p>Пароль не должен содержать пробелов: утилита делит строку по пробелу. Если <code>PRIMOSALT</code> задан, он должен быть одинаковым на всех службах и агентах; в пользовательских юнитах для него есть закомментированная строка <code>#Environment=PRIMOSALT=</code>.</p></div>
 
-<h3>4. Службы Оркестратора</h3>
+<h3 id="ubuntu-services">4. Службы Оркестратора</h3>
 <p>Все шаги этого раздела выполняйте под <code>orch-user</code>, не через <code>sudo</code>: иначе файлы получат владельца root и юниты не запустятся.</p>
 <ol class="steps">
   <li>Откройте оболочку пользователя служб — войдите по SSH под <code>orch-user</code> или из текущей сессии:
 <pre><code>sudo su - orch-user
 export XDG_RUNTIME_DIR=/run/user/$(id -u)</code></pre>
+    Если оболочка <code>orch-user</code> осталась открытой после раздела 3, выполните только вторую команду.
     <span class="check"><code>whoami</code> — <code>orch-user</code>; <code>systemctl --user status</code> отвечает без ошибки подключения к шине</span></li>
   <li>Распакуйте архивы и сделайте файлы исполняемыми:
 <pre><code>cd ~/dist
@@ -733,7 +775,7 @@ unzip -q -o primo-rpa-orchestrator-nuget2-*-linux.zip -d /opt/Primo/NuGet2
 chmod +x /opt/Primo/NuGet2/BaGet</code></pre>
     Если RDP2 и ArcSight не требуются, исключите их из списка.
     <span class="check">в каждом каталоге есть исполняемый файл, <code>appsettings.ProdLinux.json</code> и юниты <code>*.service</code>, <code>*.user.service</code></span></li>
-  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. «Минимальные изменения для запуска» ниже. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
+  <li>Настройте <code>appsettings.ProdLinux.json</code> каждой службы — см. <a href="#ubuntu-min">Минимальные изменения для запуска</a>. Вместо изменения файла допускается добавить в юнит строки <code>Environment=</code>: секция и ключ через двойное подчёркивание, например <code>Environment=RabbitMQ__Host=db01</code>. Переменные окружения перекрывают файл.</li>
   <li>Установите пользовательские юниты:
 <pre><code>mkdir -p ~/.config/systemd/user
 for s in MachineInfo WebApi RobotLogs Analytic Notifications States Queues Licenses LogEventsWebhook RDP2 ArcSight; do
@@ -761,9 +803,9 @@ done</code></pre>
 <pre><code>for p in 56748 56749 56751 56750 5088 5089 56770; do echo "$p $(curl -s http://localhost:$p/health)"; done</code></pre>
     <span class="check"><code>/health</code> отвечает <code>Healthy</code> на портах <code>56748</code>, <code>56749</code>, <code>56751</code>, <code>56750</code>, <code>5088</code>, <code>5089</code>, <code>56770</code>; <code>curl http://localhost:8081/</code> отвечает без ошибки; RDP2 — <code>curl -k https://localhost:5102/health</code></span></li>
 </ol>
-<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. таблицу ниже.</p>
+<p>Если States отвечает <code>Unhealthy</code>, в её конфиге не задан <code>Orchestrator:BaseUrl</code> — см. шаг 5 в <a href="#ubuntu-min">минимальных изменениях</a>.</p>
 
-<h4>Минимальные изменения для запуска</h4>
+<h4 id="ubuntu-min">Минимальные изменения для запуска</h4>
 <p>Набор изменений, с которым Оркестратор запускается на одном сервере. Файл каждой службы — <code>/opt/Primo/&lt;служба&gt;/appsettings.ProdLinux.json</code>, редактируется под <code>orch-user</code>, например <code>nano /opt/Primo/WebApi/appsettings.ProdLinux.json</code>. Параметры, не названные в списке, оставьте как в файле: почта, приёмник событий, ключ NuGet, каталоги данных для запуска изменять не требуется.</p>
 <ol class="steps">
   <li><b>Подключение к RabbitMQ</b> — файлы WebApi, RobotLogs, Analytic, Notifications, States, Queues, Licenses, LogEventsWebhook. В секции <code>RabbitMQ</code> задайте три строки:
@@ -791,8 +833,9 @@ done</code></pre>
 </ol>
 <p>Каталоги данных в файлах служб уже указывают внутрь <code>/opt/Primo/Data</code>, созданного в разделе 1, поэтому изменять их не требуется. Службы RDP2 и ArcSight для запуска не требуются. RDP2 нужна, только если роботы работают на Windows.</p>
 
-<h4>Что задать в конфигах</h4>
-<p>Полная таблица параметров — для справки и для установки на несколько серверов. Значения для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
+<details>
+<summary>Справка: все параметры, которые задаются при установке</summary>
+<p>Таблица требуется при установке на несколько серверов и для сверки конфигов. Значения приведены для случая, когда все компоненты установлены на одном сервере. Адреса служб между собой — <code>localhost</code>; внешний адрес — <code>https://&lt;адрес&gt;:44392</code>. В поставочных файлах уже записаны примеры: адреса вида <code>192.168.0.x</code>, пользователь <code>postgres</code>, пользователь RabbitMQ <code>admin</code>. Замените их по таблице. Остальные примеры в конфиге WebApi — домен Active Directory, тенанты, входящая почта, Keycloak — для запуска изменять не требуется.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Служба</th><th>Параметры</th><th>Значение</th></tr>
   <tr><td>Все, кроме MachineInfo, NuGet2, RDP2, ArcSight</td><td><code>RabbitMQ:Host</code>, <code>RabbitMQ:Port</code>, <code>RabbitMQ:UserName</code>, <code>RabbitMQ:Password</code></td><td>адрес RabbitMQ, <code>5672</code>, пользователь, зашифрованный пароль</td></tr>
@@ -810,13 +853,14 @@ done</code></pre>
   <tr><td>NuGet2</td><td>строка <code>Database:ConnectionString</code>, <code>FileSystem:Path</code>, <code>ApiKey</code></td><td>БД <code>ltoolsnuget</code>; каталог пакетов с правом записи</td></tr>
   <tr><td>ArcSight</td><td><code>Files:Path</code></td><td>каталог для файлов событий с правом записи</td></tr>
 </table></div>
+</details>
 <p>Порты Kestrel и журналы Serilog задаются в том же файле. Переменная <code>ASPNETCORE_ENVIRONMENT=ProdLinux</code> уже есть в юнитах; без неё служба сразу завершается.</p>
 
 <h4>Журналы служб</h4>
 <pre><code>journalctl --user -u Primo.Orchestrator.WebApi -f</code></pre>
 <p>В юнитах задан <code>SyslogIdentifier</code> — имя службы, например <code>Primo.Orchestrator.WebApi</code>.</p>
 
-<h3>5. nginx и UI4</h3>
+<h3 id="ubuntu-nginx">5. nginx и UI4</h3>
 <p>Шаги также выполняются под <code>orch-user</code>. Файл <code>nginx.linux.conf</code> при установке на один сервер изменять не требуется: адреса служб в нём заданы как <code>127.0.0.1</code>.</p>
 <ol class="steps">
   <li>Скопируйте конфиг, сертификат и UI:
@@ -839,7 +883,7 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 </ol>
 <p>Журналы nginx: <code>/opt/Primo/nginx/logs/nginx_error.log</code> и <code>nginx_access.log</code> (JSON).</p>
 
-<h3>6. Проверка</h3>
+<h3 id="ubuntu-check">6. Проверка</h3>
 <ol class="steps">
   <li>Все юниты запущены:
 <pre><code>systemctl --user list-units 'Primo.Orchestrator.*'</code></pre>
@@ -850,19 +894,19 @@ systemctl --user enable --now Primo.Orchestrator.Nginx</code></pre>
 </ol>
 <p>Далее — <a href="../deploy/first-run.html">Первый запуск</a> (лицензия, администратор) и <a href="../deploy/verify.html">Проверка установки</a>.</p>
 
-<h3>7. Машины роботов на Ubuntu</h3>
+<h3 id="ubuntu-robots">7. Машины роботов на Ubuntu</h3>
 <p>На каждую машину роботов устанавливается агент. Он всегда работает от пользователя <code>Agent:UserName</code> (по умолчанию <code>agent</code>), общая группа агента и роботов — <code>Agent:GroupName</code> (по умолчанию <code>primo-rpa</code>). Основной вариант — пользовательский юнит: обновление агента из Оркестратора управляет им командой <code>systemctl --user</code>.</p>
 <p>Что нужно: архив <code>primo-rpa-orchestrator-agent-&lt;версия&gt;-linux.zip</code> (в нём агент, <code>LTools.Orchestrator.Agent.Runner</code>, <code>appsettings.Runner.json</code>, <code>launch-as-user.expect</code> и юниты), <code>sudo</code> на машине.</p>
 <ol class="steps">
   <li>Установите пакеты:
 <pre><code>sudo apt install expect unzip xvfb xauth x11-utils dbus-x11</code></pre>
     Пакет <code>x11-utils</code> содержит утилиту <code>xprop</code>: без неё запуск роботов завершается без сообщения в интерфейсе. У пользователя робота должен существовать каталог <code>~/.local/share</code> — подробности на странице <a href="agent.html">Машины роботов и агент</a>.
-    Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическое окружение, команда запуска сеанса которого указывается в шаге 6.
+    Также требуются: X-сервер — <code>/usr/bin/Xvnc</code> (позволяет просматривать сеанс робота и управлять им) или <code>/usr/bin/Xvfb</code> (без просмотра), <code>/usr/bin/xauth</code>, для Xvnc — <code>/usr/bin/vncpasswd</code>; графическое окружение; команда запуска его сеанса задаётся в параметре <code>AgentCommands:Session</code> конфига агента.
     <span class="check"><code>ls /usr/bin/expect /usr/bin/xauth</code> и <code>ls /usr/bin/Xvnc</code> (или <code>/usr/bin/Xvfb</code>) находят файлы</span></li>
-  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и одинаковы для всех ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
+  <li>Установите агент, зарегистрируйте машину и проверьте связь по странице <a href="agent.html">Машины роботов и агент</a>: создание пользователя и группы агента, права <code>sudo</code>, каталоги, конфиг, юнит и регистрация машины описаны там и не зависят от ОС. <span class="check">в списке машин в колонке <b>Версия агента</b> появилась версия</span></li>
 </ol>
 <figure class="shot"><img src="../assets/img/machine-form.png" alt="Форма «Добавить машину» с включённым переключателем Linux" loading="lazy" width="1440" height="900"><figcaption><b>Настройки → Система → Машины роботов → Добавить машину</b>: для машины на Linux включён переключатель <b>Linux</b>.</figcaption></figure>
-<p>При старте агент проверяет: доступен ли <code>sudo</code>, есть ли <code>expect</code>, исполняемы ли <code>launch-as-user.expect</code> и команда сеанса, разрешён ли в sudoers вызов <code>systemd-run</code>, существуют ли пользователь и группа. Каждая проблема — отдельное предупреждение в журнале. Подробнее об агенте — <a href="../deploy/agent.html">Машины роботов и агент</a>.</p>
+<p>Проверки, которые агент выполняет при запуске, и предупреждения в журнале описаны на странице <a href="agent.html">Машины роботов и агент</a>.</p>
 
 <details>
 <summary>Вариант от root: если nginx должен слушать порт ниже 1024</summary>
@@ -940,12 +984,12 @@ Start-Service "Primo.Orchestrator.WebApi"</code></pre>
 </ol>
 <p>Окружение задаёт переменная <code>ASPNETCORE_ENVIRONMENT</code>: <code>ProdLinux</code> или <code>ProdWin</code>. Если она не задана, служба сразу завершается с ошибкой.</p>
 
-<div class="warn"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В сборках 1.26.7 и 1.26.9 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi.</p></div>
+<div class="note"><p>У WebApi есть режим только миграций: <code>Primo.Orchestrator.WebApi --migration</code>. В сборках 1.26.7 и 1.26.9 режим не работает: процесс завершается ошибкой <code>NullReferenceException</code> сразу после строки <code>Migration mode started</code>, миграции не применяются. Миграции применяются автоматически при обычном запуске WebApi.</p></div>
 
 
 <h2>Что дальше</h2>
 <div class="next">
-  <a href="agent.html">Машины роботов и агент<small>поставить агент на машины, где будут работать роботы</small></a>
+  <a href="agent.html">Машины роботов и агент<small>установка агента на машины роботов</small></a>
   <a href="first-run.html">Первый запуск<small>лицензия, дистрибутив робота, первый робот</small></a>
 </div>
 

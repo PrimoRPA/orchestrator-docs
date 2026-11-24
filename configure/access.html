@@ -18,19 +18,19 @@
   <div><b>Результат</b>включены нужные способы входа в Оркестратор</div>
 </div>
 
+<div class="note"><p>Файл конфигурации WebApi — <code>appsettings.ProdLinux.json</code> (Linux) или <code>appsettings.ProdWin.json</code> (Windows) в каталоге службы. В Docker параметр задаётся переменной окружения сервиса <code>web-api</code> в <code>docker-compose.yml</code>: уровни имени разделяются двойным подчёркиванием, элемент массива указывается номером — <code>Auth__Type</code>, <code>Tenants__Items__0__Id</code>, <code>ActiveDirectory__MultyForest__&lt;домен&gt;__Host</code>. После изменения перезапустите WebApi: часть параметров читается только при запуске. В Docker выполните <code>sudo docker compose up -d</code> — контейнер пересоздаётся с новыми переменными. Порядок чтения источников — на странице <a href="../reference/config.html#sources">Параметры конфигурации</a>.</p></div>
+
 <h2>Способы входа: <code>Auth:Type</code></h2>
 <p>Набор способов входа на экране входа UI4 (список <b>Другие способы входа</b>) задаётся одним числом — суммой флагов. Например, <code>5</code> = Оркестратор + SSO.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Флаг</th><th>Способ</th><th>Что видно на экране входа UI4</th></tr>
-  <tr><td><code>1</code></td><td>Учётные записи Оркестратора</td><td>«Логин и пароль»</td></tr>
+  <tr><td><code>1</code></td><td>Учётные записи Оркестратора</td><td><b>Логин и пароль</b></td></tr>
   <tr><td><code>2</code></td><td>LDAP: логин и пароль AD</td><td>форма логина с выбором домена</td></tr>
-  <tr><td><code>4</code></td><td>Negotiate: SSO по Kerberos</td><td>«Доменная учетная запись»</td></tr>
-  <tr><td><code>8</code></td><td>Keycloak, упрощённый поток</td><td>«Keycloak (Упрощённый поток)»</td></tr>
-  <tr><td><code>16</code></td><td>Keycloak, поток с PKCE</td><td>«Keycloak (PKCE)»</td></tr>
+  <tr><td><code>4</code></td><td>Negotiate: SSO по Kerberos</td><td><b>Доменная учетная запись</b></td></tr>
+  <tr><td><code>8</code></td><td>Keycloak, упрощённый поток</td><td><b>Keycloak (Упрощённый поток)</b></td></tr>
+  <tr><td><code>16</code></td><td>Keycloak, поток с PKCE</td><td><b>Keycloak (PKCE)</b></td></tr>
 </table></div>
-<p>В коде значение по умолчанию — <code>0</code> (ни один флаг). В Docker-образе WebApi задано <code>Auth__Type=5</code>.</p>
-
-<figure class="shot"><img src="../assets/img/role-form.png" alt="Форма «Добавить роль»" loading="lazy" width="1440" height="900"><figcaption>Форма <b>Добавить роль</b>: тенант, группы AD и таблица прав по разделам.</figcaption></figure>
+<p>Значение по умолчанию — <code>0</code>: ни один флаг не установлен. В Docker-образе WebApi задано <code>Auth__Type=5</code>.</p>
 
 <h2>Active Directory: секция <code>ActiveDirectory</code></h2>
 <p>Каждый домен — отдельный ключ в <code>ActiveDirectory:MultyForest</code>. Ключ — полное имя домена: оно же сохраняется в привязках ролей и должно совпадать со значением, которое возвращает AD при входе.</p>
@@ -54,14 +54,18 @@
 <p>Параметры уровня секции:</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр</th><th>Назначение</th><th>По умолчанию</th><th>С версии</th></tr>
-  <tr><td><code>ActiveDirectory:MultyTenantsGroup</code></td><td>Мультитенантная AD-авторизация: одна группа AD может быть привязана к ролям разных тенантов. На форме входа появляется переключатель «Мультитенантная AD-авторизация» и выбор тенанта</td><td><code>false</code></td><td></td></tr>
+  <tr><td><code>ActiveDirectory:MultyTenantsGroup</code></td><td>Мультитенантная AD-авторизация: одна группа AD может быть привязана к ролям разных тенантов. На форме входа появляется переключатель <b>Мультитенантная AD-авторизация</b> и выбор тенанта</td><td><code>false</code></td><td></td></tr>
   <tr><td><code>ActiveDirectory:KerberosKeytabVault</code></td><td>Источник keytab:<code>0</code> — из Vault через клиент приложения, <code>1</code> — из переменной окружения <code>KEYTAB_&lt;ДОМЕН&gt;</code> (Base64; точки в имени домена заменяются на <code>_</code>, буквы — заглавные). Не задан — файл <code>KerberosKeytabPath</code> или S3</td><td>не задан</td><td>1.26.4</td></tr>
 </table></div>
 <p>Keytab допускается хранить и в S3:<span data-ver="1.26.9"><code>FileStore:S3KerberosKeytabs:&lt;домен&gt;</code></span><span data-ver="1.26.7"><code>FileStore:MinioKerberosKeytabs:&lt;домен&gt;</code></span> с полями <code>BucketName</code>, <code>ObjectName</code> (работает при <code>FileStore:Type=1</code>, см. <a href="storage.html">Хранилища</a>).</p>
-<p>Группы AD привязываются к ролям в UI4: <b>Настройки → Администрирование → Роли пользователей</b>, в карточке роли — «Группы AD».</p>
+<p>Группы AD привязываются к ролям в UI4: <b>Настройки → Администрирование → Роли пользователей</b>, в карточке роли — <b>Группы AD</b>.</p>
+
+<figure class="shot"><img src="../assets/img/role-form.png" alt="Форма «Добавить роль»" loading="lazy" width="1440" height="900"><figcaption>Форма <b>Добавить роль</b>: тенант, группы AD и таблица прав по разделам.</figcaption></figure>
+
+<div class="note"><p>SSO средствами IIS не поддерживается: билет Kerberos проверяется в WebApi по keytab (файл, Vault, переменная окружения или S3).</p></div>
 
 <h2>Keycloak: секция <code>OpenId:KeyCloak</code></h2>
-<p>Ключ внутри секции — имя realm. Роли Keycloak привязываются к ролям Оркестратора в карточке роли, блок «Роли KeyCloak».</p>
+<p>Ключ внутри секции — имя realm. Роли Keycloak привязываются к ролям Оркестратора в карточке роли, блок <b>Роли KeyCloak</b>.</p>
 <div class="tbl-wrap"><table>
   <tr><th>Параметр (внутри <code>OpenId:KeyCloak:&lt;realm&gt;</code>)</th><th>Назначение</th><th>По умолчанию</th></tr>
   <tr><td><code>ClientId</code></td><td>Клиент Keycloak</td><td><code>orch</code></td></tr>
@@ -81,7 +85,7 @@
   <tr><td><code>Tenants:FromAppsettings</code></td><td><code>true</code> — список тенантов берётся из конфига (<code>Items</code>); <code>false</code> — из БД</td><td><code>false</code> (в Docker-образе <code>True</code>)</td></tr>
   <tr><td><code>Tenants:Items[]</code></td><td>Тенанты, кроме тенанта по умолчанию: <code>Id</code>, <code>Name</code>, <code>TimeOffset</code>, <code>IncomingEmail</code>, <code>Agent</code>, <code>RpaProjectQueueProcessingType</code></td><td>—</td></tr>
   <tr><td><code>Tenants:TimeOffset</code></td><td>Смещение времени в часах для тенанта по умолчанию</td><td><code>0</code></td></tr>
-  <tr><td><code>Tenants:Agent:Port</code> / <code>Https</code> / <code>Timeout</code></td><td>Параметры обращения WebApi к агенту. В <code>Items[].Agent</code> — отдельное значение для тенанта, что позволяет размещать на одной машине агентов разных тенантов на разных портах</td><td><code>5002</code> / <code>true</code> / <code>1500</code> мс</td></tr>
+  <tr><td><code>Tenants:Agent:Port</code> / <code>Https</code> / <code>Timeout</code></td><td>Параметры обращения WebApi к агенту. В <code>Items[].Agent</code> — отдельное значение для тенанта, что позволяет размещать на одной машине агентов разных тенантов на разных портах</td><td><code>5002</code> / <code>true</code> / <code>1500</code> мс (в Docker-образе <code>Timeout</code> — <code>2000</code>)</td></tr>
   <tr><td><code>Tenants:IncomingEmail</code></td><td>Ящик для почтовых триггеров, см. <a href="notifications.html">Почта и оповещения</a></td><td>—</td></tr>
   <tr><td><code>Tenants:DisabledDefaultTenant</code></td><td>Запретить вход в тенант по умолчанию</td><td><code>false</code></td></tr>
 </table></div>
@@ -97,18 +101,22 @@
   <tr><td><code>Security:Password:MaxOldPasswords</code></td><td>Сколько прошлых паролей нельзя повторять</td><td><code>4</code></td></tr>
   <tr><td><code>Security:Lockout:MaxFailedAccessAttempts</code></td><td>Неудачных попыток до временной блокировки</td><td><code>5</code></td></tr>
   <tr><td><code>Security:Lockout:DefaultLockoutTimeSpan</code></td><td>Длительность блокировки (формат <code>чч:мм:сс</code>)</td><td><code>00:05:00</code></td></tr>
-  <tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>Время жизни сессии (токена), минуты</td><td>в коде нет значения (<code>0</code>); в Docker-образе <code>720</code></td></tr>
+  <tr><td><code>Security:Jwt:SessionLifetimeMin</code></td><td>Время жизни сессии (токена), минуты</td><td>значения по умолчанию нет (<code>0</code>); в Docker-образе <code>720</code></td></tr>
 </table></div>
 <div class="warn"><p><code>Security:Jwt:SessionLifetimeMin</code> читается без значения по умолчанию. Задайте его явно, иначе срок сессии будет нулевым.</p></div>
 
 <h2>Отключение тенанта по умолчанию</h2>
-<p>При <code>Tenants:DisabledDefaultTenant=true</code> любой вход без указания тенанта (логин и пароль, AD, Keycloak) отклоняется, в журнал службы пишется предупреждение о попытке входа в отключённый тенант. Требуется перезапуск WebApi.</p>
-<p>Встроенные учётные записи <code>admin</code>, <code>studio</code> и <code>superadmin</code> можно заблокировать полем <code>Disabled</code> в таблице <code>Users</code> БД <code>ltoolsidentity</code>. Экрана для этого в UI4 нет.</p>
+<p>При отключённом тенанте по умолчанию любой вход без указания тенанта (логин и пароль, AD, Keycloak) отклоняется. Порядок шагов важен: доступ к системным настройкам должен быть выдан группе AD до отключения тенанта и блокировки <code>admin</code>.</p>
+<ol class="steps">
+  <li>Привяжите отдельную группу AD к встроенной роли администратора: <b>Настройки → Администрирование → Роли пользователей</b>, в карточке роли — <b>Группы AD</b>. <span class="check">Пользователь из этой группы входит в Оркестратор с ролью администратора.</span></li>
+  <li>Задайте в конфигурации WebApi <code>Tenants:DisabledDefaultTenant=true</code> (в Docker — <code>Tenants__DisabledDefaultTenant=True</code>) и перезапустите WebApi. <span class="check">Вход без указания тенанта отклоняется; в журнале службы WebApi — предупреждение о попытке входа в отключённый тенант.</span></li>
+  <li>Если требуется, заблокируйте встроенные учётные записи <code>admin</code>, <code>studio</code> и <code>superadmin</code>: установите поле <code>Disabled</code> в таблице <code>Users</code> БД <code>ltoolsidentity</code>. Экрана для этого в UI4 нет; запрос выполняется на сервере БД под учётной записью с правом изменения таблицы.
 <pre><code>UPDATE "Users" SET "Disabled" = true
 WHERE "Id" IN ('a18be9c0-aa65-4af8-bd17-00bd9344e575',  -- admin
                'a18be9c0-aa67-4af8-bd17-00bd9344e575',  -- studio
                '00000000-0000-0000-0000-100000000000'); -- superadmin</code></pre>
-<div class="note"><p>Чтобы при отключённом тенанте по умолчанию сохранить доступ к системным настройкам, заранее привяжите отдельную группу AD к встроенной роли администратора и только после этого отключите тенант и заблокируйте <code>admin</code>.</p></div>
+    <span class="check">Вход под <code>admin</code> отклоняется.</span></li>
+</ol>
 
 <h2>Ограничение версии Студии: секция <code>StudioVersionChecker</code></h2>
 <div class="tbl-wrap"><table>
@@ -118,43 +126,52 @@ WHERE "Id" IN ('a18be9c0-aa65-4af8-bd17-00bd9344e575',  -- admin
 </table></div>
 
 <h2>Пример</h2>
-<pre><code>"Auth": { "Type": 7 },
-"ActiveDirectory": {
-  "MultyTenantsGroup": false,
-  "MultyForest": {
-    "corp.example.local": {
-      "Host": "dc01.corp.example.local",
-      "UseSsl": true,
-      "AdminUserName": "svc-orch@corp.example.local",
-      "AdminPassword": "&lt;зашифрованный пароль&gt;",
-      "StartPoint": "DC=corp,DC=example,DC=local",
-      "GroupsFilter": "(&amp;(ObjectClass=group)(cn=primo*))",
-      "Tenants": [ "" ],
-      "KerberosKeytabPath": "/etc/primo/orch.keytab"
+<p>Фрагмент файла конфигурации WebApi: вход по логину и паролю Оркестратора, по LDAP и SSO (<code>1 + 2 + 4 = 7</code>), один домен, один дополнительный тенант. Секции добавляются к имеющимся в файле.</p>
+<pre><code>{
+  "Auth": { "Type": 7 },
+  "ActiveDirectory": {
+    "MultyTenantsGroup": false,
+    "MultyForest": {
+      "corp.example.local": {
+        "Host": "dc01.corp.example.local",
+        "UseSsl": true,
+        "AdminUserName": "svc-orch@corp.example.local",
+        "AdminPassword": "&lt;зашифрованный пароль&gt;",
+        "StartPoint": "DC=corp,DC=example,DC=local",
+        "GroupsFilter": "(&amp;(ObjectClass=group)(cn=primo*))",
+        "Tenants": [ "" ],
+        "KerberosKeytabPath": "/etc/primo/orch.keytab"
+      }
     }
+  },
+  "Tenants": {
+    "FromAppsettings": true,
+    "DisabledDefaultTenant": false,
+    "Agent": { "Port": 5002, "Https": true, "Timeout": 1500 },
+    "Items": [ { "Id": "BUCH", "Name": "Бухгалтерия", "TimeOffset": 3 } ]
+  },
+  "Security": {
+    "Jwt": { "SessionLifetimeMin": 720 },
+    "Password": { "RequiredLength": 8, "MaxOldPasswords": 7 },
+    "Lockout": { "MaxFailedAccessAttempts": 5, "DefaultLockoutTimeSpan": "00:05:00" }
   }
-},
-"Tenants": {
-  "FromAppsettings": true,
-  "DisabledDefaultTenant": false,
-  "Agent": { "Port": 5002, "Https": true, "Timeout": 1500 },
-  "Items": [ { "Id": "BUCH", "Name": "Бухгалтерия", "TimeOffset": 3 } ]
-},
-"Security": {
-  "Jwt": { "SessionLifetimeMin": 720 },
-  "Password": { "RequiredLength": 8, "MaxOldPasswords": 7 },
-  "Lockout": { "MaxFailedAccessAttempts": 5, "DefaultLockoutTimeSpan": "00:05:00" }
 }</code></pre>
+<p>Те же параметры в Docker — переменные окружения сервиса <code>web-api</code>, например:</p>
+<pre><code>Auth__Type: 7
+ActiveDirectory__MultyForest__corp.example.local__Host: dc01.corp.example.local
+ActiveDirectory__MultyForest__corp.example.local__Tenants__0: ""
+Tenants__Items__0__Id: BUCH
+Security__Jwt__SessionLifetimeMin: 720</code></pre>
 
 <h2>Как проверить</h2>
 <ol class="steps">
-  <li>Перезапустите WebApi и откройте <code>https://&lt;адрес Оркестратора&gt;/api/Account/type</code>. <span class="check">Ответ — число из <code>Auth:Type</code>.</span></li>
+  <li>Перезапустите WebApi. <span class="check">Служба запущена, <code>/health</code> отвечает <code>Healthy</code>.</span></li>
+  <li>Откройте в браузере <code>https://&lt;адрес Оркестратора&gt;/api/Account/type</code>. <span class="check">Ответ — число из <code>Auth:Type</code>.</span></li>
   <li>Откройте экран входа UI4. <span class="check">В списке <b>Другие способы входа</b> есть только те способы, флаги которых включены.</span></li>
   <li>Войдите доменной учётной записью из группы, привязанной к роли. <span class="check">Вход успешен, в карточке пользователя видна роль. Ошибка «Ошибка аутентификации в AD …» — проверьте <code>Host</code>, учётную запись и <code>StartPoint</code>.</span></li>
   <li>При <code>MultyTenantsGroup=true</code> откройте <code>/api/Account/MultyTenantsGroup</code>. <span class="check">Ответ <code>true</code>, на форме входа есть выбор тенанта.</span></li>
 </ol>
 
-<div class="note"><p>SSO через IIS из старого руководства не поддерживается: билет Kerberos проверяется в WebApi по keytab (файл, Vault, переменная окружения или S3).</p></div>
 <h2>Что дальше</h2>
 <div class="next">
   <a href="security.html">Безопасность<small>шифрование паролей в конфигах, Vault, сертификаты TLS</small></a>

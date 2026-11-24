@@ -49,9 +49,9 @@
 <tr><td>MinIO или Ceph (S3)</td><td>WebApi (<code>FileStore</code>), RobotLogs (<code>ScreenFileUpload</code>), NuGet2</td><td>Необязательно; по умолчанию файлы хранятся в файловой системе.</td></tr>
 <tr><td>Redis</td><td>WebApi</td><td>Необязательно, ключ <code>UseRedis</code>.</td></tr>
 <tr><td>HashiCorp Vault</td><td>WebApi, RobotLogs, States, Notifications, Analytic, Licenses, Queues, LogEventsWebhook, агент</td><td>Необязательно, <code>Secrets:External</code> = <code>Vault</code>.</td></tr>
-<tr><td>MQTT-брокер</td><td>WebApi, RDP2</td><td>Не требуется. Необязательный режим версий 1.26.8–1.26.11; в ветке следующей версии MQTT из кода удалён.</td></tr>
+<tr><td>MQTT-брокер</td><td>WebApi, RDP2</td><td>Не требуется. Необязательный режим, доступен с 1.26.8; параметры — секция <code>Mqtt</code> в конфигурации WebApi и RDP2.</td></tr>
 <tr><td>Grafana</td><td>UI (отчёты)</td><td>Необязательно; nginx проксирует <code>/grafana/</code>.</td></tr>
-<tr><td>MCP-сервер (<code>PrimoRpa.McpServer.Api</code>)</td><td>внешние ИИ-клиенты</td><td>Отдельный продукт, не из этого репозитория. В Docker-шаблоне для Ubuntu — контейнер <code>mcp</code>, обращается к WebApi; nginx проксирует <code>/mcp</code>.</td></tr>
+<tr><td>MCP Server (<code>PrimoRpa.McpServer.Api</code>)</td><td>внешние ИИ-клиенты</td><td>Отдельный продукт, подробнее — <a href="mcp.html">«MCP Server»</a>. В Docker-шаблоне для Ubuntu — контейнер <code>mcp</code>, обращается к WebApi; nginx проксирует <code>/mcp</code>.</td></tr>
 </table></div>
 
 <h2>Имена служб и контейнеров</h2>
@@ -85,7 +85,7 @@
 <tr><td><code>log-events-webhook</code></td><td><code>log-events-webhook</code></td><td>LogEventsWebhook</td></tr>
 <tr><td><code>nuget2</code></td><td><code>nuget</code></td><td>NuGet2</td></tr>
 <tr><td><code>ui</code></td><td><code>ui</code></td><td>UI + nginx</td></tr>
-<tr><td><code>mcp</code> (только Ubuntu)</td><td><code>mcp</code></td><td>MCP-сервер</td></tr>
+<tr><td><code>mcp</code> (только Ubuntu)</td><td><code>mcp</code></td><td>MCP Server</td></tr>
 <tr><td><code>postgres:14</code></td><td><code>0postgres-db</code></td><td>PostgreSQL</td></tr>
 <tr><td><code>rabbitmq:3-management</code></td><td><code>0rabbitmq</code></td><td>RabbitMQ</td></tr>
 </table></div>
@@ -96,9 +96,9 @@
 <tr><th>Утилита</th><th>Проект</th><th>Назначение</th></tr>
 <tr><td>PasswordEncryptor</td><td><code>LTools.Orchestrator.PasswordEncryptor</code></td><td>Шифрование паролей для конфигов служб. Входит в поставку для Windows и Linux.</td></tr>
 <tr><td>RsaPasswordEncryptor</td><td><code>LTools.Orchestrator.RsaPasswordEncryptor</code></td><td>Шифрование паролей RSA (<code>ConfigPasswordEncryptor:Algorithm</code> = <code>RSA</code>).</td></tr>
-<tr><td>ComplectDescriber</td><td><code>LTools.Orchestrator.ComplectDescriber</code></td><td>Внутренняя: формирует описание комплекта поставки в документ Word.</td></tr>
+<tr><td>ComplectDescriber</td><td><code>LTools.Orchestrator.ComplectDescriber</code></td><td>Внутренняя утилита: формирует описание комплекта поставки в документ Word.</td></tr>
 </table></div>
-<p>Остальные проекты решения — библиотеки (<code>LTools.Shared</code>, <code>LTools.Enums</code>, <code>*Dal</code>, <code>*.Migrations.*</code>, <code>LTools.Orchestrator.Storages</code>, <code>.Monitoring</code>, <code>.Mqtt</code>), тесты и стенды разработчиков (<code>RobotMock*</code>, <code>*Test*</code>, <code>CyberArk.ApiMock</code>).</p>
+<p>Остальные проекты решения — библиотеки (<code>LTools.Shared</code>, <code>LTools.Enums</code>, <code>*Dal</code>, <code>*.Migrations.*</code>, <code>LTools.Orchestrator.Storages</code>, <code>.Monitoring</code>, <code>.Mqtt</code>), тесты и заглушки для разработки (<code>RobotMock*</code>, <code>*Test*</code>, <code>CyberArk.ApiMock</code>).</p>
 
 <h2>Потоки трафика</h2>
 <pre>Браузер ──HTTPS──► UI (Nginx) ──► WebApi / RobotLogs / Licenses / Queues / NuGet
@@ -107,15 +107,15 @@ WebApi ──HTTP(S)──► Агент:  Deploy, Start, HardKill, Erase, Reboo
 Робот ──HTTP(S)──► WebApi (RobotDeployment:OrchBaseUrl) и RobotLogs (RobotDeployment:RobotLogsBaseUrl)
 Службы ◄──► RabbitMQ;   WebApi ◄──REST──► RDP2;   WebApi ──► MachineInfo (License:MachineInfoUrl)
 UI ◄── /events (WS:Path) ── WebApi: живые обновления в интерфейсе</pre>
-<p>Порты — на странице <a href="../reference/ports.html">Порты</a>.</p>
+<p>Порты — на странице <a href="ports.html">«Порты»</a>.</p>
 
 <h2 id="robot-start">Как запускается робот</h2>
 <ol class="steps">
-  <li>Запуск инициирован вручную или заданием. Проект помещается в очередь проектов (RabbitMQ, при строгом порядке — таблица БД). <span class="check">проект виден в RPA-проекты → Очередь проектов</span></li>
-  <li>Для свободного робота WebApi вызывает у агента <code>api/Robots/Start</code> (или <code>StartWithTracking</code>). <span class="check">в карточке робота появляется трекинг запуска</span></li>
-  <li>Агент проходит этапы и сообщает о каждом: остановка старого процесса робота, скачивание и сохранение архива проекта, генерация скрипта запуска, создание задачи запуска. <span class="check">этапы трекинга отмечены успешными</span></li>
-  <li><b>Windows:</b> агент записывает <code>run.bat</code> и создаёт задачу Планировщика заданий под учётной записью робота. <b>Linux:</b> агент записывает <code>start-0-runner.sh</code> → <code>start-1-session.sh</code> (запускает графическую сессию) → <code>start-2-robot.sh</code>. Если в <code>~/.config/robot</code> есть исполняемые <code>pre-session.sh</code>, <code>post-session.sh</code>, <code>pre-robot.sh</code>, <code>post-robot.sh</code>, они выполняются до и после соответствующего шага. <span class="check">процесс Primo.Robot запущен</span></li>
-  <li>Робот получает свободную лицензию, переходит в состояние «Выполняет проект», отправляет журналы в RobotLogs, работает с ресурсами и очередями через WebApi. <span class="check">статус робота — выполняет проект</span></li>
+  <li>Запуск инициирован вручную или заданием. Проект помещается в очередь проектов (RabbitMQ, при строгом порядке — таблица БД). <span class="check">Проект виден в разделе <b>Очередь проектов</b>.</span></li>
+  <li>Для свободного робота WebApi вызывает у агента <code>api/Robots/Start</code> (или <code>StartWithTracking</code>). <span class="check">В карточке робота появляются этапы запуска.</span></li>
+  <li>Агент проходит этапы и сообщает о каждом: остановка старого процесса робота, скачивание и сохранение архива проекта, генерация скрипта запуска, создание задачи запуска. <span class="check">Этапы запуска отмечены успешными.</span></li>
+  <li><b>Windows:</b> агент записывает <code>run.bat</code> и создаёт задачу Планировщика заданий под учётной записью робота. <b>Linux:</b> агент записывает <code>start-0-runner.sh</code> → <code>start-1-session.sh</code> (запускает графическую сессию) → <code>start-2-robot.sh</code>. Если в <code>~/.config/robot</code> есть исполняемые <code>pre-session.sh</code>, <code>post-session.sh</code>, <code>pre-robot.sh</code>, <code>post-robot.sh</code>, они выполняются до и после соответствующего шага. <span class="check">На машине робота запущен процесс <code>Primo.Robot</code>.</span></li>
+  <li>Робот получает свободную лицензию, переходит в состояние «Выполняет проект», отправляет журналы в RobotLogs, работает с ресурсами и очередями через WebApi. <span class="check">Состояние робота — «Выполняет проект».</span></li>
 </ol>
 <p>Развёртывание также выполняется через агента (<code>api/Robots/Deploy</code>): агент скачивает дистрибутив робота, распаковывает его, на Windows изменяет <code>Primo.Robot.exe.config</code> (порт и сертификат) и резервирует URL робота.</p>
 

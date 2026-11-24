@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Оркестратор: документация</title>
 <link rel="stylesheet" href="../assets/style.css">
 </head>
@@ -16,9 +17,9 @@
 <div class="tbl-wrap"><table>
   <tr><th>Что</th><th>Значение</th></tr>
   <tr><td>Исполняемый файл</td><td><code>PrimoRpa.McpServer.Api</code></td></tr>
-  <tr><td>Источник кода</td><td>Не из решения <code>Orchestrator.Backend.sln</code>: скрипт сборки бэкенда её не собирает. Образ строится из готового архива <code>mcp-linux-&lt;версия&gt;.zip</code>, который конвейер загружает из Nexus вместе с архивами остальных служб.</td></tr>
+  <tr><td>Происхождение</td><td>Отдельный продукт: в состав служб Оркестратора не входит. Docker-образ собирается из готового архива <code>mcp-linux-&lt;версия&gt;.zip</code>.</td></tr>
   <tr><td>Docker-образ</td><td><code>docker/ubuntu/mcp.Dockerfile</code>, база <code>ubuntu:24.04</code>; сервис <code>mcp</code> в <code>docker/ubuntu/docker-compose.yml.template</code></td></tr>
-  <tr><td>Astra Linux</td><td>Dockerfile нет, образ не собирается: конвейер пропускает его с сообщением «No mcp.Dockerfile for …».</td></tr>
+  <tr><td>Astra Linux</td><td>Образа на базе Astra Linux нет.</td></tr>
   <tr><td>Порт</td><td><code>5080</code> (HTTP) внутри сети compose, на хост не публикуется</td></tr>
   <tr><td>Внешний адрес</td><td><code>https://&lt;сервер&gt;:44392/mcp</code> — через nginx</td></tr>
   <tr><td>Проверка состояния</td><td><code>/mcp/health</code>; отвечает <code>503</code>, пока Оркестратор недоступен</td></tr>
@@ -28,16 +29,16 @@
 <p>MCP Server работает от имени учётной записи Оркестратора, заданной в его настройках. Внешние клиенты подключаются к нему по API-ключу из списка <code>Mcp:ApiKeys</code>.</p>
 
 <h2>Параметры</h2>
-<p>Настройки задаются переменными окружения. Файл <code>appsettings.ProdLinux.json</code> из архива в образ не включается и заменяется пустым.</p>
+<p>Настройки задаются переменными окружения контейнера <code>mcp</code>; чтобы применить изменения, пересоздайте контейнер (<code>docker compose up -d mcp</code>). Файл <code>appsettings.ProdLinux.json</code> из архива в образ не включается и заменяется пустым.</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Параметр (переменная окружения)</th><th>Назначение</th><th>По умолчанию в образе</th></tr>
-  <tr><td><code>Orchestrator__BaseUrl</code></td><td>Адрес WebApi, к которому обращается MCP Server.</td><td><code>http://web-api:5001/</code></td></tr>
-  <tr><td><code>Orchestrator__UserName</code></td><td>Учётная запись Оркестратора, от имени которой работает служба.</td><td><code>admin</code></td></tr>
-  <tr><td><code>Orchestrator__Password</code></td><td>Пароль этой учётной записи.</td><td>пусто</td></tr>
-  <tr><td><code>Orchestrator__IgnoreSslErrors</code></td><td>Игнорировать ошибки SSL при обращении к Оркестратору.</td><td><code>false</code></td></tr>
-  <tr><td><code>Mcp__ApiKeys__0</code></td><td>API-ключ для внешних клиентов. Ключей может быть несколько: <code>Mcp__ApiKeys__1</code> и т. д.</td><td>пусто</td></tr>
-  <tr><td><code>Kestrel__EndPoints__InternalHttp__Url</code></td><td>Адрес, который слушает служба.</td><td><code>http://*:5080</code></td></tr>
-  <tr><td><code>ASPNETCORE_ENVIRONMENT</code></td><td>Окружение.</td><td><code>ProdLinux</code></td></tr>
+  <tr><th>Параметр (переменная окружения)</th><th>Тип</th><th>Назначение</th><th>По умолчанию в образе</th></tr>
+  <tr><td><code>Orchestrator__BaseUrl</code></td><td>строка</td><td>Адрес WebApi, к которому обращается MCP Server.</td><td><code>http://web-api:5001/</code></td></tr>
+  <tr><td><code>Orchestrator__UserName</code></td><td>строка</td><td>Учётная запись Оркестратора, от имени которой работает служба.</td><td><code>admin</code></td></tr>
+  <tr><td><code>Orchestrator__Password</code></td><td>строка</td><td>Пароль этой учётной записи.</td><td>пусто</td></tr>
+  <tr><td><code>Orchestrator__IgnoreSslErrors</code></td><td>bool</td><td>Игнорировать ошибки SSL при обращении к Оркестратору.</td><td><code>false</code></td></tr>
+  <tr><td><code>Mcp__ApiKeys__0</code></td><td>строка</td><td>API-ключ для внешних клиентов. Ключей может быть несколько: <code>Mcp__ApiKeys__1</code> и т. д.</td><td>пусто</td></tr>
+  <tr><td><code>Kestrel__EndPoints__InternalHttp__Url</code></td><td>строка</td><td>Адрес, который слушает служба.</td><td><code>http://*:5080</code></td></tr>
+  <tr><td><code>ASPNETCORE_ENVIRONMENT</code></td><td>строка</td><td>Имя окружения службы.</td><td><code>ProdLinux</code></td></tr>
 </table></div>
 <p>В compose-шаблоне значения для службы берутся из <code>x-secrets</code>: <code>mcp-orch-user</code>, <code>mcp-orch-pass</code>, <code>mcp-api-key</code>. Там же задаётся <code>TZ</code>.</p>
 
@@ -54,13 +55,13 @@ location /mcp {
 
 <h2>Включение (Docker, Ubuntu)</h2>
 <ol class="steps">
-  <li>В <code>x-secrets</code> compose-файла задайте <code>mcp-orch-user</code> и <code>mcp-orch-pass</code> — учётную запись Оркестратора для службы. <span class="check">в файле нет значений из примера</span></li>
-  <li>Задайте <code>mcp-api-key</code> — ключ, который выдаётся ИИ-клиентам. <span class="check">ключ не совпадает с паролями из <code>x-secrets</code></span></li>
-  <li>Проверьте, что у сервиса <code>mcp</code> указан образ, а не заготовка <code>image: &lt;mcp&gt;</code>. <span class="check">в строке <code>image:</code> есть реестр и тег</span></li>
-  <li>Запустите службу:
+  <li>В <code>x-secrets</code> compose-файла задайте <code>mcp-orch-user</code> и <code>mcp-orch-pass</code> — учётную запись Оркестратора для службы. <span class="check">В файле нет значений из примера.</span></li>
+  <li>Задайте <code>mcp-api-key</code> — ключ, который выдаётся ИИ-клиентам. <span class="check">Ключ не совпадает с паролями из <code>x-secrets</code>.</span></li>
+  <li>Проверьте, что у сервиса <code>mcp</code> указан образ, а не заготовка <code>image: &lt;mcp&gt;</code>. <span class="check">В строке <code>image:</code> указаны реестр и тег.</span></li>
+  <li>На сервере Docker в каталоге с compose-файлом запустите службу:
 <pre><code>docker compose up -d mcp</code></pre>
-    <span class="check"><code>docker compose ps</code> показывает <code>mcp</code> в состоянии <code>healthy</code></span></li>
-  <li>Проверьте доступ через nginx: откройте <code>https://&lt;сервер&gt;:44392/mcp/health</code>. <span class="check">ответ <code>200</code>; <code>503</code> означает, что Оркестратор недоступен для MCP Server — проверьте учётную запись и <code>Orchestrator__BaseUrl</code></span></li>
+    <span class="check"><code>docker compose ps</code> показывает <code>mcp</code> в состоянии <code>healthy</code>.</span></li>
+  <li>Проверьте доступ через nginx: откройте <code>https://&lt;сервер&gt;:44392/mcp/health</code>. <span class="check">Ответ <code>200</code>. Ответ <code>503</code> означает, что Оркестратор недоступен для MCP Server: проверьте учётную запись и <code>Orchestrator__BaseUrl</code>.</span></li>
 </ol>
 <div class="warn"><p>В шаблоне служба работает от имени <code>admin</code>. Все действия ИИ-клиентов в Оркестраторе выполняются с правами этой учётной записи.</p></div>
 
