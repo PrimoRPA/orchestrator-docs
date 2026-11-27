@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Оркестратор: документация</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../" data-page="configure/performance">
+<main>
+<h1>Производительность и нагрузка</h1>
+<div class="applies" data-sw="">Применимо: <span>1.26.7 LTS</span><span>Linux</span><span>Docker</span></div>
+<p class="lead">Сколько роботов выдерживает один сервер Оркестратора, что ограничивает работу первым и какие настройки PostgreSQL и WebApi задать для промышленной эксплуатации. Цифры получены нагрузочным тестом Оркестратора 1.26.7 LTS в ноябре 2026 года.</p>
+
+<div class="meta">
+  <div><b>Перед началом</b>выполнен <a href="../deploy/first-run.html">Первый запуск</a>, известно планируемое число роботов и интенсивность работы с очередями</div>
+  <div><b>Результат</b>PostgreSQL и WebApi настроены под нагрузку, понятен предел одного сервера</div>
+</div>
+
+<h2 id="summary">Главное</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Вопрос</th><th>Ответ</th></tr>
+  <tr><td>Сколько роботов держит один сервер</td><td>До <b>500</b> одновременно подключённых роботов — без сбоев, в том числе при непрерывной работе более двух часов. До <b>~600</b> — после <a href="#tuning">настройки</a>, с единичными перезапусками WebApi, после которых работа восстанавливается сама.</td></tr>
+  <tr><td>Сколько элементов обрабатывает очередь обмена данными</td><td>Около <b>500 элементов в минуту</b>, когда роботы и добавляют, и забирают элементы; <b>850–880</b> — когда роботы только забирают и закрывают элементы. С ростом числа роботов от 100 до 500 эта величина не растёт: растёт только ожидание.</td></tr>
+  <tr><td>Поможет ли более мощный сервер</td><td>Скорее всего, нет. Сервер 16 vCPU / 31 ГБ RAM был загружен на треть: процессор в среднем 22–35 %, ожидание диска не выше 7 %, память до 10,5 ГБ. Ограничивают <a href="#limits">блокировки в БД и пределы подключений</a>.</td></tr>
+  <tr><td>Как быстро отвечает Оркестратор</td><td>При 10 роботах 95 % операций с очередью укладываются в 0,5 с. Начиная со 100 роботов — в 6–65 с: роботы ждут, пока освободятся строки очереди в БД.</td></tr>
+  <tr><td>Что делать при парке больше 500–600 роботов</td><td>Разносить нагрузку на несколько экземпляров WebApi за балансировщиком — <a href="scaling.html">Масштабирование и отказоустойчивость</a>. Под нагрузкой такая схема не проверялась.</td></tr>
+</table></div>
+
+<h2 id="limits">Что ограничивает первым</h2>
+<p>Ограничения перечислены в том порядке, в котором они проявляются при росте числа роботов. В колонке «Признак» — то, что видно в журнале службы или в поведении системы.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Ограничение</th><th>Признак</th><th>Что сделать</th></tr>
+  <tr><td>Число подключений PostgreSQL (<code>max_connections</code>, по умолчанию 100)</td><td>Уже при 100 роботах WebApi завершается с ошибкой «53300: too many clients…» или «remaining connection slots are reserved…»; роботы не получают и не освобождают лицензии</td><td>Задать <code>max_connections</code> больше суммы пулов всех служб — <a href="#postgres">PostgreSQL</a></td></tr>
+  <tr><td>Пул подключений WebApi к БД (<code>MaxPoolSize</code>, в Docker 200)</td><td>«The connection pool has been exhausted … Max Pool Size (currently 200)». Процесс WebApi завершается, Docker перезапускает контейнер, роботы разом переподключаются и снова исчерпывают пул — перезапуски каждые 1–3 минуты</td><td>Увеличить пул — <a href="#webapi">WebApi</a></td></tr>
+  <tr><td>Каналы RabbitMQ одного экземпляра WebApi</td><td>После увеличения пула, при 600–750 роботах: «RabbitMQ.Client.Exceptions.ChannelAllocationException: The connection cannot support any more channels», WebApi перезапускается</td><td>Это предел одного экземпляра: разносить нагрузку на несколько экземпляров WebApi</td></tr>
+  <tr><td>Блокировки строк очереди обмена данными</td><td>В журнале PostgreSQL «40P01: deadlock detected», Оркестратор отвечает 409 или 500 на смену статуса элемента; время получения и закрытия элементов растёт</td><td>Учитывать предел ~500 элементов в минуту на очередь при <a href="#planning">планировании</a>; разделять поток на несколько очередей</td></tr>
+  <tr><td>Разросшиеся таблицы очереди</td><td>Обработка замедляется даже при 10 роботах: на тесте 810 вместо 1 200 закрытых элементов в минуту</td><td>Регулярно удалять завершённые элементы — <a href="../work/queues.html">Очереди обмена данными</a>, <a href="../operate/db-maintenance.html">Обслуживание БД</a></td></tr>
+  <tr><td>Разделяемая память контейнера PostgreSQL (64 МБ в Docker)</td><td>VACUUM завершается ошибкой «could not resize shared memory segment»</td><td>Задать <code>shm_size</code> — <a href="#postgres">PostgreSQL</a></td></tr>
+  <tr><td>Служба журналов роботов (RobotLogs)</td><td>При 100–250 роботах 43–66 % отправок журнала завершаются ошибкой, ответ до 100 с. Работа роботов при этом продолжается</td><td>Настройкой не устраняется; учитывать при оценке полноты журналов</td></tr>
+</table></div>
+
+<h2 id="tuning">Настройки для промышленной эксплуатации</h2>
+<p>Настройки ниже рекомендуются, если одновременно работает 300 роботов и больше. Значения проверены на сервере 16 vCPU / 31 ГБ RAM, где PostgreSQL и все службы работали в Docker на одной машине.</p>
+
+<h3 id="postgres">PostgreSQL</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Рекомендация</th><th>На тесте</th></tr>
+  <tr><td><code>max_connections</code></td><td>100</td><td>Больше суммы <code>MaxPoolSize</code> всех строк подключения всех служб</td><td>1500</td></tr>
+  <tr><td><code>shared_buffers</code></td><td>128 МБ</td><td>около 25 % RAM сервера БД</td><td>4 ГБ</td></tr>
+  <tr><td><code>effective_cache_size</code></td><td>4 ГБ</td><td>50–75 % RAM сервера БД</td><td>20 ГБ</td></tr>
+  <tr><td><code>work_mem</code></td><td>4 МБ</td><td>32 МБ</td><td>32 МБ</td></tr>
+  <tr><td><code>maintenance_work_mem</code></td><td>64 МБ</td><td>1 ГБ</td><td>1 ГБ</td></tr>
+  <tr><td><code>max_wal_size</code> / <code>min_wal_size</code></td><td>1 ГБ / 80 МБ</td><td>8 ГБ / 1 ГБ</td><td>8 ГБ / 1 ГБ</td></tr>
+  <tr><td><code>checkpoint_completion_target</code></td><td>0.9</td><td>0.9</td><td>0.9</td></tr>
+  <tr><td><code>random_page_cost</code>, <code>effective_io_concurrency</code></td><td>4, 1</td><td>1.1 и 200 для SSD</td><td>1.1, 200</td></tr>
+  <tr><td>Автовакуум</td><td></td><td>Чаще и агрессивнее, чтобы таблицы очередей не разрастались</td><td><code>autovacuum_vacuum_scale_factor</code> 0.02, <code>autovacuum_analyze_scale_factor</code> 0.01, <code>autovacuum_vacuum_cost_limit</code> 2000, <code>autovacuum_naptime</code> 10s</td></tr>
+</table></div>
+<p>Параметры задаются в <code>postgresql.conf</code> или командой <code>ALTER SYSTEM SET …</code> от суперпользователя БД. <code>max_connections</code> и <code>shared_buffers</code> применяются только после перезапуска PostgreSQL, остальные — после <code>SELECT pg_reload_conf();</code>.</p>
+<p>В Docker увеличьте разделяемую память контейнера PostgreSQL: без этого VACUUM на больших таблицах завершается ошибкой. В <code>docker-compose.yml</code>, в описании сервиса <code>0postgres-db</code>:</p>
+<pre><code>    0postgres-db:
+        image: postgres:14
+        shm_size: 2gb</code></pre>
+<p>Затем выполните <code>sudo docker compose up -d</code> в каталоге поставки.</p>
+<div class="note"><p>pgbouncer на тесте не применялся. При установке за pgbouncer учитывайте: Оркестратор передаёт параметр <code>search_path</code>, поэтому в pgbouncer нужен <code>ignore_startup_parameters = search_path</code>; с отключённым пулом на стороне служб (<code>Pooling=False</code>) WebApi за pgbouncer завершался с ошибкой.</p></div>
+
+<h3 id="webapi">WebApi и другие службы</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Параметр</th><th>Служба</th><th>По умолчанию</th><th>Рекомендация</th></tr>
+  <tr><td><code>MinWorkerThreads</code></td><td>WebApi, Queues, Licenses</td><td>системное значение</td><td>550</td></tr>
+  <tr><td><code>DbConnection:Items:Default:MaxPoolSize</code></td><td>WebApi</td><td>200 в Docker</td><td>600</td></tr>
+  <tr><td><code>DbConnection:Items:Identity:MaxPoolSize</code></td><td>WebApi</td><td>200 в Docker</td><td>300</td></tr>
+  <tr><td><code>DbConnection:Items:License:MaxPoolSize</code></td><td>WebApi</td><td>200 в Docker</td><td>300</td></tr>
+</table></div>
+<p>В Docker параметры задаются переменными окружения в <code>docker-compose.yml</code>, в разделе <code>environment</code> соответствующего сервиса, например <code>web-api</code>:</p>
+<pre><code>            MinWorkerThreads: 550
+            DbConnection__Items__Default__MaxPoolSize: 600
+            DbConnection__Items__Identity__MaxPoolSize: 300
+            DbConnection__Items__License__MaxPoolSize: 300</code></pre>
+<p>После изменения выполните <code>sudo docker compose up -d</code>. При установке службами — те же параметры в <code>appsettings.ProdLinux.json</code> службы и перезапуск службы. Полное описание параметров — <a href="../reference/config.html">Параметры конфигурации</a>.</p>
+<div class="warn"><p>Больший пул устраняет перезапуски WebApi, но не ускоряет очередь. При 500 роботах после увеличения пула закрывалось 436 элементов в минуту вместо 535: одновременно выполняется больше транзакций, и они чаще блокируют друг друга. Проверьте сумму пулов всех служб против <code>max_connections</code> PostgreSQL.</p></div>
+
+<h2 id="planning">Планирование</h2>
+<ul>
+  <li><b>Пропускная способность одной очереди:</b> около 30 тыс. элементов в час, если роботы добавляют и забирают элементы, и около 50 тыс. в час, если только забирают. Закладывайте 500–700 элементов в минуту на очередь при интенсивной работе.</li>
+  <li><b>Число роботов на очередь</b> зависит от того, сколько робот обрабатывает один элемент. Если минуту — 500 роботов уже выбирают весь поток очереди. Если пять минут — очередь выдержала бы около 2 500 роботов, но один экземпляр WebApi обслуживает около 500 одновременно подключённых роботов (около 600 после настройки).</li>
+  <li><b>Больше 500–600 роботов</b> — несколько экземпляров WebApi за балансировщиком, у каждого свой пул подключений к БД и своё подключение к RabbitMQ. Под нагрузкой эта схема не проверялась; расчёт выше — оценка, а не замер.</li>
+  <li><b>Добавление процессора и памяти</b> предел, скорее всего, не поднимет: на тесте ресурсы сервера были загружены на треть.</li>
+</ul>
+<p>Ресурсы сервера для начальной оценки — на странице <a href="../deploy/hardware.html">Требования к железу</a>.</p>
+
+<h2 id="test">Как проводился тест</h2>
+<div class="tbl-wrap"><table>
+  <tr><th></th><th>Условия</th></tr>
+  <tr><td>Сервер</td><td>Ubuntu 22.04, 16 vCPU, 31 ГБ RAM, 300 ГБ диска. Оркестратор 1.26.7 LTS (WebApi 1.26.7.28), установка в Docker из поставки; PostgreSQL 14 и RabbitMQ в контейнерах на том же сервере</td></tr>
+  <tr><td>Нагрузка</td><td>Эмулятор attended-роботов на отдельной машине Windows Server 2019 (16 vCPU, 32 ГБ): вход, проверка лицензии, загрузка проекта, keep-alive, отправка журнала, работа с очередью, освобождение лицензии</td></tr>
+  <tr><td>Режимы</td><td><b>Запись и чтение</b>: каждый робот добавляет элемент в очередь, забирает элемент, обрабатывает его 200 мс и закрывает. <b>Только чтение</b>: роботы забирают и закрывают элементы, очередь параллельно наполняют 20 отдельных роботов</td></tr>
+  <tr><td>Ступени</td><td>10 → 100 → 250 → 500 → 600 → 750 → 850 → 1000 роботов, по 10 минут с паузой 3 минуты; отдельно — непрерывная работа 250 роботов; повтор 500, 600 и 750 после настройки PostgreSQL и пула WebApi</td></tr>
+  <tr><td>Критерии</td><td>95 % ответов не дольше 2 с; ошибок меньше 1 %; процессор и память в устойчивой фазе не выше 70 %; нет массовых сбоев и самопроизвольного освобождения лицензий</td></tr>
+</table></div>
+<p>Во всех прогонах уже были заданы <code>MinWorkerThreads</code> 550, <code>max_connections</code> 1500, <code>shared_buffers</code> 4 ГБ и <code>shm_size</code> 2 ГБ: с настройками PostgreSQL по умолчанию WebApi завершался ошибкой уже при 100 роботах.</p>
+
+<h3 id="results">Результаты по ступеням</h3>
+<p>Время — со стороны робота, 95-й процентиль (p95). «Закрыто в минуту» — сколько элементов очереди все роботы вместе закрыли за минуту.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Роботов</th><th>Режим</th><th>Закрыто в минуту</th><th>Ошибок закрытия</th><th>Получение элемента, p95</th><th>Закрытие элемента, p95</th><th>Ошибок отправки журнала</th><th>Процессор, ср. / пик</th><th>Память</th></tr>
+  <tr><td>10</td><td>запись и чтение</td><td>1 200</td><td>0,6 %</td><td>0,06 с</td><td>0,44 с</td><td>0 %</td><td>20 / 31 %</td><td>3,3 ГБ</td></tr>
+  <tr><td>100</td><td>запись и чтение</td><td>473</td><td>3,4 %</td><td>6,3 с</td><td>21 с</td><td>0 %</td><td>34 / 61 %</td><td>6,8 ГБ</td></tr>
+  <tr><td>100</td><td>только чтение</td><td>520</td><td>2,9 %</td><td>10 с</td><td>19 с</td><td>57 %</td><td>30 / 52 %</td><td>6,0 ГБ</td></tr>
+  <tr><td>250</td><td>запись и чтение</td><td>542</td><td>2,7 %</td><td>13 с</td><td>20 с</td><td>66 %</td><td>33 / 100 %¹</td><td>7,5 ГБ</td></tr>
+  <tr><td>250</td><td>только чтение</td><td>844</td><td>2,0 %</td><td>23 с</td><td>27 с</td><td>49 %</td><td>31 / 57 %</td><td>6,7 ГБ</td></tr>
+  <tr><td>500</td><td>запись и чтение</td><td>535</td><td>4,2 %</td><td>65 с</td><td>35 с</td><td>54 %</td><td>26 / 54 %</td><td>7,2 ГБ</td></tr>
+  <tr><td>600</td><td>запись и чтение</td><td>≈ 900 первые 3 мин, затем 0²</td><td>12 %</td><td>58 с</td><td>39 с</td><td>40 %</td><td>—</td><td>—</td></tr>
+  <tr><td>750–1000</td><td>запись и чтение</td><td>≈ 0²</td><td>78–100 %</td><td>—</td><td>—</td><td>68–82 %</td><td>—</td><td>—</td></tr>
+</table></div>
+<p>¹ Кратковременный пик. ² WebApi перезапускается по исчерпанию пула подключений к БД, роботы переподключаются и снова исчерпывают пул.</p>
+
+<h3 id="long">Непрерывная работа: 250 роботов, 2 ч 17 мин</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Операция</th><th>Вызовов</th><th>Ошибок</th></tr>
+  <tr><td>Получение элемента</td><td>120 358</td><td>0</td></tr>
+  <tr><td>Закрытие элемента</td><td>120 116</td><td>2 744 (2,3 %)</td></tr>
+  <tr><td>Keep-alive</td><td>516 971</td><td>3</td></tr>
+  <tr><td>Отправка журнала</td><td>18 477</td><td>7 878 (43 %)</td></tr>
+</table></div>
+<p>Весь тест очередь закрывала около 880 элементов в минуту, WebApi не перезапускался, процессор в среднем 34 % (пик 65 %), память до 8,1 ГБ.</p>
+
+<h3 id="after-tuning">После настройки PostgreSQL и пула WebApi</h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Роботов</th><th></th><th>Закрыто в минуту</th><th>Ошибок закрытия</th><th>Получение, p95</th><th>Закрытие, p95</th><th>Перезапуски WebApi</th></tr>
+  <tr><td rowspan="2">10</td><td>до</td><td>1 200</td><td>0,6 %</td><td>0,06 с</td><td>0,44 с</td><td>нет</td></tr>
+  <tr><td>после</td><td>1 665</td><td>0,5 %</td><td>0,04 с</td><td>0,08 с</td><td>нет</td></tr>
+  <tr><td rowspan="2">500</td><td>до</td><td>535</td><td>4,2 %</td><td>65 с</td><td>35 с</td><td>нет</td></tr>
+  <tr><td>после</td><td>436</td><td>2,6 %</td><td>58 с</td><td>54 с</td><td>нет</td></tr>
+  <tr><td rowspan="2">600</td><td>до</td><td>≈ 900, затем 0</td><td>12 %</td><td>58 с</td><td>39 с</td><td>непрерывно</td></tr>
+  <tr><td>после</td><td>309 (≈ 600 в конце ступени)</td><td>6,7 %</td><td>98 с</td><td>73 с</td><td>1, восстановился сам</td></tr>
+  <tr><td rowspan="2">750</td><td>до</td><td>≈ 0</td><td>—</td><td>—</td><td>—</td><td>непрерывно</td></tr>
+  <tr><td>после</td><td>203 (≈ 700 между перезапусками)</td><td>20 %</td><td>70 с</td><td>67 с</td><td>4, каждый раз восстанавливался</td></tr>
+</table></div>
+<p>При 10 роботах ускорение дала в основном очистка и пересборка таблиц очереди. При 600 и 750 роботах пул больше не исчерпывается; перезапуски WebApi вызывает нехватка каналов RabbitMQ.</p>
+
+<h3 id="not-tested">Что тест не покрывает</h3>
+<ul>
+  <li>Нагрузку создавал эмулятор attended-роботов. Роботы, которые запускает агент Оркестратора, под нагрузкой не проверялись.</li>
+  <li>PostgreSQL и все службы работали на одном сервере. Схема с отдельным сервером БД не проверялась.</li>
+  <li>Несколько экземпляров WebApi за балансировщиком не проверялись.</li>
+  <li>Ступени длились по 10 минут, непрерывная работа — 2 ч 17 мин.</li>
+  <li>Тест выполнялся на 1.26.7 LTS. Для 1.26.9 результаты не повторялись.</li>
+</ul>
+
+<h2>Что дальше</h2>
+<div class="next">
+  <a href="scaling.html">Масштабирование и отказоустойчивость<small>несколько экземпляров WebApi, балансировка, кластер RabbitMQ</small></a>
+  <a href="../operate/db-maintenance.html">Обслуживание БД<small>очистка журналов и очередей, перенос запусков</small></a>
+  <a href="../troubleshoot/slow.html">Оркестратор и БД работают медленно<small>диагностика при уже возникшей проблеме</small></a>
+</div>
+
+
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
